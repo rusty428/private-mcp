@@ -16,7 +16,7 @@ const SYSTEM_PROMPT = `Extract metadata from the user's captured thought. Return
 - "people": array of people mentioned (empty if none)
 - "action_items": array of implied to-dos (empty if none)
 - "dates_mentioned": array of dates YYYY-MM-DD (empty if none)
-- "topics": array of 1-3 short topic tags (always at least one)
+- "topics": array of 1-3 short topic tags, always lowercase (always at least one)
 - "type": one of "observation", "task", "idea", "reference", "person_note"
 Only extract what's explicitly there. Return valid JSON only.`;
 
@@ -39,7 +39,9 @@ export async function classifyThought(text: string): Promise<ClassificationResul
   const content = result.content[0].text;
 
   try {
-    return JSON.parse(content);
+    const parsed = JSON.parse(content);
+    parsed.topics = parsed.topics.map((t: string) => t.toLowerCase());
+    return parsed;
   } catch {
     return {
       type: 'observation',
