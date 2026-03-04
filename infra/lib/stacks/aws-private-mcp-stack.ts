@@ -3,6 +3,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3vectors from 'aws-cdk-lib/aws-s3vectors';
 import { Construct } from 'constructs';
 import { AWSPrivateMCPConfig } from '../config';
 import {
@@ -22,6 +23,20 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     super(scope, id, props);
 
     const { config } = props;
+
+    // --- S3 Vectors ---
+    const vectorBucket = new s3vectors.CfnVectorBucket(this, 'ThoughtsBucket', {
+      vectorBucketName: VECTOR_BUCKET_NAME,
+    });
+
+    const vectorIndex = new s3vectors.CfnIndex(this, 'ThoughtsIndex', {
+      vectorBucketName: VECTOR_BUCKET_NAME,
+      indexName: VECTOR_INDEX_NAME,
+      dataType: 'float32',
+      dimension: VECTOR_DIMENSIONS,
+      distanceMetric: 'cosine',
+    });
+    vectorIndex.addDependency(vectorBucket);
 
     // --- Common Lambda environment ---
     const commonEnv = {
