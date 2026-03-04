@@ -55,6 +55,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
         's3vectors:DeleteVectors',
       ],
       resources: [
+        `arn:aws:s3vectors:${config.region}:${config.accountId}:vector-bucket/${VECTOR_BUCKET_NAME}`,
         `arn:aws:s3vectors:${config.region}:${config.accountId}:vector-bucket/${VECTOR_BUCKET_NAME}/*`,
       ],
     });
