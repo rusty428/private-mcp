@@ -19,13 +19,14 @@ export async function storeThought(
         metadata: {
           content: metadata.content,
           type: metadata.type,
-          topics: metadata.topics,
-          people: metadata.people,
-          action_items: metadata.action_items,
-          dates_mentioned: metadata.dates_mentioned,
           source: metadata.source,
           source_ref: metadata.source_ref || '',
           created_at: metadata.created_at,
+          // S3 Vectors does not allow empty arrays in metadata — only include non-empty arrays
+          ...(metadata.topics.length > 0 && { topics: metadata.topics }),
+          ...(metadata.people.length > 0 && { people: metadata.people }),
+          ...(metadata.action_items.length > 0 && { action_items: metadata.action_items }),
+          ...(metadata.dates_mentioned.length > 0 && { dates_mentioned: metadata.dates_mentioned }),
         },
       },
     ],

@@ -57,6 +57,8 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       resources: [
         `arn:aws:s3vectors:${config.region}:${config.accountId}:vector-bucket/${VECTOR_BUCKET_NAME}`,
         `arn:aws:s3vectors:${config.region}:${config.accountId}:vector-bucket/${VECTOR_BUCKET_NAME}/*`,
+        `arn:aws:s3vectors:${config.region}:${config.accountId}:bucket/${VECTOR_BUCKET_NAME}`,
+        `arn:aws:s3vectors:${config.region}:${config.accountId}:bucket/${VECTOR_BUCKET_NAME}/*`,
       ],
     });
 
@@ -67,6 +69,15 @@ export class AWSPrivateMCPStack extends cdk.Stack {
         `arn:aws:bedrock:${config.region}::foundation-model/${EMBEDDING_MODEL_ID}`,
         `arn:aws:bedrock:${config.region}::foundation-model/${CLASSIFICATION_MODEL_ID}`,
       ],
+    });
+
+    // --- Marketplace IAM policy (required for first-time Anthropic model access) ---
+    const marketplacePolicy = new iam.PolicyStatement({
+      actions: [
+        'aws-marketplace:ViewSubscriptions',
+        'aws-marketplace:Subscribe',
+      ],
+      resources: ['*'],
     });
 
     // --- process-thought Lambda ---
@@ -84,6 +95,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     });
     processThoughtFn.addToRolePolicy(s3VectorsPolicy);
     processThoughtFn.addToRolePolicy(bedrockPolicy);
+    processThoughtFn.addToRolePolicy(marketplacePolicy);
 
     // --- ingest-thought Lambda ---
     const ingestThoughtFn = new nodejs.NodejsFunction(this, 'IngestThoughtFn', {
