@@ -145,6 +145,23 @@ aws-private-mcp-infra/
 
 Region: `us-west-2`
 
+## Claude Code MCP Setup
+
+To connect Claude Code to this MCP server as a native tool provider:
+
+```bash
+# Get the API key value
+API_KEY=$(aws apigateway get-api-key --api-key fe5nyv6n00 --include-value \
+  --profile private-mcp --region us-west-2 --query 'value' --output text)
+
+# Register the MCP server
+claude mcp add --transport http aws-private-mcp \
+  "https://zjyd52hk73.execute-api.us-west-2.amazonaws.com/api/mcp" \
+  --header "x-api-key: $API_KEY"
+```
+
+Restart Claude Code after adding. The four MCP tools (`stats`, `browse_recent`, `search_thoughts`, `capture_thought`) will be available as native tools.
+
 ## Future Plans
 
 - Web UI frontend (`aws-private-mcp-web` separate repo)
