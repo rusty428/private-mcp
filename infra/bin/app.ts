@@ -2,6 +2,7 @@
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
 import { config } from '../lib/config';
+import { AWSPrivateMCPStack } from '../lib/stacks/aws-private-mcp-stack';
 
 const app = new cdk.App();
 
@@ -10,7 +11,10 @@ const env = {
   region: config.region,
 };
 
-// Stacks will be added in Task 3
+new AWSPrivateMCPStack(app, 'AWSPrivateMCPStack', {
+  env,
+  config,
+});
 
 Object.entries(config.tags).forEach(([key, value]) => {
   cdk.Tags.of(app).add(key, value);
