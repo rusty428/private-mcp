@@ -6,7 +6,7 @@ export interface AWSPrivateMCPConfig {
 }
 
 export const config: AWSPrivateMCPConfig = {
-  accountId: '', // SET AFTER ACCOUNT CREATION
+  accountId: '951921971435',
   region: 'us-west-2',
   applicationId: 'aws-private-mcp',
   tags: {
