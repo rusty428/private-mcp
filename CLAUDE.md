@@ -82,7 +82,6 @@ aws-private-mcp-infra/
 │       ├── index.ts                  # Handler: gather yesterday's data, format, post to Slack
 │       └── functions/
 │           ├── getTodaysThoughts.ts  # ListVectors + GetVectors filtered by date
-│           ├── getTotalCount.ts      # Total vector count
 │           ├── formatReport.ts       # Build two-section Slack message
 │           └── postToSlack.ts        # Post to Slack channel
 ├── types/
