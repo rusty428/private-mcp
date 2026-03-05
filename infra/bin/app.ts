@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig();
 import * as cdk from 'aws-cdk-lib';
 import { config } from '../lib/config';
 import { AWSPrivateMCPStack } from '../lib/stacks/aws-private-mcp-stack';

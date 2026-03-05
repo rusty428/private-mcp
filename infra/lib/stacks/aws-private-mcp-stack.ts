@@ -106,8 +106,8 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       memorySize: 256,
       environment: {
         ...commonEnv,
-        SLACK_BOT_TOKEN: this.node.tryGetContext('slackBotToken') || '',
-        SLACK_CAPTURE_CHANNEL: this.node.tryGetContext('slackCaptureChannel') || '',
+        SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || '',
+        SLACK_CAPTURE_CHANNEL: process.env.SLACK_CAPTURE_CHANNEL || '',
         PROCESS_THOUGHT_FN_NAME: processThoughtFn.functionName,
       },
       bundling: {
