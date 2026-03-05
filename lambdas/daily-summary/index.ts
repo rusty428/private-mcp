@@ -12,7 +12,9 @@ interface DailySummaryResult {
 export const handler = async (): Promise<DailySummaryResult> => {
   const timezone = process.env.DAILY_SUMMARY_TIMEZONE || 'America/Los_Angeles';
   const now = new Date();
-  const todayDateStr = now.toLocaleDateString('en-CA', { timeZone: timezone });
+  // Scheduled run = morning summary of previous day
+  const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const todayDateStr = yesterday.toLocaleDateString('en-CA', { timeZone: timezone });
 
   const [thoughts, totalCount] = await Promise.all([
     getTodaysThoughts(todayDateStr),
