@@ -40,8 +40,12 @@ export function formatReport(
 
     if (m.type === 'decision') decisions.push(m.content);
     if (m.type === 'milestone') milestones.push(m.content);
-    for (const ai of m.action_items) actionItems.push(ai);
-    for (const p of m.people) peopleSet.add(p);
+    if (Array.isArray(m.action_items)) {
+      for (const ai of m.action_items) actionItems.push(ai);
+    }
+    if (Array.isArray(m.people)) {
+      for (const p of m.people) peopleSet.add(p);
+    }
   }
 
   const sourceStr = Object.entries(bySource)
