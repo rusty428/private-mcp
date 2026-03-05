@@ -28,9 +28,9 @@ export function formatReport(
 
   const byType: Record<string, number> = {};
   const bySource: Record<string, number> = {};
-  const decisions: string[] = [];
-  const actionItems: string[] = [];
-  const milestones: string[] = [];
+  const decisionsSet = new Set<string>();
+  const actionItemsSet = new Set<string>();
+  const milestonesSet = new Set<string>();
   const peopleSet = new Set<string>();
 
   for (const t of thoughts) {
@@ -38,10 +38,10 @@ export function formatReport(
     byType[m.type] = (byType[m.type] || 0) + 1;
     bySource[m.source] = (bySource[m.source] || 0) + 1;
 
-    if (m.type === 'decision') decisions.push(m.content);
-    if (m.type === 'milestone') milestones.push(m.content);
+    if (m.type === 'decision') decisionsSet.add(m.content);
+    if (m.type === 'milestone') milestonesSet.add(m.content);
     if (Array.isArray(m.action_items)) {
-      for (const ai of m.action_items) actionItems.push(ai);
+      for (const ai of m.action_items) actionItemsSet.add(ai);
     }
     if (Array.isArray(m.people)) {
       for (const p of m.people) peopleSet.add(p);
@@ -63,17 +63,17 @@ export function formatReport(
   text += `• Types: ${typeStr}\n`;
   text += `• Total stored: ${totalCount}\n`;
 
-  const hasHighlights = decisions.length > 0 || actionItems.length > 0 || milestones.length > 0 || peopleSet.size > 0;
+  const hasHighlights = decisionsSet.size > 0 || actionItemsSet.size > 0 || milestonesSet.size > 0 || peopleSet.size > 0;
   if (hasHighlights) {
     text += `\n*Highlights*\n`;
-    if (decisions.length > 0) {
-      text += `• Decisions: ${decisions.join('; ')}\n`;
+    if (decisionsSet.size > 0) {
+      text += `• Decisions: ${[...decisionsSet].join('; ')}\n`;
     }
-    if (actionItems.length > 0) {
-      text += `• Action items: ${actionItems.join('; ')}\n`;
+    if (actionItemsSet.size > 0) {
+      text += `• Action items: ${[...actionItemsSet].join('; ')}\n`;
     }
-    if (milestones.length > 0) {
-      text += `• Milestones: ${milestones.join('; ')}\n`;
+    if (milestonesSet.size > 0) {
+      text += `• Milestones: ${[...milestonesSet].join('; ')}\n`;
     }
     if (peopleSet.size > 0) {
       text += `• People mentioned: ${[...peopleSet].join(', ')}\n`;
