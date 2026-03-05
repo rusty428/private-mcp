@@ -20,13 +20,9 @@ pnpm diff              # Preview infrastructure changes (cdk diff)
 pnpm deploy            # Deploy all stacks (cdk deploy)
 ```
 
-Deploy with Slack config:
-```bash
-npx cdk deploy AWSPrivateMCPStack --profile private-mcp \
-  -c slackBotToken=<token> -c slackCaptureChannel=<channel-id>
-```
-
 AWS profile: `--profile private-mcp` (account `951921971435`, us-west-2)
+
+Slack config is loaded from `.env` automatically (see `.env.example` for required vars).
 
 ## Architecture
 
@@ -59,20 +55,20 @@ aws-private-mcp-infra/
 │       └── stacks/
 │           └── aws-private-mcp-stack.ts  # Single stack: all resources
 ├── lambdas/
-│   ├── process-thought/              # Core: embed + classify + store
-│   │   ├── index.ts                  # Handler (parallel Bedrock calls → S3 Vectors)
+│   ├── process-thought/              # Core: embed + classify + store + Slack reply
+│   │   ├── index.ts                  # Handler (parallel Bedrock calls → S3 Vectors → optional Slack reply)
 │   │   ├── functions/
 │   │   │   ├── generateEmbedding.ts  # Bedrock Titan Embeddings v2
 │   │   │   ├── classifyThought.ts    # Bedrock Claude 3 Haiku
-│   │   │   └── storeThought.ts       # S3 Vectors PutVectors
+│   │   │   ├── storeThought.ts       # S3 Vectors PutVectors
+│   │   │   ├── formatConfirmation.ts # Format Slack reply text
+│   │   │   └── replyInSlack.ts       # Post threaded Slack reply
 │   │   └── utils/
 │   │       └── createResponse.ts
-│   ├── ingest-thought/               # Slack webhook handler
+│   ├── ingest-thought/               # Slack webhook handler (async fire-and-forget)
 │   │   ├── index.ts                  # Slack event filtering + URL verification
 │   │   └── functions/
-│   │       ├── invokeProcessThought.ts
-│   │       ├── replyInSlack.ts
-│   │       └── formatConfirmation.ts
+│   │       └── invokeProcessThought.ts  # Async (Event) Lambda invocation
 │   └── mcp-server/                   # MCP protocol server
 │       ├── index.ts                  # Lambda entry (serverless-express)
 │       ├── server.ts                 # Express app + MCP tool registration
@@ -91,8 +87,8 @@ aws-private-mcp-infra/
 
 **Each Lambda is self-contained.** No shared code directories across Lambdas. Each Lambda has its own `functions/` and `utils/` subdirectories.
 
-- **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. Invoked by both other Lambdas.
-- **ingest-thought** — Slack webhook handler. Handles `url_verification` challenge, filters messages, invokes process-thought, replies in Slack thread.
+- **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. Invoked by both other Lambdas. When triggered from Slack (via `slackReply` context), replies in the Slack thread after processing.
+- **ingest-thought** — Slack webhook handler. Handles `url_verification` challenge, filters messages, invokes process-thought asynchronously (Event invocation), returns 200 immediately to avoid Slack's 3-second retry.
 - **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` in stateless mode. Express + `@codegenie/serverless-express`. Four tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`.
 
 ## Tech Stack
@@ -134,7 +130,7 @@ aws-private-mcp-infra/
 
 - **Never hardcode stack outputs** into config files. Pass between stacks via CDK properties.
 - **Tagging**: All resources get `Project: AWSPrivateMCP` and `ManagedBy: cdk` via `cdk.Tags.of(app)`.
-- **Slack secrets** passed as CDK context (`-c slackBotToken=...`), set as Lambda env vars.
+- **Slack secrets** loaded from `.env` via dotenv (gitignored). No `-c` context flags needed.
 - **S3 Vectors bucket and index** are CDK-managed L1 constructs (`CfnVectorBucket`, `CfnIndex`).
 
 ## AWS Account
@@ -165,5 +161,4 @@ Restart Claude Code after adding. The four MCP tools (`stats`, `browse_recent`, 
 ## Future Plans
 
 - Web UI frontend (`aws-private-mcp-web` separate repo)
-- Deduplication for Slack 3-second retry issue
 - Additional capture sources
