@@ -12,13 +12,19 @@ interface ClassificationResult {
   dates_mentioned: string[];
 }
 
-const SYSTEM_PROMPT = `Extract metadata from the user's captured thought. Return JSON with:
-- "people": array of people mentioned (empty if none)
-- "action_items": array of implied to-dos (empty if none)
-- "dates_mentioned": array of dates YYYY-MM-DD (empty if none)
-- "topics": array of 1-3 short topic tags, always lowercase (always at least one)
-- "type": one of "observation", "task", "idea", "reference", "person_note"
-Only extract what's explicitly there. Return valid JSON only.`;
+const SYSTEM_PROMPT = `Extract metadata from a captured thought or note. Return JSON with:
+
+- "type": one of "observation", "task", "idea", "reference", "person_note", "decision", "project_summary", "milestone"
+- "topics": array of 2-5 short topic tags, always lowercase
+- "people": array of actual human names mentioned (not products, companies, organizations, or technologies)
+- "action_items": array of explicit to-dos that haven't been done yet (not things already completed)
+- "dates_mentioned": array of dates in YYYY-MM-DD format (empty if none)
+
+Rules:
+- Only extract what is explicitly stated. Do not infer or guess.
+- "people" must be real human names. "Haiku", "Jeep", "WERA", "Bedrock" are NOT people.
+- "action_items" are things still needing to be done. If the text describes something already completed, it is not an action item.
+- Return valid JSON only, no other text.`;
 
 export async function classifyThought(text: string): Promise<ClassificationResult> {
   const response = await bedrock.send(new InvokeModelCommand({
