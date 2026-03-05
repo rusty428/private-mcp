@@ -13,14 +13,13 @@ interface DailySummaryReport {
 
 export function formatReport(
   todayDateStr: string,
-  thoughts: ThoughtWithKey[],
-  totalCount: number
+  thoughts: ThoughtWithKey[]
 ): DailySummaryReport {
   const count = thoughts.length;
 
   if (count === 0) {
     return {
-      text: `*Daily Summary — ${todayDateStr}*\n\nNo thoughts captured today. All-time total: ${totalCount}`,
+      text: `*Daily Summary — ${todayDateStr}*\n\nNo thoughts captured yesterday.`,
       thoughtCount: 0,
       dateStr: todayDateStr,
     };
@@ -61,7 +60,6 @@ export function formatReport(
   text += `*Performance*\n`;
   text += `• ${count} thoughts captured (${sourceStr})\n`;
   text += `• Types: ${typeStr}\n`;
-  text += `• All-time total: ${totalCount}\n`;
 
   const hasHighlights = decisionsSet.size > 0 || actionItemsSet.size > 0 || milestonesSet.size > 0 || peopleSet.size > 0;
   if (hasHighlights) {

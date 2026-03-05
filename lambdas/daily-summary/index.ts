@@ -1,5 +1,4 @@
 import { getTodaysThoughts } from './functions/getTodaysThoughts';
-import { getTotalCount } from './functions/getTotalCount';
 import { formatReport } from './functions/formatReport';
 import { postToSlack } from './functions/postToSlack';
 
@@ -16,12 +15,8 @@ export const handler = async (): Promise<DailySummaryResult> => {
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const todayDateStr = yesterday.toLocaleDateString('en-CA', { timeZone: timezone });
 
-  const [thoughts, totalCount] = await Promise.all([
-    getTodaysThoughts(todayDateStr),
-    getTotalCount(),
-  ]);
-
-  const report = formatReport(todayDateStr, thoughts, totalCount);
+  const thoughts = await getTodaysThoughts(todayDateStr);
+  const report = formatReport(todayDateStr, thoughts);
 
   const channel = process.env.SLACK_CAPTURE_CHANNEL;
   const botToken = process.env.SLACK_BOT_TOKEN;
