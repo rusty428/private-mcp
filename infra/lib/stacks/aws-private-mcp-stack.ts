@@ -4,6 +4,8 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3vectors from 'aws-cdk-lib/aws-s3vectors';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { Construct } from 'constructs';
 import { AWSPrivateMCPConfig } from '../config';
 import {
@@ -136,6 +138,43 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     processThoughtFn.grantInvoke(mcpServerFn);
     mcpServerFn.addToRolePolicy(s3VectorsPolicy);
     mcpServerFn.addToRolePolicy(bedrockPolicy);
+
+    // --- daily-summary Lambda ---
+    const dailySummaryFn = new nodejs.NodejsFunction(this, 'DailySummaryFn', {
+      entry: 'lambdas/daily-summary/index.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        ...commonEnv,
+        SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || '',
+        SLACK_CAPTURE_CHANNEL: process.env.SLACK_CAPTURE_CHANNEL || '',
+        DAILY_SUMMARY_TIMEZONE: process.env.DAILY_SUMMARY_TIMEZONE || 'America/Los_Angeles',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+    dailySummaryFn.addToRolePolicy(s3VectorsPolicy);
+
+    // EventBridge scheduled rule for daily summary
+    const summaryHour = process.env.DAILY_SUMMARY_HOUR || '18';
+    new events.Rule(this, 'DailySummarySchedule', {
+      schedule: events.Schedule.cron({
+        minute: '0',
+        hour: summaryHour,
+        month: '*',
+        weekDay: '*',
+        year: '*',
+      }),
+      targets: [new targets.LambdaFunction(dailySummaryFn)],
+    });
+
+    // Allow mcp-server to invoke daily-summary
+    dailySummaryFn.grantInvoke(mcpServerFn);
+    mcpServerFn.addEnvironment('DAILY_SUMMARY_FN_NAME', dailySummaryFn.functionName);
 
     // --- API Gateway ---
     const api = new apigateway.RestApi(this, 'AWSPrivateMCPApi', {

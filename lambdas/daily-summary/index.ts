@@ -1,0 +1,32 @@
+import { getTodaysThoughts } from './functions/getTodaysThoughts';
+import { getTotalCount } from './functions/getTotalCount';
+import { formatReport } from './functions/formatReport';
+import { postToSlack } from './functions/postToSlack';
+
+interface DailySummaryResult {
+  text: string;
+  thoughtCount: number;
+  dateStr: string;
+}
+
+export const handler = async (): Promise<DailySummaryResult> => {
+  const timezone = process.env.DAILY_SUMMARY_TIMEZONE || 'America/Los_Angeles';
+  const now = new Date();
+  const todayDateStr = now.toLocaleDateString('en-CA', { timeZone: timezone });
+
+  const [thoughts, totalCount] = await Promise.all([
+    getTodaysThoughts(todayDateStr),
+    getTotalCount(),
+  ]);
+
+  const report = formatReport(todayDateStr, thoughts, totalCount);
+
+  const channel = process.env.SLACK_CAPTURE_CHANNEL;
+  const botToken = process.env.SLACK_BOT_TOKEN;
+
+  if (channel && botToken) {
+    await postToSlack(channel, botToken, report.text);
+  }
+
+  return report;
+};

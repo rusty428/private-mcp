@@ -6,6 +6,7 @@ import { searchThoughts } from './functions/searchThoughts';
 import { browseRecent } from './functions/browseRecent';
 import { getStats } from './functions/getStats';
 import { captureThought } from './functions/captureThought';
+import { invokeDailySummary } from './functions/invokeDailySummary';
 
 const app: Express = express();
 app.use(express.json());
@@ -86,6 +87,20 @@ function createServer(): McpServer {
       if (result.action_items.length > 0) confirmation += `\nAction items: ${result.action_items.join('; ')}`;
       return {
         content: [{ type: 'text' as const, text: confirmation }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'daily_summary',
+    {
+      title: 'Daily Summary',
+      description: 'Generate and post today\'s daily summary to Slack. Returns the summary text.',
+    },
+    async () => {
+      const result = await invokeDailySummary();
+      return {
+        content: [{ type: 'text' as const, text: result.text }],
       };
     }
   );
