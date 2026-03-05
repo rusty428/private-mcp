@@ -1,7 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { invokeProcessThought } from './functions/invokeProcessThought';
-import { replyInSlack } from './functions/replyInSlack';
-import { formatConfirmation } from './functions/formatConfirmation';
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -37,18 +35,16 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return { statusCode: 200, headers: {}, body: 'ok' };
     }
 
-    const result = await invokeProcessThought(
-      messageText,
-      'slack',
-      `slack_ts:${messageTs}`
-    );
-
-    const confirmation = formatConfirmation(result);
-    await replyInSlack(channel, messageTs, confirmation);
+    // Fire-and-forget: invoke process-thought asynchronously so Slack gets 200 within 3s
+    await invokeProcessThought(messageText, 'slack', `slack_ts:${messageTs}`, {
+      channel,
+      threadTs: messageTs,
+      botToken: process.env.SLACK_BOT_TOKEN || '',
+    });
 
     return { statusCode: 200, headers: {}, body: 'ok' };
   } catch (err) {
     console.error('ingest-thought error:', err);
-    return { statusCode: 500, headers: {}, body: 'error' };
+    return { statusCode: 200, headers: {}, body: 'ok' };
   }
 };

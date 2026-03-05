@@ -2,13 +2,22 @@ import { ProcessThoughtInput, ProcessThoughtResult, ThoughtMetadata } from '../.
 import { generateEmbedding } from './functions/generateEmbedding';
 import { classifyThought } from './functions/classifyThought';
 import { storeThought } from './functions/storeThought';
+import { formatConfirmation } from './functions/formatConfirmation';
+import { replyInSlack } from './functions/replyInSlack';
 import { randomUUID } from 'crypto';
+
+interface SlackReplyContext {
+  channel: string;
+  threadTs: string;
+  botToken: string;
+}
 
 interface LambdaEvent {
   body?: string;
   source?: string;
   text?: string;
   sourceRef?: string;
+  slackReply?: SlackReplyContext;
 }
 
 export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult> => {
@@ -43,7 +52,7 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
 
   await storeThought(id, embedding, metadata);
 
-  return {
+  const result: ProcessThoughtResult = {
     id,
     type: classification.type,
     topics: classification.topics,
@@ -51,4 +60,17 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
     action_items: classification.action_items,
     created_at: createdAt,
   };
+
+  // Reply in Slack thread if this was triggered from Slack
+  if (event.slackReply?.botToken) {
+    const confirmation = formatConfirmation(result);
+    await replyInSlack(
+      event.slackReply.channel,
+      event.slackReply.threadTs,
+      event.slackReply.botToken,
+      confirmation
+    );
+  }
+
+  return result;
 };
