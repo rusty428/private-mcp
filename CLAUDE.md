@@ -69,14 +69,22 @@ aws-private-mcp-infra/
 │   │   ├── index.ts                  # Slack event filtering + URL verification
 │   │   └── functions/
 │   │       └── invokeProcessThought.ts  # Async (Event) Lambda invocation
-│   └── mcp-server/                   # MCP protocol server
-│       ├── index.ts                  # Lambda entry (serverless-express)
-│       ├── server.ts                 # Express app + MCP tool registration
+│   ├── mcp-server/                   # MCP protocol server
+│   │   ├── index.ts                  # Lambda entry (serverless-express)
+│   │   ├── server.ts                 # Express app + MCP tool registration
+│   │   └── functions/
+│   │       ├── searchThoughts.ts     # Semantic search via S3 Vectors
+│   │       ├── browseRecent.ts       # List + filter recent thoughts
+│   │       ├── getStats.ts           # Aggregate stats
+│   │       ├── captureThought.ts     # Invoke process-thought
+│   │       └── invokeDailySummary.ts # Invoke daily-summary Lambda
+│   └── daily-summary/                # Daily report (EventBridge + MCP on-demand)
+│       ├── index.ts                  # Handler: gather yesterday's data, format, post to Slack
 │       └── functions/
-│           ├── searchThoughts.ts     # Semantic search via S3 Vectors
-│           ├── browseRecent.ts       # List + filter recent thoughts
-│           ├── getStats.ts           # Aggregate stats
-│           └── captureThought.ts     # Invoke process-thought
+│           ├── getTodaysThoughts.ts  # ListVectors + GetVectors filtered by date
+│           ├── getTotalCount.ts      # Total vector count
+│           ├── formatReport.ts       # Build two-section Slack message
+│           └── postToSlack.ts        # Post to Slack channel
 ├── types/
 │   ├── thought.ts                    # ThoughtMetadata, ProcessThoughtInput/Result, etc.
 │   └── config.ts                     # Constants: bucket name, index, dimensions, model IDs
@@ -89,7 +97,8 @@ aws-private-mcp-infra/
 
 - **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. Invoked by both other Lambdas. When triggered from Slack (via `slackReply` context), replies in the Slack thread after processing.
 - **ingest-thought** — Slack webhook handler. Handles `url_verification` challenge, filters messages, invokes process-thought asynchronously (Event invocation), returns 200 immediately to avoid Slack's 3-second retry.
-- **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` in stateless mode. Express + `@codegenie/serverless-express`. Four tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`.
+- **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` in stateless mode. Express + `@codegenie/serverless-express`. Five tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`.
+- **daily-summary** — Generates a two-section report (performance metrics + content highlights) and posts to Slack. Triggered daily by EventBridge cron (~7am Pacific) for previous day's thoughts, or on-demand via `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
 
 ## Tech Stack
 
@@ -101,6 +110,8 @@ aws-private-mcp-infra/
 - **API**: API Gateway REST API, stage `api`
 - **MCP Auth**: API Gateway API keys + usage plan
 - **MCP SDK**: `@modelcontextprotocol/sdk` — imports from `sdk/server/mcp.js` and `sdk/server/streamableHttp.js`
+- **Scheduling**: EventBridge cron rule for daily summary
+- **Config**: dotenv for secrets and schedule config (`.env`, gitignored)
 
 ## API Endpoints
 
@@ -119,6 +130,7 @@ aws-private-mcp-infra/
 | `browse_recent` | `limit?, type?, topic?` | List recent thoughts with optional filters |
 | `stats` | none | Count, type breakdown, top topics, date range |
 | `capture_thought` | `text, source?` | Save a thought via process-thought |
+| `daily_summary` | none | Generate and post yesterday's daily summary to Slack |
 
 ## S3 Vectors Gotchas (MUST FOLLOW)
 
@@ -132,6 +144,7 @@ aws-private-mcp-infra/
 - **Tagging**: All resources get `Project: AWSPrivateMCP` and `ManagedBy: cdk` via `cdk.Tags.of(app)`.
 - **Slack secrets** loaded from `.env` via dotenv (gitignored). No `-c` context flags needed.
 - **S3 Vectors bucket and index** are CDK-managed L1 constructs (`CfnVectorBucket`, `CfnIndex`).
+- **EventBridge schedule** for daily summary uses `DAILY_SUMMARY_HOUR` from `.env` (UTC). Cron fires daily at that hour.
 
 ## AWS Account
 
@@ -156,7 +169,7 @@ claude mcp add --transport http aws-private-mcp \
   --header "x-api-key: $API_KEY"
 ```
 
-Restart Claude Code after adding. The four MCP tools (`stats`, `browse_recent`, `search_thoughts`, `capture_thought`) will be available as native tools.
+Restart Claude Code after adding. The five MCP tools (`stats`, `browse_recent`, `search_thoughts`, `capture_thought`, `daily_summary`) will be available as native tools.
 
 ## Future Plans
 
