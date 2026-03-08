@@ -162,11 +162,13 @@ To connect Claude Code to this MCP server as a native tool provider:
 API_KEY=$(aws apigateway get-api-key --api-key fe5nyv6n00 --include-value \
   --profile private-mcp --region us-west-2 --query 'value' --output text)
 
-# Register the MCP server
-claude mcp add --transport http aws-private-mcp \
+# Register the MCP server (--scope user makes it available in ALL projects)
+claude mcp add --transport http --scope user aws-private-mcp \
   "https://zjyd52hk73.execute-api.us-west-2.amazonaws.com/api/mcp" \
   --header "x-api-key: $API_KEY"
 ```
+
+**Always use `--scope user`.** The default `--scope local` only registers the MCP for the current project directory — sessions in other projects won't have access to the tools.
 
 Restart Claude Code after adding. The five MCP tools (`stats`, `browse_recent`, `search_thoughts`, `capture_thought`, `daily_summary`) will be available as native tools.
 

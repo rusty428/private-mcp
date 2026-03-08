@@ -94,10 +94,45 @@ Get the channel ID: right-click channel → View channel details → scroll to b
 ### Claude Code
 
 ```bash
-claude mcp add --transport http aws-private-mcp \
+claude mcp add --transport http --scope user aws-private-mcp \
   https://<API_GATEWAY_URL>/mcp \
   --header "x-api-key: <YOUR_API_KEY>"
 ```
+
+**The `--scope user` flag is critical.** Without it, the MCP server is only registered for the current project directory. With `--scope user`, the MCP tools are available in every Claude Code session regardless of which project you're working in. Available scopes:
+
+| Scope | Registered in | Available in |
+|---|---|---|
+| `local` (default) | `.claude.json` per project path | Only that project directory |
+| `project` | `.claude/settings.json` in repo | Anyone who clones the repo |
+| `user` | `~/.claude.json` | All projects on your machine |
+
+### SessionEnd Hook (optional, recommended)
+
+The MCP tools are only available when Claude Code is running. To ensure session activity is always captured — even if the AI doesn't proactively call `capture_thought` — add a SessionEnd hook to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/mcp-session-hook.sh",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+The hook script curls `capture_thought` directly via the MCP HTTP API on every session end. It checks for a session summary JSON (written by a `createSessionSummary` skill or similar) and posts rich content if found, otherwise falls back to a basic session ping with project name, git branch, and timestamp.
+
+See `~/.claude/scripts/mcp-session-hook.sh` for the reference implementation.
 
 ### Claude Desktop
 
@@ -177,6 +212,24 @@ aws logs tail "/aws/lambda/<function-name>" --since 5m --profile private-mcp --r
 ### S3 Vectors empty array error
 
 S3 Vectors does not allow empty arrays in metadata. The `storeThought` function filters these out. If you add new array fields to metadata, apply the same pattern.
+
+### MCP tools missing in some projects
+
+If MCP tools work in one project but not another, the server was registered with `--scope local` (the default) instead of `--scope user`. Fix by re-registering:
+
+```bash
+claude mcp remove aws-private-mcp --scope local
+claude mcp add --transport http --scope user aws-private-mcp \
+  https://<API_GATEWAY_URL>/mcp \
+  --header "x-api-key: <YOUR_API_KEY>"
+```
+
+### Daily summary shows zero activity
+
+The daily summary reports on the previous day's thoughts. If zero thoughts were captured, check:
+1. MCP server is registered at `--scope user` (see above)
+2. AWS SSO token hasn't expired (run `aws sso login --profile private-mcp`)
+3. The SessionEnd hook is configured and the script is executable
 
 ### Duplicate Slack replies
 
