@@ -85,12 +85,23 @@ export async function searchThoughts(
   const embedResult = JSON.parse(new TextDecoder().decode(embedResponse.body));
   const queryVector = embedResult.embedding;
 
-  const filterConditions: any[] = [
-    { quality: { '$ne': 'noise' } },
-  ];
+  // Exclude noise, but include old records that lack a quality field
+  const noiseFilter = {
+    '$or': [
+      { quality: { '$ne': 'noise' } },
+      { quality: { '$exists': false } },
+    ],
+  };
+
+  const filterConditions: any[] = [noiseFilter];
 
   if (project) {
-    filterConditions.push({ project: { '$eq': project } });
+    filterConditions.push({
+      '$or': [
+        { project: { '$eq': project } },
+        { project: { '$exists': false } },
+      ],
+    });
   }
 
   const filter = filterConditions.length === 1
