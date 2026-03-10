@@ -195,6 +195,26 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     dailySummaryFn.grantInvoke(mcpServerFn);
     mcpServerFn.addEnvironment('DAILY_SUMMARY_FN_NAME', dailySummaryFn.functionName);
 
+    // --- rest-api Lambda (UI backend) ---
+    const restApiFn = new nodejs.NodejsFunction(this, 'RestApiFn', {
+      entry: 'lambdas/rest-api/index.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 512,
+      environment: {
+        ...commonEnv,
+        PROCESS_THOUGHT_FN_NAME: processThoughtFn.functionName,
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+    restApiFn.addToRolePolicy(s3VectorsPolicy);
+    restApiFn.addToRolePolicy(bedrockPolicy);
+    processThoughtFn.grantInvoke(restApiFn);
+
     // --- API Gateway ---
     const api = new apigateway.RestApi(this, 'AWSPrivateMCPApi', {
       restApiName: 'AWSPrivateMCP',
@@ -241,6 +261,31 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     mcpResource.addMethod('DELETE', new apigateway.LambdaIntegration(mcpServerFn), {
       apiKeyRequired: true,
     });
+
+    // REST API endpoints for UI (API key secured)
+    const restApiIntegration = new apigateway.LambdaIntegration(restApiFn);
+
+    const thoughtsResource = api.root.addResource('thoughts');
+    thoughtsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+
+    const thoughtByIdResource = thoughtsResource.addResource('{id}');
+    thoughtByIdResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+    thoughtByIdResource.addMethod('PUT', restApiIntegration, { apiKeyRequired: true });
+    thoughtByIdResource.addMethod('DELETE', restApiIntegration, { apiKeyRequired: true });
+
+    const searchResource = api.root.addResource('search');
+    searchResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
+
+    const captureResource = api.root.addResource('capture');
+    captureResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
+
+    const statsResource = api.root.addResource('stats');
+    const timeseriesResource = statsResource.addResource('timeseries');
+    timeseriesResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+
+    const reportsResource = api.root.addResource('reports');
+    const generateResource = reportsResource.addResource('generate');
+    generateResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
 
     // --- Outputs ---
     new cdk.CfnOutput(this, 'ApiUrl', {
