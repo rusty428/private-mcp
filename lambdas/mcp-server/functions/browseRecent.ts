@@ -5,7 +5,8 @@ const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 export async function browseRecent(
   limit: number = 20,
   type?: string,
-  topic?: string
+  topic?: string,
+  project?: string,
 ): Promise<any[]> {
   const listResponse = await s3vectors.send(new ListVectorsCommand({
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
@@ -30,6 +31,9 @@ export async function browseRecent(
     metadata: v.metadata,
   }));
 
+  // Exclude noise (treat missing quality as standard for backward compat)
+  results = results.filter((r: any) => r.metadata?.quality !== 'noise');
+
   if (type) {
     results = results.filter((r: any) => r.metadata?.type === type);
   }
@@ -38,6 +42,10 @@ export async function browseRecent(
     results = results.filter((r: any) =>
       Array.isArray(r.metadata?.topics) && r.metadata.topics.includes(topic)
     );
+  }
+
+  if (project) {
+    results = results.filter((r: any) => r.metadata?.project === project);
   }
 
   results.sort((a: any, b: any) =>

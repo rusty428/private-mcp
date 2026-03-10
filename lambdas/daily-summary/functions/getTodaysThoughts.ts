@@ -31,7 +31,9 @@ export async function getTodaysThoughts(todayDateStr: string): Promise<ThoughtWi
     if (getResponse.vectors) {
       for (const v of getResponse.vectors) {
         const meta = v.metadata as unknown as ThoughtMetadata;
-        if (meta?.created_at?.startsWith(todayDateStr)) {
+        const dateStr = meta?.thought_date || meta?.created_at?.slice(0, 10) || '';
+        const isNoise = meta?.quality === 'noise';
+        if (dateStr === todayDateStr && !isNoise) {
           allThoughts.push({ key: v.key!, metadata: meta });
         }
       }

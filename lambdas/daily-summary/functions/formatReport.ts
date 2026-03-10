@@ -37,8 +37,8 @@ export function formatReport(
     byType[m.type] = (byType[m.type] || 0) + 1;
     bySource[m.source] = (bySource[m.source] || 0) + 1;
 
-    if (m.type === 'decision') decisionsSet.add(m.content);
-    if (m.type === 'milestone') milestonesSet.add(m.content);
+    if (m.type === 'decision') decisionsSet.add(m.summary || m.content);
+    if (m.type === 'milestone') milestonesSet.add(m.summary || m.content);
     if (Array.isArray(m.action_items)) {
       for (const ai of m.action_items) actionItemsSet.add(ai);
     }

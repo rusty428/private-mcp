@@ -26,10 +26,12 @@ function createServer(): McpServer {
         query: z.string().describe('What to search for - natural language'),
         limit: z.number().optional().default(10).describe('Max results to return'),
         threshold: z.number().optional().default(0.5).describe('Similarity threshold (0=exact, 2=opposite). Lower = stricter.'),
+        project: z.string().optional().describe('Filter to a specific project'),
+        since: z.string().optional().describe('Time filter: today, yesterday, this week, last week, this month, last month, N days ago, or YYYY-MM-DD'),
       },
     },
-    async ({ query, limit, threshold }) => {
-      const results = await searchThoughts(query, limit, threshold);
+    async ({ query, limit, threshold, project, since }) => {
+      const results = await searchThoughts(query, limit, threshold, project, since);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }],
       };
@@ -40,15 +42,16 @@ function createServer(): McpServer {
     'browse_recent',
     {
       title: 'Browse Recent Thoughts',
-      description: 'List recent thoughts, optionally filtered by type or topic.',
+      description: 'List recent thoughts, optionally filtered by type, topic, or project.',
       inputSchema: {
         limit: z.number().optional().default(20).describe('Max results'),
-        type: z.string().optional().describe('Filter by type: observation, task, idea, reference, person_note'),
+        type: z.string().optional().describe('Filter by type: observation, task, idea, reference, person_note, decision, project_summary, milestone'),
         topic: z.string().optional().describe('Filter by topic tag'),
+        project: z.string().optional().describe('Filter to a specific project'),
       },
     },
-    async ({ limit, type, topic }) => {
-      const results = await browseRecent(limit, type, topic);
+    async ({ limit, type, topic, project }) => {
+      const results = await browseRecent(limit, type, topic, project);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }],
       };
@@ -77,14 +80,19 @@ function createServer(): McpServer {
       inputSchema: {
         text: z.string().describe('The thought to capture'),
         source: z.string().optional().default('mcp').describe('Where this thought came from'),
+        project: z.string().optional().describe('Project name this thought relates to'),
+        session_id: z.string().optional().describe('Claude Code session ID'),
+        session_name: z.string().optional().describe('Claude Code session name (/rename label)'),
       },
     },
-    async ({ text, source }) => {
-      const result = await captureThought(text, source);
-      let confirmation = `Captured as *${result.type}*`;
-      if (result.topics.length > 0) confirmation += ` - ${result.topics.join(', ')}`;
-      if (result.people.length > 0) confirmation += `\nPeople: ${result.people.join(', ')}`;
-      if (result.action_items.length > 0) confirmation += `\nAction items: ${result.action_items.join('; ')}`;
+    async ({ text, source, project, session_id, session_name }) => {
+      const result = await captureThought(text, source, project, session_id, session_name);
+      let confirmation = `Captured (${result.quality})`;
+      if (result.quality === 'noise') {
+        confirmation += ' — stored but won\'t appear in search';
+      } else {
+        confirmation += ' — enrichment processing async';
+      }
       return {
         content: [{ type: 'text' as const, text: confirmation }],
       };

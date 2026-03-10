@@ -96,8 +96,27 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       },
     });
     processThoughtFn.addToRolePolicy(s3VectorsPolicy);
-    processThoughtFn.addToRolePolicy(bedrockPolicy);
-    processThoughtFn.addToRolePolicy(marketplacePolicy);
+
+    // --- enrich-thought Lambda (Stage 2 — async enrichment) ---
+    const enrichThoughtFn = new nodejs.NodejsFunction(this, 'EnrichThoughtFn', {
+      entry: 'lambdas/enrich-thought/index.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 256,
+      environment: commonEnv,
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+    enrichThoughtFn.addToRolePolicy(s3VectorsPolicy);
+    enrichThoughtFn.addToRolePolicy(bedrockPolicy);
+    enrichThoughtFn.addToRolePolicy(marketplacePolicy);
+
+    // process-thought invokes enrich-thought async
+    enrichThoughtFn.grantInvoke(processThoughtFn);
+    processThoughtFn.addEnvironment('ENRICH_THOUGHT_FN_NAME', enrichThoughtFn.functionName);
 
     // --- ingest-thought Lambda ---
     const ingestThoughtFn = new nodejs.NodejsFunction(this, 'IngestThoughtFn', {

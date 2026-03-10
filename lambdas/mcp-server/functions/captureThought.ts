@@ -5,12 +5,15 @@ const lambda = new LambdaClient({ region: process.env.REGION });
 
 export async function captureThought(
   text: string,
-  source: string = 'mcp'
+  source: string = 'mcp',
+  project?: string,
+  session_id?: string,
+  session_name?: string,
 ): Promise<ProcessThoughtResult> {
   const response = await lambda.send(new InvokeCommand({
     FunctionName: process.env.PROCESS_THOUGHT_FN_NAME,
     InvocationType: 'RequestResponse',
-    Payload: Buffer.from(JSON.stringify({ text, source })),
+    Payload: Buffer.from(JSON.stringify({ text, source, project, session_id, session_name })),
   }));
 
   const payload = JSON.parse(new TextDecoder().decode(response.Payload));
