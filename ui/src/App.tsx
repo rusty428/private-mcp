@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import TopNavigation from '@cloudscape-design/components/top-navigation';
 import AppLayout from '@cloudscape-design/components/app-layout';
+import { Dashboard } from './pages/Dashboard/Dashboard';
 
 function AppContent() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ function AppContent() {
         toolsHide
         content={
           <Routes>
-            <Route path="/" element={<div>Dashboard (coming next)</div>} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/browse" element={<div>Browse</div>} />
             <Route path="/search" element={<div>Search</div>} />
             <Route path="/reports" element={<div>Reports</div>} />
