@@ -1,29 +1,73 @@
-export type ThoughtType = 'observation' | 'task' | 'idea' | 'reference' | 'person_note' | 'decision' | 'project_summary' | 'milestone';
+export type ThoughtType =
+  | 'observation'
+  | 'task'
+  | 'idea'
+  | 'reference'
+  | 'person_note'
+  | 'decision'
+  | 'project_summary'
+  | 'milestone';
+
+export type ThoughtSource =
+  | 'mcp'
+  | 'user-prompt'
+  | 'session-summary'
+  | 'session-hook'
+  | 'slack'
+  | 'memory-seed'
+  | 'api';
+
+export type ThoughtQuality = 'high' | 'standard' | 'noise';
+
+export const VALID_THOUGHT_TYPES: ThoughtType[] = [
+  'observation', 'task', 'idea', 'reference', 'person_note',
+  'decision', 'project_summary', 'milestone',
+];
 
 export interface ThoughtMetadata {
   content: string;
-  type: ThoughtType;
+  summary: string;
+  type: ThoughtType | 'pending';
   topics: string[];
   people: string[];
   action_items: string[];
   dates_mentioned: string[];
-  source: 'slack' | 'mcp' | 'api' | 'memory-seed';
-  source_ref?: string;
+  project: string;
+  related_projects: string[];
+  source: ThoughtSource;
+  source_ref: string;
+  session_id: string;
+  session_name: string;
+  quality: ThoughtQuality;
+  thought_date: string;
   created_at: string;
 }
 
 export interface ProcessThoughtInput {
   text: string;
-  source: 'slack' | 'mcp' | 'api' | 'memory-seed';
+  source: ThoughtSource;
   sourceRef?: string;
+  project?: string;
+  session_id?: string;
+  session_name?: string;
 }
 
 export interface ProcessThoughtResult {
   id: string;
-  type: ThoughtType;
-  topics: string[];
-  people: string[];
-  action_items: string[];
+  quality: ThoughtQuality;
+  thought_date: string;
+  created_at: string;
+}
+
+export interface EnrichThoughtInput {
+  id: string;
+  content: string;
+  source: ThoughtSource;
+  project: string;
+  session_id: string;
+  session_name: string;
+  source_ref: string;
+  thought_date: string;
   created_at: string;
 }
 
