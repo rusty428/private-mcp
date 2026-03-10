@@ -5,6 +5,8 @@ import { editThought } from './functions/editThought';
 import { deleteThought } from './functions/deleteThought';
 import { searchThoughts } from './functions/searchThoughts';
 import { captureThought } from './functions/captureThought';
+import { getTimeSeries } from './functions/getTimeSeries';
+import { generateNarrative } from './functions/generateNarrative';
 
 const app: Express = express();
 app.use(express.json());
@@ -74,6 +76,31 @@ app.post('/capture', async (req, res) => {
     if (!req.body.text) return res.status(400).json({ error: 'text is required' });
     const result = await captureThought(req.body);
     res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/stats/timeseries', async (req, res) => {
+  try {
+    const results = await getTimeSeries({
+      startDate: req.query.startDate as string,
+      endDate: req.query.endDate as string,
+      interval: req.query.interval as 'day' | 'week',
+    });
+    res.json(results);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/reports/generate', async (req, res) => {
+  try {
+    if (!req.body.startDate || !req.body.endDate) {
+      return res.status(400).json({ error: 'startDate and endDate are required' });
+    }
+    const narrative = await generateNarrative(req.body);
+    res.json({ narrative });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
