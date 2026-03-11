@@ -4,6 +4,7 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3vectors from 'aws-cdk-lib/aws-s3vectors';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { Construct } from 'constructs';
@@ -128,6 +129,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       environment: {
         ...commonEnv,
         SLACK_BOT_TOKEN: process.env.SLACK_BOT_TOKEN || '',
+        SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET || '',
         SLACK_CAPTURE_CHANNEL: process.env.SLACK_CAPTURE_CHANNEL || '',
         PROCESS_THOUGHT_FN_NAME: processThoughtFn.functionName,
       },
@@ -205,6 +207,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       environment: {
         ...commonEnv,
         PROCESS_THOUGHT_FN_NAME: processThoughtFn.functionName,
+        ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000',
       },
       bundling: {
         minify: true,
@@ -215,16 +218,36 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     restApiFn.addToRolePolicy(bedrockPolicy);
     processThoughtFn.grantInvoke(restApiFn);
 
+    // --- API Gateway Access Logs ---
+    const apiLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
+      logGroupName: '/aws/apigateway/AWSPrivateMCP',
+      retention: logs.RetentionDays.ONE_MONTH,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // --- API Gateway ---
     const api = new apigateway.RestApi(this, 'AWSPrivateMCPApi', {
       restApiName: 'AWSPrivateMCP',
       description: 'AWSPrivateMCP - Private MCP server API',
       deployOptions: {
         stageName: 'api',
+        accessLogDestination: new apigateway.LogGroupLogDestination(apiLogGroup),
+        accessLogFormat: apigateway.AccessLogFormat.jsonWithStandardFields({
+          caller: true,
+          httpMethod: true,
+          ip: true,
+          protocol: true,
+          requestTime: true,
+          resourcePath: true,
+          responseLength: true,
+          status: true,
+          user: true,
+        }),
+        loggingLevel: apigateway.MethodLoggingLevel.ERROR,
       },
       defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(','),
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
       },
     });
@@ -286,6 +309,29 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     const reportsResource = api.root.addResource('reports');
     const generateResource = reportsResource.addResource('generate');
     generateResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
+
+    // --- Optional: API alarms (only if ALERT_EMAIL is configured) ---
+    if (process.env.ALERT_EMAIL) {
+      const sns = cdk.aws_sns;
+      const subscriptions = cdk.aws_sns_subscriptions;
+      const cloudwatch = cdk.aws_cloudwatch;
+      const actions = cdk.aws_cloudwatch_actions;
+
+      const alarmTopic = new sns.Topic(this, 'ApiAlarmTopic', {
+        topicName: 'AWSPrivateMCP-ApiAlarms',
+      });
+      alarmTopic.addSubscription(
+        new subscriptions.EmailSubscription(process.env.ALERT_EMAIL)
+      );
+
+      const alarm5xx = new cloudwatch.Alarm(this, 'Api5xxAlarm', {
+        metric: api.metricServerError({ period: cdk.Duration.minutes(5) }),
+        threshold: 5,
+        evaluationPeriods: 1,
+        alarmDescription: 'AWSPrivateMCP API: 5+ server errors in 5 minutes',
+      });
+      alarm5xx.addAlarmAction(new actions.SnsAction(alarmTopic));
+    }
 
     // --- Outputs ---
     new cdk.CfnOutput(this, 'ApiUrl', {

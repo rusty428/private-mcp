@@ -1,4 +1,5 @@
 import { ProcessThoughtInput, ProcessThoughtResult, ThoughtMetadata, EnrichThoughtInput } from '../../types/thought';
+import { MAX_TEXT_LENGTH } from '../../types/validation';
 import { triageThought } from './functions/triageThought';
 import { getPlaceholderVector } from './functions/placeholderVector';
 import { storeThought } from './functions/storeThought';
@@ -40,6 +41,10 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
 
   if (!input.text || input.text.trim() === '') {
     throw new Error('Text is required');
+  }
+
+  if (input.text.length > MAX_TEXT_LENGTH) {
+    throw new Error(`Text too long. Maximum ${MAX_TEXT_LENGTH} characters, got ${input.text.length}.`);
   }
 
   const id = randomUUID();

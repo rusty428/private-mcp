@@ -161,6 +161,44 @@ Settings → Connectors → Add custom connector:
 
 Note: no space after the colon in the header value.
 
+## Security
+
+### Authentication
+
+All API endpoints require an API Gateway API key (`x-api-key` header), except the Slack webhook (`/slack/events`), which is publicly accessible but verified via signature.
+
+### Slack Webhook Verification
+
+Incoming Slack requests are verified using HMAC-SHA256 signature validation with the `SLACK_SIGNING_SECRET` (stored in `.env`). Includes replay protection — requests with timestamps older than 5 minutes are rejected.
+
+### CORS
+
+CORS is restricted to `http://localhost:5173` and `http://localhost:3000` by default. To allow additional origins (e.g., a CloudFront distribution for a deployed UI), set the `ALLOWED_ORIGINS` environment variable in `.env` as a comma-separated list.
+
+### Input Validation
+
+All REST API endpoints validate input:
+
+- Thought IDs must be valid UUIDs
+- Dates must match `YYYY-MM-DD` format
+- Text fields capped at 10,000 characters
+- Query strings capped at 1,000 characters
+- Result count parameters have upper-bound caps
+- Type and source fields validated against allowed enums
+- Request body size capped at 50KB
+
+### Secrets Management
+
+Slack tokens (`SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`) are stored in `.env` (gitignored) and passed as Lambda environment variables at deploy time. For multi-user AWS accounts, consider migrating to AWS Secrets Manager.
+
+### IAM
+
+Lambda execution roles follow least-privilege: scoped to the specific S3 Vectors bucket and required Bedrock model ARNs.
+
+### Logging and Alarms
+
+API Gateway access logs are sent to CloudWatch with 30-day retention. All Lambda handlers use structured error logging. To enable a CloudWatch alarm on 5xx errors (via SNS email notification), set `ALERT_EMAIL` in `.env`.
+
 ## Project Structure
 
 ```

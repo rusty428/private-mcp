@@ -2,6 +2,7 @@ import { S3VectorsClient, QueryVectorsCommand } from '@aws-sdk/client-s3vectors'
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { EMBEDDING_MODEL_ID, VECTOR_DIMENSIONS } from '../../../types/config';
 import { ThoughtSearchResult } from '../../../types/thought';
+import { MAX_QUERY_LENGTH, MAX_SEARCH_LIMIT } from '../../../types/validation';
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 const bedrock = new BedrockRuntimeClient({ region: process.env.REGION });
@@ -71,6 +72,11 @@ export async function searchThoughts(
   project?: string,
   since?: string,
 ): Promise<ThoughtSearchResult[]> {
+  if (query.length > MAX_QUERY_LENGTH) {
+    throw new Error(`Query too long. Maximum ${MAX_QUERY_LENGTH} characters, got ${query.length}.`);
+  }
+  limit = Math.min(limit, MAX_SEARCH_LIMIT);
+
   const embedResponse = await bedrock.send(new InvokeModelCommand({
     modelId: EMBEDDING_MODEL_ID,
     contentType: 'application/json',

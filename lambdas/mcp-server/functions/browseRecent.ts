@@ -1,4 +1,5 @@
 import { S3VectorsClient, ListVectorsCommand, GetVectorsCommand } from '@aws-sdk/client-s3vectors';
+import { MAX_LIST_LIMIT, VALID_THOUGHT_TYPES } from '../../../types/validation';
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 
@@ -8,6 +9,11 @@ export async function browseRecent(
   topic?: string,
   project?: string,
 ): Promise<any[]> {
+  limit = Math.min(limit, MAX_LIST_LIMIT);
+  if (type && !VALID_THOUGHT_TYPES.includes(type as any)) {
+    throw new Error(`Invalid type. Must be one of: ${VALID_THOUGHT_TYPES.join(', ')}`);
+  }
+
   const listResponse = await s3vectors.send(new ListVectorsCommand({
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,

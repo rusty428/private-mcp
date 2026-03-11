@@ -1,5 +1,6 @@
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { ProcessThoughtResult } from '../../../types/thought';
+import { MAX_TEXT_LENGTH } from '../../../types/validation';
 
 const lambda = new LambdaClient({ region: process.env.REGION });
 
@@ -10,6 +11,10 @@ export async function captureThought(
   session_id?: string,
   session_name?: string,
 ): Promise<ProcessThoughtResult> {
+  if (text.length > MAX_TEXT_LENGTH) {
+    throw new Error(`Text too long. Maximum ${MAX_TEXT_LENGTH} characters, got ${text.length}.`);
+  }
+
   const response = await lambda.send(new InvokeCommand({
     FunctionName: process.env.PROCESS_THOUGHT_FN_NAME,
     InvocationType: 'RequestResponse',
