@@ -70,7 +70,7 @@ export function ThoughtDetail({
 
         <div>
           <Box variant="awsui-key-label">Date</Box>
-          <div>{new Date(thought.metadata.thought_date).toLocaleString()}</div>
+          <div>{(() => { const d = new Date(thought.metadata.thought_date || thought.metadata.created_at || ''); return isNaN(d.getTime()) ? '-' : d.toLocaleString(); })()}</div>
         </div>
 
         <div>

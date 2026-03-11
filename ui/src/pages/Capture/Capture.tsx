@@ -116,7 +116,7 @@ export function Capture() {
               <div>
                 <Box variant="awsui-key-label">Captured</Box>
                 <Box variant="span">
-                  {format(new Date(result.created_at), 'MMM d, yyyy h:mm a')}
+                  {(() => { const d = new Date(result.created_at || ''); return isNaN(d.getTime()) ? '-' : format(d, 'MMM d, yyyy h:mm a'); })()}
                 </Box>
               </div>
             </div>

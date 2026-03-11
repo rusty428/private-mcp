@@ -11,6 +11,7 @@ import type { SearchResult } from '../../api/types';
 import { SearchResultCard } from './SearchResultCard';
 
 export function Search() {
+  console.log('Search component mounting');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [filteredResults, setFilteredResults] = useState<SearchResult[]>([]);
@@ -28,6 +29,7 @@ export function Search() {
     setHasSearched(true);
     try {
       const searchResults = await api.search({ query: query.trim(), limit: 50 });
+      console.log('RAW SEARCH API RESPONSE:', JSON.stringify(searchResults, null, 2));
       setResults(searchResults);
       setFilteredResults(searchResults);
       // Reset filters

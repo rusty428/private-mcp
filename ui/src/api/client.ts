@@ -45,11 +45,15 @@ export const api = {
   deleteThought: (id: string) =>
     request<{ success: boolean }>(`/thoughts/${id}`, { method: 'DELETE' }),
 
-  search: (params: { query: string; limit?: number; threshold?: number; project?: string }) =>
-    request<SearchResult[]>('/search', {
+  search: async (params: { query: string; limit?: number; threshold?: number; project?: string }) => {
+    console.log('API search called with:', params);
+    const results = await request<SearchResult[]>('/search', {
       method: 'POST',
       body: JSON.stringify(params),
-    }),
+    });
+    console.log('API search raw results:', results);
+    return results;
+  },
 
   capture: (params: { text: string; source?: string; project?: string }) =>
     request<CaptureResult>('/capture', {

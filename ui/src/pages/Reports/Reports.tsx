@@ -99,10 +99,9 @@ export function Reports() {
     if (actionItems.length > 0) {
       md += `## Open Action Items\n\n`;
       actionItems.forEach((thought) => {
-        md += `### ${thought.metadata.project || 'No project'} - ${format(
-          new Date(thought.metadata.thought_date),
-          'MMM d, yyyy'
-        )}\n\n`;
+        const d = new Date(thought.metadata.thought_date || thought.metadata.created_at || '');
+        const dateStr = isNaN(d.getTime()) ? 'Unknown date' : format(d, 'MMM d, yyyy');
+        md += `### ${thought.metadata.project || 'No project'} - ${dateStr}\n\n`;
         thought.metadata.action_items.forEach((item) => {
           md += `- ${item}\n`;
         });

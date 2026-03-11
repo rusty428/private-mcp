@@ -159,7 +159,11 @@ export function Browse() {
                 {
                   id: 'summary',
                   header: 'Summary',
-                  cell: (item) => item.metadata.summary || item.metadata.content.substring(0, 100) + '...',
+                  cell: (item) => {
+                    const text = item.metadata.summary || item.metadata.content || '';
+                    const truncated = text.length > 120 ? text.substring(0, 120) + '...' : text;
+                    return <span style={{ display: 'block', maxWidth: '500px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncated}</span>;
+                  },
                   sortingField: 'metadata.summary',
                 },
                 {
@@ -179,7 +183,11 @@ export function Browse() {
                 {
                   id: 'date',
                   header: 'Date',
-                  cell: (item) => new Date(item.metadata.thought_date).toLocaleDateString(),
+                  cell: (item) => {
+                    const raw = item.metadata.thought_date || item.metadata.created_at || '';
+                    const d = new Date(raw);
+                    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+                  },
                   sortingField: 'metadata.thought_date',
                   width: 120,
                 },

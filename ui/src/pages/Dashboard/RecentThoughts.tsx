@@ -56,7 +56,11 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
           {
             id: 'date',
             header: 'Date',
-            cell: (item) => new Date(item.metadata.thought_date).toLocaleDateString(),
+            cell: (item) => {
+              const raw = item.metadata.thought_date || item.metadata.created_at || '';
+              const d = new Date(raw);
+              return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+            },
             width: 120,
           },
         ]}

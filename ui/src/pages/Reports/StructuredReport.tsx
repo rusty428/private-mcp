@@ -13,10 +13,24 @@ interface StructuredReportProps {
   stats: TimeSeriesResponse;
 }
 
+function safeDate(thought: ThoughtRecord): Date {
+  const raw = thought.metadata.thought_date || thought.metadata.created_at || '';
+  const d = new Date(raw);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
+function safeDateStr(thought: ThoughtRecord, fmt: string): string {
+  try {
+    return format(safeDate(thought), fmt);
+  } catch {
+    return 'Unknown';
+  }
+}
+
 export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
   // Group thoughts by week
   const thoughtsByWeek = thoughts.reduce((acc, thought) => {
-    const date = new Date(thought.metadata.thought_date);
+    const date = safeDate(thought);
     const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Monday
     const weekKey = format(weekStart, 'yyyy-MM-dd');
     if (!acc[weekKey]) {
@@ -115,7 +129,7 @@ export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
               <div key={thought.key}>
                 <Box variant="small" color="text-status-inactive">
                   {thought.metadata.project || 'No project'} •{' '}
-                  {format(new Date(thought.metadata.thought_date), 'MMM d, yyyy')}
+                  {safeDateStr(thought, 'MMM d, yyyy')}
                 </Box>
                 <ul style={{ marginTop: '4px', marginBottom: 0 }}>
                   {thought.metadata.action_items.map((item, i) => (
@@ -144,7 +158,7 @@ export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <ThoughtTypeBadge type={thought.metadata.type} />
                         <Box variant="small" color="text-status-inactive">
-                          {format(new Date(thought.metadata.thought_date), 'MMM d')} •{' '}
+                          {safeDateStr(thought, 'MMM d')} •{' '}
                           {thought.metadata.project || 'No project'}
                         </Box>
                       </div>
