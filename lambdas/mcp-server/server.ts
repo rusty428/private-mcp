@@ -13,7 +13,7 @@ app.use(express.json());
 
 function createServer(): McpServer {
   const server = new McpServer({
-    name: 'aws-private-mcp',
+    name: 'private-mcp',
     version: '1.0.0',
   });
 

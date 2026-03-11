@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AWSPrivateMCP is a private MCP server on AWS for personal thought capture and semantic retrieval. Type a thought in Slack or any MCP-connected AI tool — it gets embedded, classified, and stored in S3 Vectors. Any AI tool can search your thoughts by meaning.
+Private MCP is a private MCP server on AWS for personal thought capture and semantic retrieval. Type a thought in Slack or any MCP-connected AI tool — it gets embedded, classified, and stored in S3 Vectors. Any AI tool can search your thoughts by meaning.
 
 All data stays within a dedicated AWS account. No third-party API routing.
 
@@ -47,13 +47,13 @@ AI Tools ──MCP──▶ API Gateway ──▶ mcp-server Lambda
 ## Source Layout
 
 ```
-aws-private-mcp-infra/
+private-mcp/
 ├── infra/
 │   ├── bin/app.ts                    # CDK app entry — stack instantiation
 │   └── lib/
-│       ├── config/index.ts           # AWSPrivateMCPConfig (account ID, region, tags)
+│       ├── config/index.ts           # PrivateMCPConfig (account ID, region, tags)
 │       └── stacks/
-│           └── aws-private-mcp-stack.ts  # Single stack: all resources
+│           └── private-mcp-stack.ts      # Single stack: all resources
 ├── lambdas/
 │   ├── process-thought/              # Core: embed + classify + store + Slack reply
 │   │   ├── index.ts                  # Handler (parallel Bedrock calls → S3 Vectors → optional Slack reply)
@@ -140,7 +140,7 @@ aws-private-mcp-infra/
 ## CDK Conventions (MUST FOLLOW)
 
 - **Never hardcode stack outputs** into config files. Pass between stacks via CDK properties.
-- **Tagging**: All resources get `Project: AWSPrivateMCP` and `ManagedBy: cdk` via `cdk.Tags.of(app)`.
+- **Tagging**: All resources get `Project: PrivateMCP` and `ManagedBy: cdk` via `cdk.Tags.of(app)`.
 - **Slack secrets** loaded from `.env` via dotenv (gitignored). No `-c` context flags needed.
 - **S3 Vectors bucket and index** are CDK-managed L1 constructs (`CfnVectorBucket`, `CfnIndex`).
 - **EventBridge schedule** for daily summary uses `DAILY_SUMMARY_HOUR` from `.env` (UTC). Cron fires daily at that hour.
@@ -149,7 +149,7 @@ aws-private-mcp-infra/
 
 | Account | ID | Profile | Purpose |
 |---|---|---|---|
-| private-mcp | `951921971435` | `private-mcp` | All AWSPrivateMCP infrastructure |
+| private-mcp | `951921971435` | `private-mcp` | All Private MCP infrastructure |
 
 Region: `us-west-2`
 
@@ -159,12 +159,12 @@ To connect Claude Code to this MCP server as a native tool provider:
 
 ```bash
 # Get the API key value
-API_KEY=$(aws apigateway get-api-key --api-key fe5nyv6n00 --include-value \
+API_KEY=$(aws apigateway get-api-key --api-key p8o0sxzj9c --include-value \
   --profile private-mcp --region us-west-2 --query 'value' --output text)
 
 # Register the MCP server (--scope user makes it available in ALL projects)
-claude mcp add --transport http --scope user aws-private-mcp \
-  "https://zjyd52hk73.execute-api.us-west-2.amazonaws.com/api/mcp" \
+claude mcp add --transport http --scope user private-mcp \
+  "https://h5digtl3r8.execute-api.us-west-2.amazonaws.com/api/mcp" \
   --header "x-api-key: $API_KEY"
 ```
 
@@ -181,5 +181,5 @@ Restart Claude Code after adding. The five MCP tools (`stats`, `browse_recent`, 
 
 ## Future Plans
 
-- Web UI frontend (`aws-private-mcp-web` separate repo)
+- Web UI frontend (separate repo)
 - Additional capture sources

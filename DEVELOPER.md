@@ -10,7 +10,7 @@
 ## Setup
 
 ```bash
-cd ~/projects/AWSPrivateMCP/aws-private-mcp-infra
+cd ~/projects/AWSPrivateMCP/private-mcp
 pnpm install
 ```
 
@@ -43,7 +43,7 @@ aws sts get-caller-identity --profile private-mcp
 The stack requires Slack credentials passed as CDK context:
 
 ```bash
-npx cdk deploy AWSPrivateMCPStack --profile private-mcp \
+npx cdk deploy PrivateMCPStack --profile private-mcp \
   -c slackBotToken=xoxb-your-token \
   -c slackCaptureChannel=C0your-channel-id
 ```
@@ -94,7 +94,7 @@ Get the channel ID: right-click channel → View channel details → scroll to b
 ### Claude Code
 
 ```bash
-claude mcp add --transport http --scope user aws-private-mcp \
+claude mcp add --transport http --scope user private-mcp \
   https://<API_GATEWAY_URL>/mcp \
   --header "x-api-key: <YOUR_API_KEY>"
 ```
@@ -137,7 +137,7 @@ See `~/.claude/scripts/mcp-session-hook.sh` for the reference implementation.
 ### Claude Desktop
 
 Settings → Connectors → Add custom connector:
-- Name: `AWSPrivateMCP`
+- Name: `PrivateMCP`
 - URL: `https://<API_GATEWAY_URL>/mcp`
 - Add header `x-api-key: <YOUR_API_KEY>`
 
@@ -146,7 +146,7 @@ Settings → Connectors → Add custom connector:
 ```json
 {
   "mcpServers": {
-    "aws-private-mcp": {
+    "private-mcp": {
       "command": "npx",
       "args": [
         "mcp-remote",
@@ -202,13 +202,13 @@ API Gateway access logs are sent to CloudWatch with 30-day retention. All Lambda
 ## Project Structure
 
 ```
-aws-private-mcp-infra/
+private-mcp/
 ├── infra/
 │   ├── bin/app.ts                    # CDK app entry
 │   └── lib/
 │       ├── config/index.ts           # Account ID, region, tags
 │       └── stacks/
-│           └── aws-private-mcp-stack.ts
+│           └── private-mcp-stack.ts
 ├── lambdas/
 │   ├── process-thought/              # Core: embed + classify + store
 │   ├── ingest-thought/               # Slack webhook handler
@@ -256,8 +256,8 @@ S3 Vectors does not allow empty arrays in metadata. The `storeThought` function 
 If MCP tools work in one project but not another, the server was registered with `--scope local` (the default) instead of `--scope user`. Fix by re-registering:
 
 ```bash
-claude mcp remove aws-private-mcp --scope local
-claude mcp add --transport http --scope user aws-private-mcp \
+claude mcp remove private-mcp --scope local
+claude mcp add --transport http --scope user private-mcp \
   https://<API_GATEWAY_URL>/mcp \
   --header "x-api-key: <YOUR_API_KEY>"
 ```

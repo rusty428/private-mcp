@@ -1,10 +1,10 @@
-# AWSPrivateMCP Project Memory
+# PrivateMCP Project Memory
 
 ## Project Overview
-- **AWSPrivateMCP** = private MCP server on AWS for personal thought capture and semantic retrieval
+- **PrivateMCP** = private MCP server on AWS for personal thought capture and semantic retrieval
 - Inspired by "Open Brain" guide, rebuilt entirely on AWS — no third-party data routing
 - All data stays within a dedicated AWS account
-- GitHub: rusty428/aws-private-mcp-infra (private)
+- GitHub: rusty428/private-mcp (private)
 
 ## AWS Account
 - **private-mcp** `951921971435` | Profile: `private-mcp` | Region: `us-west-2`
@@ -13,10 +13,10 @@
 - Account registry updated in badgerfy runbook
 
 ## Deployed Endpoints
-- **API Gateway**: `https://zjyd52hk73.execute-api.us-west-2.amazonaws.com/api/`
+- **API Gateway**: `https://h5digtl3r8.execute-api.us-west-2.amazonaws.com/api/`
 - **Slack webhook**: `.../api/slack/events`
 - **MCP endpoint**: `.../api/mcp`
-- **API Key ID**: `fe5nyv6n00`
+- **API Key ID**: `p8o0sxzj9c`
 
 ## Slack App
 - App name: "Open Brain" (can rename)
@@ -36,6 +36,6 @@
 - **Slack 3-second retry**: causes duplicate captures when pipeline takes >3s (cosmetic, not yet fixed)
 
 ## Future Plans
-- Web UI frontend (`aws-private-mcp-web` repo)
+- Web UI frontend (separate repo)
 - Deduplication for Slack retry issue
 - Additional capture sources (API endpoint, web UI)

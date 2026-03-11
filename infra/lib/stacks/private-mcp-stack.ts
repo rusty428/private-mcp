@@ -8,7 +8,7 @@ import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import { Construct } from 'constructs';
-import { AWSPrivateMCPConfig } from '../config';
+import { PrivateMCPConfig } from '../config';
 import {
   VECTOR_BUCKET_NAME,
   VECTOR_INDEX_NAME,
@@ -17,12 +17,12 @@ import {
   CLASSIFICATION_MODEL_ID,
 } from '../../../types/config';
 
-interface AWSPrivateMCPStackProps extends cdk.StackProps {
-  config: AWSPrivateMCPConfig;
+interface PrivateMCPStackProps extends cdk.StackProps {
+  config: PrivateMCPConfig;
 }
 
-export class AWSPrivateMCPStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: AWSPrivateMCPStackProps) {
+export class PrivateMCPStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: PrivateMCPStackProps) {
     super(scope, id, props);
 
     const { config } = props;
@@ -31,6 +31,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
     const vectorBucket = new s3vectors.CfnVectorBucket(this, 'ThoughtsBucket', {
       vectorBucketName: VECTOR_BUCKET_NAME,
     });
+    vectorBucket.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
     const vectorIndex = new s3vectors.CfnIndex(this, 'ThoughtsIndex', {
       vectorBucketName: VECTOR_BUCKET_NAME,
@@ -40,6 +41,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       distanceMetric: 'cosine',
     });
     vectorIndex.addDependency(vectorBucket);
+    vectorIndex.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
     // --- Common Lambda environment ---
     const commonEnv = {
@@ -220,15 +222,15 @@ export class AWSPrivateMCPStack extends cdk.Stack {
 
     // --- API Gateway Access Logs ---
     const apiLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
-      logGroupName: '/aws/apigateway/AWSPrivateMCP',
+      logGroupName: '/aws/apigateway/PrivateMCP',
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     // --- API Gateway ---
-    const api = new apigateway.RestApi(this, 'AWSPrivateMCPApi', {
-      restApiName: 'AWSPrivateMCP',
-      description: 'AWSPrivateMCP - Private MCP server API',
+    const api = new apigateway.RestApi(this, 'PrivateMCPApi', {
+      restApiName: 'PrivateMCP',
+      description: 'Private MCP server API',
       deployOptions: {
         stageName: 'api',
         accessLogDestination: new apigateway.LogGroupLogDestination(apiLogGroup),
@@ -261,7 +263,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
 
     // API Key + Usage Plan
     const apiKey = api.addApiKey('MCPApiKey', {
-      apiKeyName: 'aws-private-mcp-key',
+      apiKeyName: 'private-mcp-key',
     });
 
     const usagePlan = api.addUsagePlan('MCPUsagePlan', {
@@ -318,7 +320,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
       const actions = cdk.aws_cloudwatch_actions;
 
       const alarmTopic = new sns.Topic(this, 'ApiAlarmTopic', {
-        topicName: 'AWSPrivateMCP-ApiAlarms',
+        topicName: 'PrivateMCP-ApiAlarms',
       });
       alarmTopic.addSubscription(
         new subscriptions.EmailSubscription(process.env.ALERT_EMAIL)
@@ -328,7 +330,7 @@ export class AWSPrivateMCPStack extends cdk.Stack {
         metric: api.metricServerError({ period: cdk.Duration.minutes(5) }),
         threshold: 5,
         evaluationPeriods: 1,
-        alarmDescription: 'AWSPrivateMCP API: 5+ server errors in 5 minutes',
+        alarmDescription: 'PrivateMCP API: 5+ server errors in 5 minutes',
       });
       alarm5xx.addAlarmAction(new actions.SnsAction(alarmTopic));
     }

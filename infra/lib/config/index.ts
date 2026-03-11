@@ -1,16 +1,16 @@
-export interface AWSPrivateMCPConfig {
+export interface PrivateMCPConfig {
   accountId: string;
   region: string;
   applicationId: string;
   tags: Record<string, string>;
 }
 
-export const config: AWSPrivateMCPConfig = {
+export const config: PrivateMCPConfig = {
   accountId: '951921971435',
   region: 'us-west-2',
-  applicationId: 'aws-private-mcp',
+  applicationId: 'private-mcp',
   tags: {
-    Project: 'AWSPrivateMCP',
+    Project: 'PrivateMCP',
     ManagedBy: 'cdk',
   },
 };
