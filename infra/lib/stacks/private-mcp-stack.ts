@@ -209,7 +209,7 @@ export class PrivateMCPStack extends cdk.Stack {
       environment: {
         ...commonEnv,
         PROCESS_THOUGHT_FN_NAME: processThoughtFn.functionName,
-        ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000',
+        ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || '',
       },
       bundling: {
         minify: true,
@@ -248,7 +248,7 @@ export class PrivateMCPStack extends cdk.Stack {
         loggingLevel: apigateway.MethodLoggingLevel.ERROR,
       },
       defaultCorsPreflightOptions: {
-        allowOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(','),
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
       },

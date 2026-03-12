@@ -22,11 +22,16 @@ const app: Express = express();
 app.use(express.json({ limit: '50kb' }));
 
 // CORS headers — required for browser requests via Lambda proxy integration
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3000').split(',');
+const EXTRA_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (/^http:\/\/localhost:\d+$/.test(origin)) return true;
+  return EXTRA_ORIGINS.includes(origin);
+}
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+  if (origin && isAllowedOrigin(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
