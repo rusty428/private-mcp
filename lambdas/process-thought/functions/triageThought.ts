@@ -8,7 +8,6 @@ export function triageThought(text: string, source: ThoughtSource): ThoughtQuali
   if (URL_REGEX.test(trimmed)) return 'noise';
   if (SLASH_CMD_REGEX.test(trimmed)) return 'noise';
   const wordCount = trimmed.split(/\s+/).length;
-  if (wordCount < 10) return 'noise';
-  if (source === 'user-prompt' && wordCount < 15) return 'noise';
+  if (wordCount < 5) return 'noise';
   return 'standard';
 }
