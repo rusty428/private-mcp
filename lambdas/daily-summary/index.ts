@@ -22,7 +22,7 @@ export const handler = async (): Promise<DailySummaryResult> => {
   const botToken = process.env.SLACK_BOT_TOKEN;
 
   if (channel && botToken) {
-    await postToSlack(channel, botToken, report.text);
+    await postToSlack(channel, botToken, report.text, report.blocks);
   }
 
   return report;
