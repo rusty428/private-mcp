@@ -173,7 +173,7 @@ Incoming Slack requests are verified using HMAC-SHA256 signature validation with
 
 ### CORS
 
-CORS is restricted to `http://localhost:5173` and `http://localhost:3000` by default. To allow additional origins (e.g., a CloudFront distribution for a deployed UI), set the `ALLOWED_ORIGINS` environment variable in `.env` as a comma-separated list.
+Any `http://localhost:*` origin is allowed automatically for local development. To allow additional origins (e.g., a CloudFront distribution for a deployed UI), set the `ALLOWED_ORIGINS` environment variable in `.env` as a comma-separated list.
 
 ### Input Validation
 

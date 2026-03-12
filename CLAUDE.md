@@ -175,7 +175,7 @@ Restart Claude Code after adding. The five MCP tools (`stats`, `browse_recent`, 
 ## Security
 
 - **Slack webhook verification**: Requests to `/slack/events` are verified via HMAC-SHA256 signature using `SLACK_SIGNING_SECRET` (required in `.env`). 5-minute replay window.
-- **CORS**: Restricted to `localhost:5173` and `localhost:3000` by default. Override with `ALLOWED_ORIGINS` env var for production domains.
+- **CORS**: Any `localhost` origin is allowed automatically. Set `ALLOWED_ORIGINS` env var to add production domains.
 - **Input validation**: All REST API endpoints validate UUID format, date format, text length (10K), query length (1K), enum values, and request body size (50KB).
 - **CloudWatch alarms**: Optional 5xx alarm via SNS. Set `ALERT_EMAIL` in `.env` to enable.
 
