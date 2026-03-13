@@ -16,6 +16,14 @@ import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import type { ThoughtRecord, TimeSeriesResponse } from '../../api/types';
 import { format, parseISO } from 'date-fns';
 
+const CHART_TYPE_KEY = 'dashboard-chart-type';
+type ChartType = 'line' | 'bar';
+
+function getSavedChartType(): ChartType {
+  const saved = localStorage.getItem(CHART_TYPE_KEY);
+  return saved === 'bar' ? 'bar' : 'line';
+}
+
 interface StructuredReportProps {
   thoughts: ThoughtRecord[];
   stats: TimeSeriesResponse;
@@ -155,6 +163,7 @@ export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
   const [actionItemsVisible, setActionItemsVisible] = useState(false);
   const [peopleModalVisible, setPeopleModalVisible] = useState(false);
   const [chartMode, setChartMode] = useState<string>('types');
+  const [chartType, setChartType] = useState<ChartType>(getSavedChartType);
 
   // Get unique people mentioned
   const allPeople = new Set<string>();
@@ -290,15 +299,29 @@ export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
             <Header
               variant="h2"
               actions={
-                <SegmentedControl
-                  selectedId={chartMode}
-                  onChange={({ detail }) => setChartMode(detail.selectedId)}
-                  options={[
-                    { id: 'types', text: 'By Type' },
-                    { id: 'sources', text: 'By Source' },
-                    { id: 'topics', text: 'By Topic' },
-                  ]}
-                />
+                <SpaceBetween direction="horizontal" size="m">
+                  <SegmentedControl
+                    selectedId={chartType}
+                    onChange={({ detail }) => {
+                      const val = detail.selectedId as ChartType;
+                      setChartType(val);
+                      localStorage.setItem(CHART_TYPE_KEY, val);
+                    }}
+                    options={[
+                      { id: 'line', text: 'Line' },
+                      { id: 'bar', text: 'Bar' },
+                    ]}
+                  />
+                  <SegmentedControl
+                    selectedId={chartMode}
+                    onChange={({ detail }) => setChartMode(detail.selectedId)}
+                    options={[
+                      { id: 'types', text: 'By Type' },
+                      { id: 'sources', text: 'By Source' },
+                      { id: 'topics', text: 'By Topic' },
+                    ]}
+                  />
+                </SpaceBetween>
               }
             >
               Timeline
@@ -308,6 +331,7 @@ export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
           <MixedLineBarChart
             height={250}
             xScaleType="categorical"
+            stackedBars={chartType === 'bar'}
             hideFilter
             series={(() => {
               const dateKeys = stats.buckets.map((b) => format(parseISO(b.date), 'M/d'));
@@ -348,7 +372,7 @@ export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
 
               return Array.from(allGroups).sort().map((group) => ({
                 title: group,
-                type: 'line' as const,
+                type: chartType as 'line' | 'bar',
                 data: dateKeys.map((dateKey) => ({
                   x: dateKey,
                   y: byDateGroup[dateKey]?.[group] || 0,
