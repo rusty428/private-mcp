@@ -10,9 +10,10 @@ interface NarrativeSectionProps {
   startDate: string;
   endDate: string;
   project?: string;
+  onNarrativeChange?: (narrative: string | null) => void;
 }
 
-export function NarrativeSection({ startDate, endDate, project }: NarrativeSectionProps) {
+export function NarrativeSection({ startDate, endDate, project, onNarrativeChange }: NarrativeSectionProps) {
   const [narrative, setNarrative] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -21,6 +22,7 @@ export function NarrativeSection({ startDate, endDate, project }: NarrativeSecti
     try {
       const response = await api.generateNarrative({ startDate, endDate, project });
       setNarrative(response.narrative);
+      onNarrativeChange?.(response.narrative);
     } catch (error) {
       console.error('Failed to generate narrative:', error);
       setNarrative('Failed to generate narrative. Please try again.');

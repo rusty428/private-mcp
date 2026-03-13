@@ -6,7 +6,10 @@ import Input from '@cloudscape-design/components/input';
 import Button from '@cloudscape-design/components/button';
 import Table from '@cloudscape-design/components/table';
 import Box from '@cloudscape-design/components/box';
+import Icon from '@cloudscape-design/components/icon';
 import Modal from '@cloudscape-design/components/modal';
+import Pagination from '@cloudscape-design/components/pagination';
+import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import TextFilter from '@cloudscape-design/components/text-filter';
 import Select from '@cloudscape-design/components/select';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
@@ -21,8 +24,12 @@ export function Search() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<SearchResult[]>([]);
+  const [detailItem, setDetailItem] = useState<SearchResult | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Client-side filters
   const [filterText, setFilterText] = useState('');
@@ -33,10 +40,10 @@ export function Search() {
     if (!query.trim()) return;
     setLoading(true);
     setHasSearched(true);
-    setSelectedItems([]);
     setFilterText('');
     setTypeFilter(null);
     setProjectFilter(null);
+    setCurrentPage(1);
     try {
       const searchResults = await api.search({ query: query.trim(), limit: 100 });
       setResults(searchResults);
@@ -61,6 +68,12 @@ export function Search() {
     return true;
   });
 
+  const pageCount = Math.ceil(filteredResults.length / pageSize);
+  const paginatedResults = filteredResults.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const typeOptions = [
     ...VALID_THOUGHT_TYPES.map((t) => ({ label: t, value: t })),
     { label: 'pending', value: 'pending' },
@@ -69,6 +82,11 @@ export function Search() {
   const formatMatch = (distance: number) => {
     const pct = Math.round((1 - distance) * 100);
     return `${pct}%`;
+  };
+
+  const openDetail = (item: SearchResult) => {
+    setDetailItem(item);
+    setDetailVisible(true);
   };
 
   return (
@@ -102,14 +120,7 @@ export function Search() {
           {hasSearched && (
             <Table
               header={
-                <Header
-                  counter={`(${filteredResults.length})`}
-                  actions={
-                    <Button disabled={selectedItems.length !== 1} onClick={() => setDetailVisible(true)}>
-                      View
-                    </Button>
-                  }
-                >
+                <Header counter={`(${filteredResults.length})`}>
                   Results
                 </Header>
               }
@@ -117,21 +128,22 @@ export function Search() {
                 <SpaceBetween direction="horizontal" size="xs">
                   <TextFilter
                     filteringText={filterText}
-                    onChange={({ detail }) => setFilterText(detail.filteringText)}
+                    onChange={({ detail }) => { setFilterText(detail.filteringText); setCurrentPage(1); }}
                     filteringPlaceholder="Filter results..."
                     countText={`${filteredResults.length} matches`}
                   />
                   <Select
                     selectedOption={typeFilter}
-                    onChange={({ detail }) =>
-                      setTypeFilter(detail.selectedOption.value ? (detail.selectedOption as any) : null)
-                    }
+                    onChange={({ detail }) => {
+                      setTypeFilter(detail.selectedOption.value ? (detail.selectedOption as any) : null);
+                      setCurrentPage(1);
+                    }}
                     options={[{ label: 'All types', value: '' }, ...typeOptions]}
                     placeholder="All types"
                   />
                   <ProjectSelect
                     selectedOption={projectFilter}
-                    onChange={setProjectFilter}
+                    onChange={(opt) => { setProjectFilter(opt); setCurrentPage(1); }}
                   />
                 </SpaceBetween>
               }
@@ -140,16 +152,22 @@ export function Search() {
                   id: 'match',
                   header: 'Match',
                   cell: (item) => (
-                    <Box color="text-status-success" fontWeight="bold">
-                      {formatMatch(item.distance)}
-                    </Box>
+                    <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                      <Box color="text-status-success" fontWeight="bold">
+                        {formatMatch(item.distance)}
+                      </Box>
+                    </div>
                   ),
                   width: 80,
                 },
                 {
                   id: 'type',
                   header: 'Type',
-                  cell: (item) => <ThoughtTypeBadge type={item.metadata.type} />,
+                  cell: (item) => (
+                    <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                      <ThoughtTypeBadge type={item.metadata.type} />
+                    </div>
+                  ),
                   width: 140,
                 },
                 {
@@ -157,20 +175,33 @@ export function Search() {
                   header: 'Summary',
                   cell: (item) => {
                     const text = item.metadata.summary || item.metadata.content || '';
-                    return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                    const display = text.length > 100 ? text.substring(0, 100) + '...' : text;
+                    return (
+                      <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                        {display}
+                      </div>
+                    );
                   },
                   maxWidth: 400,
                 },
                 {
                   id: 'project',
                   header: 'Project',
-                  cell: (item) => item.metadata.project || '-',
+                  cell: (item) => (
+                    <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                      {item.metadata.project || '-'}
+                    </div>
+                  ),
                   width: 150,
                 },
                 {
                   id: 'source',
                   header: 'Source',
-                  cell: (item) => item.metadata.source,
+                  cell: (item) => (
+                    <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                      {item.metadata.source}
+                    </div>
+                  ),
                   width: 120,
                 },
                 {
@@ -179,15 +210,61 @@ export function Search() {
                   cell: (item) => {
                     const raw = item.metadata.thought_date || item.metadata.created_at || '';
                     const d = new Date(raw);
-                    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+                    return (
+                      <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                        {isNaN(d.getTime()) ? '-' : d.toLocaleDateString()}
+                      </div>
+                    );
                   },
                   width: 120,
                 },
+                {
+                  id: 'actions',
+                  header: '',
+                  cell: (item) => (
+                    <span
+                      style={{ cursor: 'pointer', color: 'var(--color-text-link-default)' }}
+                      onClick={() => openDetail(item)}
+                      title="View details"
+                    >
+                      <Icon name="status-info" />
+                    </span>
+                  ),
+                  width: 50,
+                },
               ]}
-              items={filteredResults}
+              items={paginatedResults}
               loading={loading}
               loadingText="Searching..."
               stickyHeader
+              pagination={
+                <Pagination
+                  currentPageIndex={currentPage}
+                  pagesCount={pageCount}
+                  onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+                />
+              }
+              preferences={
+                <CollectionPreferences
+                  title="Preferences"
+                  confirmLabel="Confirm"
+                  cancelLabel="Cancel"
+                  pageSizePreference={{
+                    title: 'Page size',
+                    options: [
+                      { value: 10, label: '10 results' },
+                      { value: 25, label: '25 results' },
+                      { value: 50, label: '50 results' },
+                      { value: 100, label: '100 results' },
+                    ],
+                  }}
+                  preferences={{ pageSize }}
+                  onConfirm={({ detail }) => {
+                    setPageSize(detail.pageSize ?? 25);
+                    setCurrentPage(1);
+                  }}
+                />
+              }
               empty={
                 <Box textAlign="center" color="inherit">
                   <b>No results</b>
@@ -196,35 +273,27 @@ export function Search() {
                   </Box>
                 </Box>
               }
-              onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
-              selectedItems={selectedItems}
-              selectionType="single"
             />
           )}
         </SpaceBetween>
       </ContentLayout>
 
       <Modal
-        visible={detailVisible && selectedItems.length === 1}
+        visible={detailVisible && detailItem !== null}
         onDismiss={() => setDetailVisible(false)}
         header="Thought Details"
         closeAriaLabel="Close details"
         size="large"
         footer={
           <Box float="right">
-            <Button variant="link" onClick={() => setDetailVisible(false)}>
+            <Button variant="primary" onClick={() => setDetailVisible(false)}>
               Close
             </Button>
           </Box>
         }
       >
-        {selectedItems.length === 1 && (
-          <ThoughtDetail
-            thought={{ key: selectedItems[0].key, metadata: selectedItems[0].metadata }}
-            editing={false}
-            onSave={async () => {}}
-            onCancel={() => setDetailVisible(false)}
-          />
+        {detailItem && (
+          <ThoughtDetail thought={{ key: detailItem.key, metadata: detailItem.metadata }} />
         )}
       </Modal>
     </>

@@ -1,12 +1,20 @@
+import { useState } from 'react';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Container from '@cloudscape-design/components/container';
 import Header from '@cloudscape-design/components/header';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
+import Grid from '@cloudscape-design/components/grid';
 import Box from '@cloudscape-design/components/box';
-import ExpandableSection from '@cloudscape-design/components/expandable-section';
+import Button from '@cloudscape-design/components/button';
+import Link from '@cloudscape-design/components/link';
+import Modal from '@cloudscape-design/components/modal';
+import Pagination from '@cloudscape-design/components/pagination';
+import Table from '@cloudscape-design/components/table';
+import MixedLineBarChart from '@cloudscape-design/components/mixed-line-bar-chart';
+import SegmentedControl from '@cloudscape-design/components/segmented-control';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import type { ThoughtRecord, TimeSeriesResponse } from '../../api/types';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface StructuredReportProps {
   thoughts: ThoughtRecord[];
@@ -19,160 +27,415 @@ function safeDate(thought: ThoughtRecord): Date {
   return isNaN(d.getTime()) ? new Date() : d;
 }
 
-function safeDateStr(thought: ThoughtRecord, fmt: string): string {
-  try {
-    return format(safeDate(thought), fmt);
-  } catch {
-    return 'Unknown';
+const CARD_HEIGHT = 130;
+
+const thoughtColumnDefinitions = [
+  {
+    id: 'type',
+    header: 'Type',
+    cell: (item: ThoughtRecord) => <ThoughtTypeBadge type={item.metadata.type} />,
+    width: 140,
+  },
+  {
+    id: 'summary',
+    header: 'Summary',
+    cell: (item: ThoughtRecord) => {
+      const text = item.metadata.summary || item.metadata.content || '';
+      return text.length > 100 ? text.substring(0, 100) + '...' : text;
+    },
+    maxWidth: 400,
+  },
+  {
+    id: 'project',
+    header: 'Project',
+    cell: (item: ThoughtRecord) => item.metadata.project || '-',
+    width: 150,
+  },
+  {
+    id: 'date',
+    header: 'Date',
+    cell: (item: ThoughtRecord) => {
+      const d = safeDate(item);
+      return format(d, 'M/d/yyyy');
+    },
+    width: 120,
+  },
+];
+
+function PaginatedThoughtTable({ items }: { items: ThoughtRecord[] }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 25;
+  const pageCount = Math.ceil(items.length / pageSize);
+  const paginatedItems = items.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  return (
+    <Table
+      columnDefinitions={thoughtColumnDefinitions}
+      items={paginatedItems}
+      variant="embedded"
+      pagination={
+        pageCount > 1 ? (
+          <Pagination
+            currentPageIndex={currentPage}
+            pagesCount={pageCount}
+            onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+          />
+        ) : undefined
+      }
+      empty={
+        <Box textAlign="center" color="inherit">
+          <b>No thoughts</b>
+        </Box>
+      }
+    />
+  );
+}
+
+function OverflowCard({
+  title,
+  children,
+  modalContent,
+}: {
+  title: string;
+  children: React.ReactNode;
+  modalContent: React.ReactNode;
+}) {
+  const [modalVisible, setModalVisible] = useState(false);
+
+  return (
+    <>
+      <Container header={<Header variant="h3">{title}</Header>}>
+        <div style={{ maxHeight: CARD_HEIGHT, overflow: 'hidden', position: 'relative' }}>
+          {children}
+        </div>
+        <div style={{ textAlign: 'right', marginTop: '4px' }}>
+          <Link onFollow={() => setModalVisible(true)}>...more</Link>
+        </div>
+      </Container>
+
+      <Modal
+        visible={modalVisible}
+        onDismiss={() => setModalVisible(false)}
+        header={title}
+        size="medium"
+        footer={
+          <Box float="right">
+            <Button variant="primary" onClick={() => setModalVisible(false)}>Close</Button>
+          </Box>
+        }
+      >
+        {modalContent}
+      </Modal>
+    </>
+  );
+}
+
+function KpiValue({
+  count,
+  hasData,
+  onClick,
+}: {
+  count: number | string;
+  hasData: boolean;
+  onClick: () => void;
+}) {
+  if (hasData) {
+    return (
+      <Link onFollow={onClick}>
+        <Box variant="awsui-value-large" color="text-status-info">{count}</Box>
+      </Link>
+    );
   }
+  return <Box variant="awsui-value-large">{count}</Box>;
 }
 
 export function StructuredReport({ thoughts, stats }: StructuredReportProps) {
-  // Group thoughts by week
-  const thoughtsByWeek = thoughts.reduce((acc, thought) => {
-    const date = safeDate(thought);
-    const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Monday
-    const weekKey = format(weekStart, 'yyyy-MM-dd');
-    if (!acc[weekKey]) {
-      acc[weekKey] = [];
-    }
-    acc[weekKey].push(thought);
-    return acc;
-  }, {} as Record<string, ThoughtRecord[]>);
-
-  const weekKeys = Object.keys(thoughtsByWeek).sort().reverse();
-
-  // Get action items
-  const actionItems = thoughts.filter(
-    (t) => t.metadata.action_items && t.metadata.action_items.length > 0
-  );
+  const [thoughtsModalVisible, setThoughtsModalVisible] = useState(false);
+  const [projectsModalVisible, setProjectsModalVisible] = useState(false);
+  const [actionItemsVisible, setActionItemsVisible] = useState(false);
+  const [peopleModalVisible, setPeopleModalVisible] = useState(false);
+  const [chartMode, setChartMode] = useState<string>('types');
 
   // Get unique people mentioned
   const allPeople = new Set<string>();
   thoughts.forEach((t) => {
     t.metadata.people?.forEach((p) => allPeople.add(p));
   });
+  const sortedPeople = Array.from(allPeople).sort();
+
+  // Get action item thoughts
+  const actionItemThoughts = thoughts.filter(
+    (t) => t.metadata.action_items && t.metadata.action_items.length > 0
+  );
+
+  const typeEntries = Object.entries(stats.byType);
+  const sourceEntries = Object.entries(stats.bySource);
 
   return (
-    <SpaceBetween size="l">
-      <Container header={<Header variant="h2">Summary Statistics</Header>}>
+    <SpaceBetween size="m">
+      {/* Row 1: KPI Stats */}
+      <Container>
         <ColumnLayout columns={4} variant="text-grid">
           <div>
             <Box variant="awsui-key-label">Total Thoughts</Box>
-            <Box variant="awsui-value-large">{stats.totalInRange}</Box>
+            <KpiValue
+              count={stats.totalInRange}
+              hasData={thoughts.length > 0}
+              onClick={() => setThoughtsModalVisible(true)}
+            />
           </div>
           <div>
             <Box variant="awsui-key-label">Projects</Box>
-            <Box variant="awsui-value-large">{stats.projects.length}</Box>
+            <KpiValue
+              count={stats.projects.length}
+              hasData={stats.projects.length > 0}
+              onClick={() => setProjectsModalVisible(true)}
+            />
           </div>
           <div>
             <Box variant="awsui-key-label">Action Items</Box>
-            <Box variant="awsui-value-large">{stats.actionItemCount}</Box>
+            <KpiValue
+              count={stats.actionItemCount}
+              hasData={stats.actionItemCount > 0}
+              onClick={() => setActionItemsVisible(true)}
+            />
           </div>
           <div>
             <Box variant="awsui-key-label">People Mentioned</Box>
-            <Box variant="awsui-value-large">{allPeople.size}</Box>
+            <KpiValue
+              count={allPeople.size}
+              hasData={sortedPeople.length > 0}
+              onClick={() => setPeopleModalVisible(true)}
+            />
           </div>
         </ColumnLayout>
       </Container>
 
-      <Container header={<Header variant="h2">Type Breakdown</Header>}>
-        <SpaceBetween size="xs">
-          {Object.entries(stats.byType).map(([type, count]) => (
-            <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ThoughtTypeBadge type={type} />
-              <Box variant="span">{count}</Box>
-            </div>
-          ))}
-        </SpaceBetween>
-      </Container>
+      {/* Row 2: Type | Source | Topics */}
+      <Grid gridDefinition={[{ colspan: 4 }, { colspan: 4 }, { colspan: 4 }]}>
+        <OverflowCard
+          title="Type Breakdown"
+          modalContent={
+            <SpaceBetween size="xs">
+              {typeEntries.map(([type, count]) => (
+                <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ThoughtTypeBadge type={type} />
+                  <Box variant="span">{count}</Box>
+                </div>
+              ))}
+            </SpaceBetween>
+          }
+        >
+          <SpaceBetween size="xs">
+            {typeEntries.map(([type, count]) => (
+              <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ThoughtTypeBadge type={type} />
+                <Box variant="span">{count}</Box>
+              </div>
+            ))}
+          </SpaceBetween>
+        </OverflowCard>
 
-      <Container header={<Header variant="h2">Source Breakdown</Header>}>
-        <ColumnLayout columns={2} variant="text-grid">
-          {Object.entries(stats.bySource).map(([source, count]) => (
-            <div key={source}>
-              <Box variant="awsui-key-label">{source}</Box>
-              <Box variant="awsui-value-large">{count}</Box>
-            </div>
-          ))}
-        </ColumnLayout>
-      </Container>
+        <OverflowCard
+          title="Source Breakdown"
+          modalContent={
+            <SpaceBetween size="s">
+              {sourceEntries.map(([source, count]) => (
+                <div key={source} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box variant="span">{source}</Box>
+                  <Box variant="span" fontWeight="bold">{count}</Box>
+                </div>
+              ))}
+            </SpaceBetween>
+          }
+        >
+          <SpaceBetween size="xs">
+            {sourceEntries.map(([source, count]) => (
+              <div key={source} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box variant="span">{source}</Box>
+                <Box variant="span" fontWeight="bold">{count}</Box>
+              </div>
+            ))}
+          </SpaceBetween>
+        </OverflowCard>
 
-      {stats.topTopics.length > 0 && (
-        <Container header={<Header variant="h2">Top Topics</Header>}>
+        <OverflowCard
+          title="Top Topics"
+          modalContent={
+            <SpaceBetween size="xs">
+              {stats.topTopics.map((topic) => (
+                <div key={topic.topic} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box variant="span">{topic.topic}</Box>
+                  <Box variant="span" color="text-status-inactive">{topic.count}</Box>
+                </div>
+              ))}
+            </SpaceBetween>
+          }
+        >
           <SpaceBetween size="xs">
             {stats.topTopics.slice(0, 10).map((topic) => (
-              <div
-                key={topic.topic}
-                style={{ display: 'flex', justifyContent: 'space-between' }}
-              >
+              <div key={topic.topic} style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Box variant="span">{topic.topic}</Box>
-                <Box variant="span" color="text-status-inactive">
-                  {topic.count}
-                </Box>
+                <Box variant="span" color="text-status-inactive">{topic.count}</Box>
               </div>
             ))}
           </SpaceBetween>
+        </OverflowCard>
+      </Grid>
+
+      {/* Timeline Chart */}
+      {thoughts.length > 0 && (
+        <Container
+          header={
+            <Header
+              variant="h2"
+              actions={
+                <SegmentedControl
+                  selectedId={chartMode}
+                  onChange={({ detail }) => setChartMode(detail.selectedId)}
+                  options={[
+                    { id: 'types', text: 'By Type' },
+                    { id: 'sources', text: 'By Source' },
+                    { id: 'topics', text: 'By Topic' },
+                  ]}
+                />
+              }
+            >
+              Timeline
+            </Header>
+          }
+        >
+          <MixedLineBarChart
+            height={250}
+            xScaleType="categorical"
+            hideFilter
+            series={(() => {
+              const dateKeys = stats.buckets.map((b) => format(parseISO(b.date), 'M/d'));
+              const byDateGroup: Record<string, Record<string, number>> = {};
+              const allGroups = new Set<string>();
+
+              if (chartMode === 'types') {
+                thoughts.forEach((t) => {
+                  const dateKey = format(safeDate(t), 'M/d');
+                  const group = t.metadata.type || 'pending';
+                  allGroups.add(group);
+                  if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
+                  byDateGroup[dateKey][group] = (byDateGroup[dateKey][group] || 0) + 1;
+                });
+              } else if (chartMode === 'sources') {
+                stats.buckets.forEach((b) => {
+                  const dateKey = format(parseISO(b.date), 'M/d');
+                  Object.entries(b.bySource).forEach(([source, count]) => {
+                    allGroups.add(source);
+                    if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
+                    byDateGroup[dateKey][source] = (byDateGroup[dateKey][source] || 0) + count;
+                  });
+                });
+              } else {
+                // Top 10 topics only to keep the chart readable
+                const topTopics = stats.topTopics.slice(0, 10).map((t) => t.topic);
+                thoughts.forEach((t) => {
+                  const dateKey = format(safeDate(t), 'M/d');
+                  (t.metadata.topics || []).forEach((topic) => {
+                    if (topTopics.includes(topic)) {
+                      allGroups.add(topic);
+                      if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
+                      byDateGroup[dateKey][topic] = (byDateGroup[dateKey][topic] || 0) + 1;
+                    }
+                  });
+                });
+              }
+
+              return Array.from(allGroups).sort().map((group) => ({
+                title: group,
+                type: 'line' as const,
+                data: dateKeys.map((dateKey) => ({
+                  x: dateKey,
+                  y: byDateGroup[dateKey]?.[group] || 0,
+                })),
+              }));
+            })()}
+            xTitle="Date"
+            yTitle="Thoughts"
+            empty={
+              <Box textAlign="center" color="inherit">
+                <b>No data</b>
+              </Box>
+            }
+          />
         </Container>
       )}
 
-      {allPeople.size > 0 && (
-        <Container header={<Header variant="h2">People Mentioned</Header>}>
-          <Box variant="p">{Array.from(allPeople).sort().join(', ')}</Box>
-        </Container>
-      )}
+      {/* Total Thoughts Modal */}
+      <Modal
+        visible={thoughtsModalVisible}
+        onDismiss={() => setThoughtsModalVisible(false)}
+        header={`All Thoughts (${thoughts.length})`}
+        size="max"
+        footer={
+          <Box float="right">
+            <Button variant="primary" onClick={() => setThoughtsModalVisible(false)}>Close</Button>
+          </Box>
+        }
+      >
+        <PaginatedThoughtTable items={thoughts} />
+      </Modal>
 
-      {actionItems.length > 0 && (
-        <Container header={<Header variant="h2">Open Action Items</Header>}>
-          <SpaceBetween size="s">
-            {actionItems.map((thought) => (
-              <div key={thought.key}>
-                <Box variant="small" color="text-status-inactive">
-                  {thought.metadata.project || 'No project'} •{' '}
-                  {safeDateStr(thought, 'MMM d, yyyy')}
-                </Box>
-                <ul style={{ marginTop: '4px', marginBottom: 0 }}>
-                  {thought.metadata.action_items.map((item, i) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </SpaceBetween>
-        </Container>
-      )}
+      {/* Projects Modal */}
+      <Modal
+        visible={projectsModalVisible}
+        onDismiss={() => setProjectsModalVisible(false)}
+        header={`Projects (${stats.projects.length})`}
+        size="medium"
+        footer={
+          <Box float="right">
+            <Button variant="primary" onClick={() => setProjectsModalVisible(false)}>Close</Button>
+          </Box>
+        }
+      >
+        <Table
+          columnDefinitions={[
+            { id: 'project', header: 'Project', cell: (item) => item.project },
+            { id: 'count', header: 'Thoughts', cell: (item) => item.count },
+          ]}
+          items={stats.projects.sort((a, b) => b.count - a.count)}
+          variant="embedded"
+        />
+      </Modal>
 
-      <Container header={<Header variant="h2">Timeline</Header>}>
-        <SpaceBetween size="s">
-          {weekKeys.map((weekKey) => {
-            const weekThoughts = thoughtsByWeek[weekKey];
-            const weekStart = new Date(weekKey);
-            const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
-            const weekLabel = `Week of ${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
+      {/* Action Items Modal */}
+      <Modal
+        visible={actionItemsVisible}
+        onDismiss={() => setActionItemsVisible(false)}
+        header={`Action Items (${stats.actionItemCount})`}
+        size="max"
+        footer={
+          <Box float="right">
+            <Button variant="primary" onClick={() => setActionItemsVisible(false)}>Close</Button>
+          </Box>
+        }
+      >
+        <PaginatedThoughtTable items={actionItemThoughts} />
+      </Modal>
 
-            return (
-              <ExpandableSection key={weekKey} headerText={`${weekLabel} (${weekThoughts.length})`}>
-                <SpaceBetween size="xs">
-                  {weekThoughts.map((thought) => (
-                    <div key={thought.key} style={{ paddingLeft: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ThoughtTypeBadge type={thought.metadata.type} />
-                        <Box variant="small" color="text-status-inactive">
-                          {safeDateStr(thought, 'MMM d')} •{' '}
-                          {thought.metadata.project || 'No project'}
-                        </Box>
-                      </div>
-                      <Box variant="p" margin={{ top: 'xxs' }}>
-                        {thought.metadata.summary || thought.metadata.content}
-                      </Box>
-                    </div>
-                  ))}
-                </SpaceBetween>
-              </ExpandableSection>
-            );
-          })}
+      {/* People Mentioned Modal */}
+      <Modal
+        visible={peopleModalVisible}
+        onDismiss={() => setPeopleModalVisible(false)}
+        header={`People Mentioned (${allPeople.size})`}
+        size="medium"
+        footer={
+          <Box float="right">
+            <Button variant="primary" onClick={() => setPeopleModalVisible(false)}>Close</Button>
+          </Box>
+        }
+      >
+        <SpaceBetween size="xs">
+          {sortedPeople.map((person) => (
+            <Box key={person} variant="p">{person}</Box>
+          ))}
         </SpaceBetween>
-      </Container>
+      </Modal>
     </SpaceBetween>
   );
 }

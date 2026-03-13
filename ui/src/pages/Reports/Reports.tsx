@@ -23,6 +23,7 @@ export function Reports() {
   const [thoughts, setThoughts] = useState<ThoughtRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [narrative, setNarrative] = useState<string | null>(null);
   const hasSelected = selectedProject !== null;
   const initialMount = useRef(true);
 
@@ -37,6 +38,7 @@ export function Reports() {
   const handleGenerate = async () => {
     setLoading(true);
     setHasGenerated(true);
+    setNarrative(null);
     try {
       const params: Record<string, string> = {
         startDate,
@@ -102,7 +104,7 @@ export function Reports() {
       (t) => t.metadata.action_items && t.metadata.action_items.length > 0
     );
     if (actionItems.length > 0) {
-      md += `## Open Action Items\n\n`;
+      md += `## Action Items\n\n`;
       actionItems.forEach((thought) => {
         const d = new Date(thought.metadata.thought_date || thought.metadata.created_at || '');
         const dateStr = isNaN(d.getTime()) ? 'Unknown date' : format(d, 'MMM d, yyyy');
@@ -114,16 +116,12 @@ export function Reports() {
       });
     }
 
-    return md;
-  };
-
-  const handleCopyMarkdown = async () => {
-    const markdown = buildMarkdown();
-    try {
-      await navigator.clipboard.writeText(markdown);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+    if (narrative) {
+      md += `## AI-Generated Narrative\n\n`;
+      md += `${narrative}\n\n`;
     }
+
+    return md;
   };
 
   const handleDownloadMarkdown = () => {
@@ -174,10 +172,9 @@ export function Reports() {
           Generate Report
         </Button>
         {!loading && stats && (
-          <>
-            <Button onClick={handleCopyMarkdown}>Copy as Markdown</Button>
+          <div style={{ marginLeft: 'auto' }}>
             <Button onClick={handleDownloadMarkdown}>Download Markdown</Button>
-          </>
+          </div>
         )}
       </div>
 
@@ -202,6 +199,7 @@ export function Reports() {
             startDate={startDate}
             endDate={endDate}
             project={selectedProject?.value}
+            onNarrativeChange={setNarrative}
           />
         </>
       )}

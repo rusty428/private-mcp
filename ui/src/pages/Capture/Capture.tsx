@@ -1,25 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Header from '@cloudscape-design/components/header';
 import Textarea from '@cloudscape-design/components/textarea';
-import Input from '@cloudscape-design/components/input';
 import Button from '@cloudscape-design/components/button';
 import Container from '@cloudscape-design/components/container';
-import Box from '@cloudscape-design/components/box';
-import Badge from '@cloudscape-design/components/badge';
+import Alert from '@cloudscape-design/components/alert';
 import FormField from '@cloudscape-design/components/form-field';
-import { PendingIndicator } from '../../components/PendingIndicator';
+import Autosuggest from '@cloudscape-design/components/autosuggest';
+import Table from '@cloudscape-design/components/table';
+import Badge from '@cloudscape-design/components/badge';
 import { api } from '../../api/client';
 import type { CaptureResult } from '../../api/types';
 import { format } from 'date-fns';
+
+interface RecentCapture extends CaptureResult {
+  text: string;
+  project: string;
+}
 
 export function Capture() {
   const [text, setText] = useState('');
   const [project, setProject] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<CaptureResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [recentCaptures, setRecentCaptures] = useState<RecentCapture[]>([]);
+  const [projectOptions, setProjectOptions] = useState<{ value: string }[]>([]);
+
+  useEffect(() => {
+    api.getTimeSeries({}).then((data) => {
+      setProjectOptions(
+        data.projects.map((p) => p.project).sort().map((p) => ({ value: p }))
+      );
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = async () => {
     if (!text.trim()) {
@@ -29,27 +44,25 @@ export function Capture() {
 
     setSubmitting(true);
     setError(null);
-    setResult(null);
+    setSuccess(false);
 
     try {
-      const captureResult = await api.capture({
+      const result = await api.capture({
         text: text.trim(),
         source: 'api',
         project: project.trim() || undefined,
       });
-      setResult(captureResult);
+      setRecentCaptures((prev) => [
+        { ...result, text: text.trim(), project: project.trim() },
+        ...prev,
+      ].slice(0, 5));
+      setText('');
+      setSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to capture thought');
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const handleReset = () => {
-    setText('');
-    setProject('');
-    setResult(null);
-    setError(null);
   };
 
   const qualityColors: Record<string, 'green' | 'blue' | 'grey'> = {
@@ -62,16 +75,32 @@ export function Capture() {
     <ContentLayout
       header={<Header variant="h1">Capture Thought</Header>}
     >
-    <SpaceBetween size="l">
-      {!result && (
+      <SpaceBetween size="l">
+        {success && (
+          <Alert
+            type="success"
+            dismissible
+            onDismiss={() => setSuccess(false)}
+          >
+            Thought captured successfully. Classification and enrichment will complete shortly.
+          </Alert>
+        )}
+
+        {error && (
+          <Alert type="error" dismissible onDismiss={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
         <Container>
           <SpaceBetween size="m">
-            <FormField label="Thought" errorText={error}>
+            <FormField label="Thought">
               <Textarea
                 value={text}
                 onChange={(e) => {
                   setText(e.detail.value);
                   setError(null);
+                  setSuccess(false);
                 }}
                 placeholder="Enter your thought here..."
                 rows={6}
@@ -79,12 +108,15 @@ export function Capture() {
               />
             </FormField>
 
-            <FormField label="Project (optional)" description="Associate this thought with a project">
-              <Input
+            <FormField label="Project" description="Select an existing project or type a new one">
+              <Autosuggest
                 value={project}
-                onChange={(e) => setProject(e.detail.value)}
+                onChange={({ detail }) => setProject(detail.value)}
+                options={projectOptions}
                 placeholder="e.g., AWSPrivateMCP"
                 disabled={submitting}
+                enteredTextLabel={(value) => `Use: "${value}"`}
+                empty="No matching projects"
               />
             </FormField>
 
@@ -95,49 +127,50 @@ export function Capture() {
             </div>
           </SpaceBetween>
         </Container>
-      )}
 
-      {result && (
-        <Container>
-          <SpaceBetween size="m">
-            <Box variant="h3">Thought Captured Successfully</Box>
-
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div>
-                <Box variant="awsui-key-label">Quality</Box>
-                <Badge color={qualityColors[result.quality] || 'grey'}>
-                  {result.quality}
-                </Badge>
-              </div>
-
-              <div>
-                <Box variant="awsui-key-label">Status</Box>
-                <PendingIndicator />
-              </div>
-
-              <div>
-                <Box variant="awsui-key-label">Captured</Box>
-                <Box variant="span">
-                  {(() => { const d = new Date(result.created_at || ''); return isNaN(d.getTime()) ? '-' : format(d, 'MMM d, yyyy h:mm a'); })()}
-                </Box>
-              </div>
-            </div>
-
-            <Box variant="p" color="text-status-inactive">
-              Your thought has been captured and is being processed. Classification and enrichment
-              will complete shortly.
-            </Box>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button variant="primary" onClick={handleReset}>
-                Capture Another
-              </Button>
-              <Button href={`/browse?id=${result.id}`}>View Thought</Button>
-            </div>
-          </SpaceBetween>
-        </Container>
-      )}
-    </SpaceBetween>
+        {recentCaptures.length > 0 && (
+          <Table
+            header={<Header variant="h2">Recent Captures</Header>}
+            columnDefinitions={[
+              {
+                id: 'quality',
+                header: 'Quality',
+                cell: (item) => (
+                  <Badge color={qualityColors[item.quality] || 'grey'}>
+                    {item.quality}
+                  </Badge>
+                ),
+                width: 100,
+              },
+              {
+                id: 'text',
+                header: 'Thought',
+                cell: (item) => {
+                  const display = item.text.length > 100 ? item.text.substring(0, 100) + '...' : item.text;
+                  return display;
+                },
+              },
+              {
+                id: 'project',
+                header: 'Project',
+                cell: (item) => item.project || '-',
+                width: 150,
+              },
+              {
+                id: 'time',
+                header: 'Captured',
+                cell: (item) => {
+                  const d = new Date(item.created_at || '');
+                  return isNaN(d.getTime()) ? '-' : format(d, 'h:mm a');
+                },
+                width: 100,
+              },
+            ]}
+            items={recentCaptures}
+            variant="embedded"
+          />
+        )}
+      </SpaceBetween>
     </ContentLayout>
   );
 }

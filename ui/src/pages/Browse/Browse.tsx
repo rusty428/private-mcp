@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import Header from '@cloudscape-design/components/header';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Table from '@cloudscape-design/components/table';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
+import Icon from '@cloudscape-design/components/icon';
 import Modal from '@cloudscape-design/components/modal';
 import Alert from '@cloudscape-design/components/alert';
+import Pagination from '@cloudscape-design/components/pagination';
+import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import TextFilter from '@cloudscape-design/components/text-filter';
 import Select from '@cloudscape-design/components/select';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import { ProjectSelect } from '../../components/ProjectSelect';
 import { ThoughtDetail } from './ThoughtDetail';
+import { EditThoughtForm, type EditThoughtFormHandle } from './EditThoughtForm';
 import { api } from '../../api/client';
 import type { ThoughtRecord } from '../../api/types';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
@@ -21,10 +25,16 @@ export function Browse() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<ThoughtRecord[]>([]);
+  const [detailItem, setDetailItem] = useState<ThoughtRecord | null>(null);
   const [editing, setEditing] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const editFormRef = useRef<EditThoughtFormHandle>(null);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Filters
   const [filterText, setFilterText] = useState('');
@@ -62,27 +72,34 @@ export function Browse() {
     return true;
   });
 
+  const pageCount = Math.ceil(filteredThoughts.length / pageSize);
+  const paginatedThoughts = filteredThoughts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const typeOptions = [
     ...VALID_THOUGHT_TYPES.map((t) => ({ label: t, value: t })),
     { label: 'pending', value: 'pending' },
   ];
 
-  const handleView = () => {
+  const openDetail = (item: ThoughtRecord) => {
+    setDetailItem(item);
     setEditing(false);
     setDetailVisible(true);
   };
 
-  const handleEdit = () => {
+  const openEdit = (item: ThoughtRecord) => {
+    setDetailItem(item);
     setEditing(true);
-    setDetailVisible(true);
   };
 
-  const handleSave = async (updates: Record<string, any>) => {
-    if (selectedItems.length !== 1) return;
+  const handleSave = async () => {
+    if (!detailItem || !editFormRef.current) return;
     try {
-      await api.editThought(selectedItems[0].key, updates);
+      const updates = editFormRef.current.getUpdates();
+      await api.editThought(detailItem.key, updates);
       setEditing(false);
-      setDetailVisible(false);
       await loadThoughts();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save changes');
@@ -94,12 +111,15 @@ export function Browse() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedItems.length === 0) return;
+    const itemsToDelete = (detailVisible || editing) && detailItem ? [detailItem] : selectedItems;
+    if (itemsToDelete.length === 0) return;
     try {
       setDeleting(true);
-      await Promise.all(selectedItems.map((item) => api.deleteThought(item.key)));
+      await Promise.all(itemsToDelete.map((item) => api.deleteThought(item.key)));
       setDeleteModalVisible(false);
       setDetailVisible(false);
+      setEditing(false);
+      setDetailItem(null);
       setSelectedItems([]);
       await loadThoughts();
     } catch (err) {
@@ -142,14 +162,9 @@ export function Browse() {
                     : `(${filteredThoughts.length})`
                 }
                 actions={
-                  <SpaceBetween direction="horizontal" size="xs">
-                    <Button disabled={selectedItems.length !== 1} onClick={handleView}>
-                      View
-                    </Button>
-                    <Button disabled={selectedItems.length === 0} onClick={handleDeleteClick}>
-                      Delete
-                    </Button>
-                  </SpaceBetween>
+                  <Button disabled={selectedItems.length === 0} onClick={handleDeleteClick}>
+                    Delete
+                  </Button>
                 }
               >
                 Thoughts
@@ -159,21 +174,22 @@ export function Browse() {
               <SpaceBetween direction="horizontal" size="xs">
                 <TextFilter
                   filteringText={filterText}
-                  onChange={({ detail }) => setFilterText(detail.filteringText)}
+                  onChange={({ detail }) => { setFilterText(detail.filteringText); setCurrentPage(1); }}
                   filteringPlaceholder="Search thoughts..."
                   countText={`${filteredThoughts.length} matches`}
                 />
                 <Select
                   selectedOption={typeFilter}
-                  onChange={({ detail }) =>
-                    setTypeFilter(detail.selectedOption.value ? (detail.selectedOption as any) : null)
-                  }
+                  onChange={({ detail }) => {
+                    setTypeFilter(detail.selectedOption.value ? (detail.selectedOption as any) : null);
+                    setCurrentPage(1);
+                  }}
                   options={[{ label: 'All types', value: '' }, ...typeOptions]}
                   placeholder="All types"
                 />
                 <ProjectSelect
                   selectedOption={projectFilter}
-                  onChange={setProjectFilter}
+                  onChange={(opt) => { setProjectFilter(opt); setCurrentPage(1); }}
                 />
               </SpaceBetween>
             }
@@ -181,7 +197,11 @@ export function Browse() {
               {
                 id: 'type',
                 header: 'Type',
-                cell: (item) => <ThoughtTypeBadge type={item.metadata.type} />,
+                cell: (item) => (
+                  <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                    <ThoughtTypeBadge type={item.metadata.type} />
+                  </div>
+                ),
                 sortingField: 'metadata.type',
                 width: 140,
               },
@@ -190,7 +210,12 @@ export function Browse() {
                 header: 'Summary',
                 cell: (item) => {
                   const text = item.metadata.summary || item.metadata.content || '';
-                  return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                  const display = text.length > 100 ? text.substring(0, 100) + '...' : text;
+                  return (
+                    <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                      {display}
+                    </div>
+                  );
                 },
                 sortingField: 'metadata.summary',
                 maxWidth: 400,
@@ -198,14 +223,22 @@ export function Browse() {
               {
                 id: 'project',
                 header: 'Project',
-                cell: (item) => item.metadata.project || '-',
+                cell: (item) => (
+                  <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                    {item.metadata.project || '-'}
+                  </div>
+                ),
                 sortingField: 'metadata.project',
                 width: 150,
               },
               {
                 id: 'source',
                 header: 'Source',
-                cell: (item) => item.metadata.source,
+                cell: (item) => (
+                  <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                    {item.metadata.source}
+                  </div>
+                ),
                 sortingField: 'metadata.source',
                 width: 120,
               },
@@ -215,17 +248,72 @@ export function Browse() {
                 cell: (item) => {
                   const raw = item.metadata.thought_date || item.metadata.created_at || '';
                   const d = new Date(raw);
-                  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+                  return (
+                    <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
+                      {isNaN(d.getTime()) ? '-' : d.toLocaleDateString()}
+                    </div>
+                  );
                 },
                 sortingField: 'metadata.thought_date',
                 width: 120,
               },
+              {
+                id: 'actions',
+                header: '',
+                cell: (item) => (
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <span
+                      style={{ cursor: 'pointer', color: 'var(--color-text-link-default)' }}
+                      onClick={() => openDetail(item)}
+                      title="View details"
+                    >
+                      <Icon name="status-info" />
+                    </span>
+                    <span
+                      style={{ cursor: 'pointer', color: 'var(--color-text-link-default)' }}
+                      onClick={() => openEdit(item)}
+                      title="Edit"
+                    >
+                      <Icon name="edit" />
+                    </span>
+                  </SpaceBetween>
+                ),
+                width: 80,
+              },
             ]}
-            items={filteredThoughts}
+            items={paginatedThoughts}
             loading={loading}
             loadingText="Loading thoughts..."
             sortingDisabled={false}
             stickyHeader
+            pagination={
+              <Pagination
+                currentPageIndex={currentPage}
+                pagesCount={pageCount}
+                onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
+              />
+            }
+            preferences={
+              <CollectionPreferences
+                title="Preferences"
+                confirmLabel="Confirm"
+                cancelLabel="Cancel"
+                pageSizePreference={{
+                  title: 'Page size',
+                  options: [
+                    { value: 10, label: '10 thoughts' },
+                    { value: 25, label: '25 thoughts' },
+                    { value: 50, label: '50 thoughts' },
+                    { value: 100, label: '100 thoughts' },
+                  ],
+                }}
+                preferences={{ pageSize }}
+                onConfirm={({ detail }) => {
+                  setPageSize(detail.pageSize ?? 25);
+                  setCurrentPage(1);
+                }}
+              />
+            }
             empty={
               <Box textAlign="center" color="inherit">
                 <b>No thoughts</b>
@@ -242,37 +330,49 @@ export function Browse() {
       </ContentLayout>
 
       <Modal
-        visible={detailVisible && selectedItems.length === 1}
+        visible={detailVisible && detailItem !== null}
         onDismiss={() => setDetailVisible(false)}
         header="Thought Details"
         closeAriaLabel="Close details"
         size="large"
         footer={
-          <Box float="right">
-            <SpaceBetween direction="horizontal" size="xs">
-              <Button variant="link" onClick={() => setDetailVisible(false)}>
-                Close
-              </Button>
-              <Button onClick={handleEdit}>Edit</Button>
-              <Button onClick={handleDeleteClick}>Delete</Button>
-            </SpaceBetween>
-          </Box>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Button variant="link" onClick={handleDeleteClick}>Delete</Button>
+            <Button variant="primary" onClick={() => setDetailVisible(false)}>
+              Close
+            </Button>
+          </div>
         }
       >
-        {selectedItems.length === 1 && (
-          <ThoughtDetail
-            thought={selectedItems[0]}
-            editing={editing}
-            onSave={handleSave}
-            onCancel={() => { setEditing(false); setDetailVisible(false); }}
-          />
-        )}
+        {detailItem && <ThoughtDetail thought={detailItem} />}
+      </Modal>
+
+      <Modal
+        visible={editing && detailItem !== null}
+        onDismiss={() => setEditing(false)}
+        header="Edit Thought"
+        closeAriaLabel="Close editor"
+        size="large"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Button variant="link" onClick={handleDeleteClick}>Delete</Button>
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => setEditing(false)}>Cancel</Button>
+              <Button variant="primary" onClick={handleSave}>Save</Button>
+            </SpaceBetween>
+          </div>
+        }
+      >
+        {detailItem && <EditThoughtForm ref={editFormRef} thought={detailItem} />}
       </Modal>
 
       <Modal
         visible={deleteModalVisible}
         onDismiss={() => setDeleteModalVisible(false)}
-        header={`Delete ${selectedItems.length === 1 ? 'thought' : `${selectedItems.length} thoughts`}`}
+        header={(() => {
+          const count = (detailVisible || editing) && detailItem ? 1 : selectedItems.length;
+          return `Delete ${count === 1 ? 'thought' : `${count} thoughts`}`;
+        })()}
         closeAriaLabel="Close dialog"
         footer={
           <Box float="right">
@@ -287,7 +387,10 @@ export function Browse() {
           </Box>
         }
       >
-        Are you sure you want to delete {selectedItems.length === 1 ? 'this thought' : `these ${selectedItems.length} thoughts`}? This action cannot be undone.
+        {(() => {
+          const count = (detailVisible || editing) && detailItem ? 1 : selectedItems.length;
+          return `Are you sure you want to delete ${count === 1 ? 'this thought' : `these ${count} thoughts`}? This action cannot be undone.`;
+        })()}
       </Modal>
     </>
   );

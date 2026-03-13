@@ -1,33 +1,14 @@
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Box from '@cloudscape-design/components/box';
-import Header from '@cloudscape-design/components/header';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
-import { EditThoughtForm } from './EditThoughtForm';
 import type { ThoughtRecord } from '../../api/types';
 
 interface ThoughtDetailProps {
   thought: ThoughtRecord;
-  editing: boolean;
-  onSave: (updates: Record<string, any>) => void;
-  onCancel: () => void;
 }
 
-export function ThoughtDetail({
-  thought,
-  editing,
-  onSave,
-  onCancel,
-}: ThoughtDetailProps) {
-  if (editing) {
-    return (
-      <SpaceBetween size="l">
-        <Header variant="h2">Edit Thought</Header>
-        <EditThoughtForm thought={thought} onSave={onSave} onCancel={onCancel} />
-      </SpaceBetween>
-    );
-  }
-
+export function ThoughtDetail({ thought }: ThoughtDetailProps) {
   return (
     <SpaceBetween size="l">
       <ColumnLayout columns={2} variant="text-grid">
