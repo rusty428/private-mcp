@@ -11,6 +11,7 @@ import Spinner from '@cloudscape-design/components/spinner';
 import { format, subDays } from 'date-fns';
 import { api } from '../../api/client';
 import type { ThoughtRecord, TimeSeriesResponse } from '../../api/types';
+import { parseLocalDate } from '../../utils/parseDate';
 import { StructuredReport } from './StructuredReport';
 import { NarrativeSection } from './NarrativeSection';
 
@@ -106,7 +107,7 @@ export function Reports() {
     if (actionItems.length > 0) {
       md += `## Action Items\n\n`;
       actionItems.forEach((thought) => {
-        const d = new Date(thought.metadata.thought_date || thought.metadata.created_at || '');
+        const d = parseLocalDate(thought.metadata.thought_date || thought.metadata.created_at || '');
         const dateStr = isNaN(d.getTime()) ? 'Unknown date' : format(d, 'MMM d, yyyy');
         md += `### ${thought.metadata.project || 'No project'} - ${dateStr}\n\n`;
         thought.metadata.action_items.forEach((item) => {

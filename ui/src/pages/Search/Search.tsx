@@ -17,6 +17,7 @@ import { ProjectSelect } from '../../components/ProjectSelect';
 import { ThoughtDetail } from '../Browse/ThoughtDetail';
 import { api } from '../../api/client';
 import type { SearchResult } from '../../api/types';
+import { parseLocalDate } from '../../utils/parseDate';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
 
 export function Search() {
@@ -209,7 +210,7 @@ export function Search() {
                   header: 'Date',
                   cell: (item) => {
                     const raw = item.metadata.thought_date || item.metadata.created_at || '';
-                    const d = new Date(raw);
+                    const d = parseLocalDate(raw);
                     return (
                       <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
                         {isNaN(d.getTime()) ? '-' : d.toLocaleDateString()}

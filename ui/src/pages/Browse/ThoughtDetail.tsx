@@ -3,6 +3,7 @@ import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Box from '@cloudscape-design/components/box';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import type { ThoughtRecord } from '../../api/types';
+import { parseLocalDate } from '../../utils/parseDate';
 
 interface ThoughtDetailProps {
   thought: ThoughtRecord;
@@ -34,7 +35,7 @@ export function ThoughtDetail({ thought }: ThoughtDetailProps) {
 
         <div>
           <Box variant="awsui-key-label">Date</Box>
-          <div>{(() => { const d = new Date(thought.metadata.thought_date || thought.metadata.created_at || ''); return isNaN(d.getTime()) ? '-' : d.toLocaleString(); })()}</div>
+          <div>{(() => { const d = parseLocalDate(thought.metadata.thought_date || thought.metadata.created_at || ''); return isNaN(d.getTime()) ? '-' : d.toLocaleString(); })()}</div>
         </div>
 
         <div>

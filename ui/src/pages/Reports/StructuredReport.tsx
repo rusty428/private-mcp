@@ -15,6 +15,7 @@ import SegmentedControl from '@cloudscape-design/components/segmented-control';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import type { ThoughtRecord, TimeSeriesResponse } from '../../api/types';
 import { format, parseISO } from 'date-fns';
+import { parseLocalDate } from '../../utils/parseDate';
 
 const CHART_TYPE_KEY = 'dashboard-chart-type';
 type ChartType = 'line' | 'bar';
@@ -31,7 +32,7 @@ interface StructuredReportProps {
 
 function safeDate(thought: ThoughtRecord): Date {
   const raw = thought.metadata.thought_date || thought.metadata.created_at || '';
-  const d = new Date(raw);
+  const d = parseLocalDate(raw);
   return isNaN(d.getTime()) ? new Date() : d;
 }
 

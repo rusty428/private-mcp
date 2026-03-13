@@ -10,6 +10,7 @@ import Modal from '@cloudscape-design/components/modal';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import { ThoughtDetail } from '../Browse/ThoughtDetail';
 import type { ThoughtRecord } from '../../api/types';
+import { parseLocalDate } from '../../utils/parseDate';
 
 interface RecentThoughtsProps {
   thoughts: ThoughtRecord[];
@@ -91,7 +92,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
               header: 'Date',
               cell: (item) => {
                 const raw = item.metadata.thought_date || item.metadata.created_at || '';
-                const d = new Date(raw);
+                const d = parseLocalDate(raw);
                 return (
                   <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
                     {isNaN(d.getTime()) ? '-' : d.toLocaleDateString()}
