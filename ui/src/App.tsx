@@ -4,16 +4,25 @@ import TopNavigation from '@cloudscape-design/components/top-navigation';
 import AppLayout from '@cloudscape-design/components/app-layout';
 import SideNavigation from '@cloudscape-design/components/side-navigation';
 import Footer from './components/Footer';
+import { ThemeProvider, useTheme } from './theme/ThemeContext';
+import type { ThemePreference } from './theme/ThemeContext';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { Browse } from './pages/Browse/Browse';
 import { Search } from './pages/Search/Search';
 import { Reports } from './pages/Reports/Reports';
 import { Capture } from './pages/Capture/Capture';
 
+const THEME_LABELS: Record<ThemePreference, string> = {
+  system: 'System',
+  light: 'Light',
+  dark: 'Dark',
+};
+
 function AppContent() {
   const [navigationOpen, setNavigationOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { preference, setPreference } = useTheme();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -26,7 +35,19 @@ function AppContent() {
             navigate('/');
           },
         }}
-        utilities={[]}
+        utilities={[
+          {
+            type: 'menu-dropdown',
+            iconName: 'settings',
+            ariaLabel: 'Settings',
+            title: 'Settings',
+            items: (['system', 'light', 'dark'] as ThemePreference[]).map((p) => ({
+              id: p,
+              text: `${THEME_LABELS[p]}${preference === p ? ' \u2713' : ''}`,
+            })),
+            onItemClick: ({ detail }) => setPreference(detail.id as ThemePreference),
+          },
+        ]}
       />
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         <AppLayout
@@ -69,7 +90,9 @@ function AppContent() {
 export function App() {
   return (
     <BrowserRouter>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
