@@ -168,10 +168,12 @@ app.get('/stats/timeseries', async (req, res) => {
     if (interval && interval !== 'day' && interval !== 'week') {
       return res.status(400).json({ error: 'Invalid interval. Must be "day" or "week".' });
     }
+    const project = req.query.project as string;
     const results = await getTimeSeries({
       startDate,
       endDate,
       interval: interval as 'day' | 'week',
+      project,
     });
     res.json(results);
   } catch (err: any) {

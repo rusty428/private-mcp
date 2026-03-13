@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ContentLayout from '@cloudscape-design/components/content-layout';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Header from '@cloudscape-design/components/header';
 import Textarea from '@cloudscape-design/components/textarea';
@@ -58,9 +59,10 @@ export function Capture() {
   };
 
   return (
+    <ContentLayout
+      header={<Header variant="h1">Capture Thought</Header>}
+    >
     <SpaceBetween size="l">
-      <Header variant="h1">Capture Thought</Header>
-
       {!result && (
         <Container>
           <SpaceBetween size="m">
@@ -136,5 +138,6 @@ export function Capture() {
         </Container>
       )}
     </SpaceBetween>
+    </ContentLayout>
   );
 }

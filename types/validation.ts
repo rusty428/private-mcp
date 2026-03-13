@@ -2,8 +2,8 @@
 
 export const MAX_TEXT_LENGTH = 10000;
 export const MAX_QUERY_LENGTH = 1000;
-export const MAX_LIST_LIMIT = 200;
-export const MAX_SEARCH_LIMIT = 50;
+export const MAX_LIST_LIMIT = 2000;
+export const MAX_SEARCH_LIMIT = 100;
 
 export const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;

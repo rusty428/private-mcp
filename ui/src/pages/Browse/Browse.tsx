@@ -7,10 +7,10 @@ import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import Modal from '@cloudscape-design/components/modal';
 import Alert from '@cloudscape-design/components/alert';
-import FormField from '@cloudscape-design/components/form-field';
+import TextFilter from '@cloudscape-design/components/text-filter';
 import Select from '@cloudscape-design/components/select';
-import Input from '@cloudscape-design/components/input';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
+import { ProjectSelect } from '../../components/ProjectSelect';
 import { ThoughtDetail } from './ThoughtDetail';
 import { api } from '../../api/client';
 import type { ThoughtRecord } from '../../api/types';
@@ -20,23 +20,22 @@ export function Browse() {
   const [thoughts, setThoughts] = useState<ThoughtRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedThought, setSelectedThought] = useState<ThoughtRecord | null>(null);
+  const [selectedItems, setSelectedItems] = useState<ThoughtRecord[]>([]);
   const [editing, setEditing] = useState(false);
+  const [detailVisible, setDetailVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   // Filters
+  const [filterText, setFilterText] = useState('');
   const [typeFilter, setTypeFilter] = useState<{ label: string; value: string } | null>(null);
-  const [projectFilter, setProjectFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState<{ label: string; value: string } | null>(null);
 
   const loadThoughts = async () => {
     try {
       setLoading(true);
       setError(null);
-      const params: Record<string, string> = {};
-      if (typeFilter) params.type = typeFilter.value;
-      if (projectFilter) params.project = projectFilter;
-      const data = await api.listThoughts(params);
+      const data = await api.listThoughts({ limit: '1000' });
       setThoughts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load thoughts');
@@ -47,33 +46,47 @@ export function Browse() {
 
   useEffect(() => {
     loadThoughts();
-  }, [typeFilter, projectFilter]);
+  }, []);
 
-  const handleRowClick = (thought: ThoughtRecord) => {
-    setSelectedThought(thought);
+  // Client-side filtering
+  const filteredThoughts = thoughts.filter((t) => {
+    if (typeFilter && t.metadata.type !== typeFilter.value) return false;
+    if (projectFilter && t.metadata.project !== projectFilter.value) return false;
+    if (filterText) {
+      const text = filterText.toLowerCase();
+      const summary = (t.metadata.summary || '').toLowerCase();
+      const content = (t.metadata.content || '').toLowerCase();
+      const project = (t.metadata.project || '').toLowerCase();
+      if (!summary.includes(text) && !content.includes(text) && !project.includes(text)) return false;
+    }
+    return true;
+  });
+
+  const typeOptions = [
+    ...VALID_THOUGHT_TYPES.map((t) => ({ label: t, value: t })),
+    { label: 'pending', value: 'pending' },
+  ];
+
+  const handleView = () => {
     setEditing(false);
+    setDetailVisible(true);
   };
 
   const handleEdit = () => {
     setEditing(true);
+    setDetailVisible(true);
   };
 
   const handleSave = async (updates: Record<string, any>) => {
-    if (!selectedThought) return;
+    if (selectedItems.length !== 1) return;
     try {
-      await api.editThought(selectedThought.key, updates);
+      await api.editThought(selectedItems[0].key, updates);
       setEditing(false);
+      setDetailVisible(false);
       await loadThoughts();
-      // Update selected thought to reflect changes
-      const updated = thoughts.find(t => t.key === selectedThought.key);
-      if (updated) setSelectedThought(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save changes');
     }
-  };
-
-  const handleCancelEdit = () => {
-    setEditing(false);
   };
 
   const handleDeleteClick = () => {
@@ -81,25 +94,20 @@ export function Browse() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedThought) return;
+    if (selectedItems.length === 0) return;
     try {
       setDeleting(true);
-      await api.deleteThought(selectedThought.key);
+      await Promise.all(selectedItems.map((item) => api.deleteThought(item.key)));
       setDeleteModalVisible(false);
-      setSelectedThought(null);
+      setDetailVisible(false);
+      setSelectedItems([]);
       await loadThoughts();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete thought');
+      setError(err instanceof Error ? err.message : 'Failed to delete thoughts');
     } finally {
       setDeleting(false);
     }
   };
-
-  const typeOptions = [
-    { label: 'All types', value: '' },
-    ...VALID_THOUGHT_TYPES.map(t => ({ label: t, value: t })),
-    { label: 'pending', value: 'pending' },
-  ];
 
   return (
     <>
@@ -125,110 +133,146 @@ export function Browse() {
             </Alert>
           )}
 
-          <SpaceBetween direction="horizontal" size="s">
-            <FormField label="Type">
-              <Select
-                selectedOption={typeFilter}
-                onChange={({ detail }) =>
-                  setTypeFilter(detail.selectedOption.value ? detail.selectedOption as any : null)
+          <Table
+            header={
+              <Header
+                counter={
+                  selectedItems.length
+                    ? `(${selectedItems.length}/${filteredThoughts.length})`
+                    : `(${filteredThoughts.length})`
                 }
-                options={typeOptions}
-                placeholder="All types"
-              />
-            </FormField>
-
-            <FormField label="Project">
-              <Input
-                value={projectFilter}
-                onChange={({ detail }) => setProjectFilter(detail.value)}
-                placeholder="Filter by project"
-              />
-            </FormField>
-          </SpaceBetween>
-
-          <div style={{ display: 'grid', gridTemplateColumns: selectedThought ? '1fr 1fr' : '1fr', gap: '1rem' }}>
-            <Table
-              columnDefinitions={[
-                {
-                  id: 'type',
-                  header: 'Type',
-                  cell: (item) => <ThoughtTypeBadge type={item.metadata.type} />,
-                  sortingField: 'metadata.type',
-                  width: 140,
-                },
-                {
-                  id: 'summary',
-                  header: 'Summary',
-                  cell: (item) => {
-                    const text = item.metadata.summary || item.metadata.content || '';
-                    const truncated = text.length > 120 ? text.substring(0, 120) + '...' : text;
-                    return <span style={{ display: 'block', maxWidth: '500px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncated}</span>;
-                  },
-                  sortingField: 'metadata.summary',
-                },
-                {
-                  id: 'project',
-                  header: 'Project',
-                  cell: (item) => item.metadata.project || '-',
-                  sortingField: 'metadata.project',
-                  width: 150,
-                },
-                {
-                  id: 'source',
-                  header: 'Source',
-                  cell: (item) => item.metadata.source,
-                  sortingField: 'metadata.source',
-                  width: 120,
-                },
-                {
-                  id: 'date',
-                  header: 'Date',
-                  cell: (item) => {
-                    const raw = item.metadata.thought_date || item.metadata.created_at || '';
-                    const d = new Date(raw);
-                    return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
-                  },
-                  sortingField: 'metadata.thought_date',
-                  width: 120,
-                },
-              ]}
-              items={thoughts}
-              loading={loading}
-              loadingText="Loading thoughts..."
-              sortingDisabled={false}
-              empty={
-                <Box textAlign="center" color="inherit">
-                  <b>No thoughts</b>
-                  <Box padding={{ bottom: 's' }} variant="p" color="inherit">
-                    No thoughts found matching your filters.
-                  </Box>
-                </Box>
-              }
-              onRowClick={({ detail }) => handleRowClick(detail.item)}
-              selectedItems={selectedThought ? [selectedThought] : []}
-              selectionType="single"
-            />
-
-            {selectedThought && (
-              <Box padding="l">
-                <ThoughtDetail
-                  thought={selectedThought}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteClick}
-                  editing={editing}
-                  onSave={handleSave}
-                  onCancel={handleCancelEdit}
+                actions={
+                  <SpaceBetween direction="horizontal" size="xs">
+                    <Button disabled={selectedItems.length !== 1} onClick={handleView}>
+                      View
+                    </Button>
+                    <Button disabled={selectedItems.length === 0} onClick={handleDeleteClick}>
+                      Delete
+                    </Button>
+                  </SpaceBetween>
+                }
+              >
+                Thoughts
+              </Header>
+            }
+            filter={
+              <SpaceBetween direction="horizontal" size="xs">
+                <TextFilter
+                  filteringText={filterText}
+                  onChange={({ detail }) => setFilterText(detail.filteringText)}
+                  filteringPlaceholder="Search thoughts..."
+                  countText={`${filteredThoughts.length} matches`}
                 />
+                <Select
+                  selectedOption={typeFilter}
+                  onChange={({ detail }) =>
+                    setTypeFilter(detail.selectedOption.value ? (detail.selectedOption as any) : null)
+                  }
+                  options={[{ label: 'All types', value: '' }, ...typeOptions]}
+                  placeholder="All types"
+                />
+                <ProjectSelect
+                  selectedOption={projectFilter}
+                  onChange={setProjectFilter}
+                />
+              </SpaceBetween>
+            }
+            columnDefinitions={[
+              {
+                id: 'type',
+                header: 'Type',
+                cell: (item) => <ThoughtTypeBadge type={item.metadata.type} />,
+                sortingField: 'metadata.type',
+                width: 140,
+              },
+              {
+                id: 'summary',
+                header: 'Summary',
+                cell: (item) => {
+                  const text = item.metadata.summary || item.metadata.content || '';
+                  return text.length > 100 ? text.substring(0, 100) + '...' : text;
+                },
+                sortingField: 'metadata.summary',
+                maxWidth: 400,
+              },
+              {
+                id: 'project',
+                header: 'Project',
+                cell: (item) => item.metadata.project || '-',
+                sortingField: 'metadata.project',
+                width: 150,
+              },
+              {
+                id: 'source',
+                header: 'Source',
+                cell: (item) => item.metadata.source,
+                sortingField: 'metadata.source',
+                width: 120,
+              },
+              {
+                id: 'date',
+                header: 'Date',
+                cell: (item) => {
+                  const raw = item.metadata.thought_date || item.metadata.created_at || '';
+                  const d = new Date(raw);
+                  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+                },
+                sortingField: 'metadata.thought_date',
+                width: 120,
+              },
+            ]}
+            items={filteredThoughts}
+            loading={loading}
+            loadingText="Loading thoughts..."
+            sortingDisabled={false}
+            stickyHeader
+            empty={
+              <Box textAlign="center" color="inherit">
+                <b>No thoughts</b>
+                <Box padding={{ bottom: 's' }} variant="p" color="inherit">
+                  No thoughts found matching your filters.
+                </Box>
               </Box>
-            )}
-          </div>
+            }
+            onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
+            selectedItems={selectedItems}
+            selectionType="multi"
+          />
         </SpaceBetween>
       </ContentLayout>
 
       <Modal
+        visible={detailVisible && selectedItems.length === 1}
+        onDismiss={() => setDetailVisible(false)}
+        header="Thought Details"
+        closeAriaLabel="Close details"
+        size="large"
+        footer={
+          <Box float="right">
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button variant="link" onClick={() => setDetailVisible(false)}>
+                Close
+              </Button>
+              <Button onClick={handleEdit}>Edit</Button>
+              <Button onClick={handleDeleteClick}>Delete</Button>
+            </SpaceBetween>
+          </Box>
+        }
+      >
+        {selectedItems.length === 1 && (
+          <ThoughtDetail
+            thought={selectedItems[0]}
+            editing={editing}
+            onSave={handleSave}
+            onCancel={() => { setEditing(false); setDetailVisible(false); }}
+          />
+        )}
+      </Modal>
+
+      <Modal
         visible={deleteModalVisible}
         onDismiss={() => setDeleteModalVisible(false)}
-        header="Delete thought"
+        header={`Delete ${selectedItems.length === 1 ? 'thought' : `${selectedItems.length} thoughts`}`}
         closeAriaLabel="Close dialog"
         footer={
           <Box float="right">
@@ -243,7 +287,7 @@ export function Browse() {
           </Box>
         }
       >
-        Are you sure you want to delete this thought? This action cannot be undone.
+        Are you sure you want to delete {selectedItems.length === 1 ? 'this thought' : `these ${selectedItems.length} thoughts`}? This action cannot be undone.
       </Modal>
     </>
   );

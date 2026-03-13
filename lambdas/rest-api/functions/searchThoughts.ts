@@ -13,7 +13,7 @@ interface SearchParams {
 }
 
 export async function searchThoughts(params: SearchParams) {
-  const { query, limit = 20, threshold = 0.5, project } = params;
+  const { query, limit = 20, threshold = 0.7, project } = params;
 
   const embedResponse = await bedrock.send(new InvokeModelCommand({
     modelId: EMBEDDING_MODEL_ID,
@@ -47,7 +47,7 @@ export async function searchThoughts(params: SearchParams) {
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,
     queryVector: { float32: queryVector },
-    topK: limit * 2,
+    topK: Math.min(limit * 2, 100),
     returnDistance: true,
     returnMetadata: true,
     filter,

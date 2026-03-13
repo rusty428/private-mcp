@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import ContentLayout from '@cloudscape-design/components/content-layout';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Header from '@cloudscape-design/components/header';
 import Button from '@cloudscape-design/components/button';
 import DatePicker from '@cloudscape-design/components/date-picker';
-import Select, { type SelectProps } from '@cloudscape-design/components/select';
+import { type SelectProps } from '@cloudscape-design/components/select';
+import { ProjectSelect } from '../../components/ProjectSelect';
 import Box from '@cloudscape-design/components/box';
 import Spinner from '@cloudscape-design/components/spinner';
 import { format, subDays } from 'date-fns';
@@ -21,6 +23,16 @@ export function Reports() {
   const [thoughts, setThoughts] = useState<ThoughtRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const hasSelected = selectedProject !== null;
+  const initialMount = useRef(true);
+
+  useEffect(() => {
+    if (initialMount.current) {
+      initialMount.current = false;
+      return;
+    }
+    if (hasSelected) handleGenerate();
+  }, [selectedProject]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -50,13 +62,6 @@ export function Reports() {
       setLoading(false);
     }
   };
-
-  const projectOptions = stats
-    ? [
-        { label: 'All Projects', value: '' },
-        ...stats.projects.map((p) => ({ label: p.project, value: p.project })),
-      ]
-    : [{ label: 'All Projects', value: '' }];
 
   const buildMarkdown = (): string => {
     if (!stats) return '';
@@ -135,19 +140,17 @@ export function Reports() {
   };
 
   return (
-    <SpaceBetween size="l">
-      <Header variant="h1">Reports</Header>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '8px', alignItems: 'flex-end' }}>
+    <ContentLayout
+      header={<Header variant="h1">Reports</Header>}
+    >
+    <SpaceBetween size="m">
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div>
           <Box variant="awsui-key-label">Start Date</Box>
           <DatePicker
             value={startDate}
             onChange={(e) => setStartDate(e.detail.value)}
             placeholder="YYYY-MM-DD"
-            openCalendarAriaLabel={(selectedDate) =>
-              selectedDate ? `Choose start date, selected date is ${selectedDate}` : 'Choose start date'
-            }
           />
         </div>
         <div>
@@ -156,24 +159,26 @@ export function Reports() {
             value={endDate}
             onChange={(e) => setEndDate(e.detail.value)}
             placeholder="YYYY-MM-DD"
-            openCalendarAriaLabel={(selectedDate) =>
-              selectedDate ? `Choose end date, selected date is ${selectedDate}` : 'Choose end date'
-            }
           />
         </div>
         <div>
           <Box variant="awsui-key-label">Project</Box>
-          <Select
-            selectedOption={selectedProject}
-            onChange={(e) => setSelectedProject(e.detail.selectedOption)}
-            options={projectOptions}
-            placeholder="All Projects"
-            expandToViewport
+          <ProjectSelect
+            selectedOption={selectedProject as any}
+            onChange={(opt) => setSelectedProject(opt)}
+            placeholder="Select Project"
+            allLabel="All Projects"
           />
         </div>
-        <Button variant="primary" onClick={handleGenerate} loading={loading}>
+        <Button variant="primary" onClick={handleGenerate} loading={loading} disabled={!hasSelected}>
           Generate Report
         </Button>
+        {!loading && stats && (
+          <>
+            <Button onClick={handleCopyMarkdown}>Copy as Markdown</Button>
+            <Button onClick={handleDownloadMarkdown}>Download Markdown</Button>
+          </>
+        )}
       </div>
 
       {loading && (
@@ -190,10 +195,6 @@ export function Reports() {
 
       {!loading && stats && thoughts && (
         <>
-          <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-            <Button onClick={handleCopyMarkdown}>Copy as Markdown</Button>
-            <Button onClick={handleDownloadMarkdown}>Download Markdown</Button>
-          </div>
 
           <StructuredReport thoughts={thoughts} stats={stats} />
 
@@ -205,5 +206,6 @@ export function Reports() {
         </>
       )}
     </SpaceBetween>
+    </ContentLayout>
   );
 }

@@ -118,7 +118,7 @@ export async function searchThoughts(
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,
     queryVector: { float32: queryVector },
-    topK: limit * 2,
+    topK: Math.min(limit * 2, 100),
     returnDistance: true,
     returnMetadata: true,
     filter,

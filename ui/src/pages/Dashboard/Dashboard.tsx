@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import ContentLayout from '@cloudscape-design/components/content-layout';
 import SpaceBetween from '@cloudscape-design/components/space-between';
+import Grid from '@cloudscape-design/components/grid';
 import Header from '@cloudscape-design/components/header';
 import { format, subDays } from 'date-fns';
 import { api } from '../../api/client';
@@ -38,11 +40,14 @@ export function Dashboard() {
   const sources = stats ? Object.keys(stats.bySource) : [];
 
   return (
+    <ContentLayout
+      header={
+        <Header variant="h1" actions={<TimeRangeSelector onChange={setTimeRange} />}>
+          Thought Dashboard
+        </Header>
+      }
+    >
     <SpaceBetween size="l">
-      <Header variant="h1" actions={<TimeRangeSelector onChange={setTimeRange} />}>
-        Thought Dashboard
-      </Header>
-
       {stats && (
         <>
           <StatCards
@@ -51,18 +56,19 @@ export function Dashboard() {
             actionItems={stats.actionItemCount}
             projectCount={stats.projects.length}
           />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <Grid gridDefinition={[{ colspan: { default: 12, m: 6 } }, { colspan: { default: 12, m: 6 } }]}>
             <ActivityChart buckets={stats.buckets} sources={sources} />
             <TypeBreakdown byType={stats.byType} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          </Grid>
+          <Grid gridDefinition={[{ colspan: { default: 12, m: 6 } }, { colspan: { default: 12, m: 6 } }]}>
             <TopTopics topTopics={stats.topTopics} />
             <SourceBreakdown bySource={stats.bySource} />
-          </div>
+          </Grid>
         </>
       )}
 
       <RecentThoughts thoughts={recent} />
     </SpaceBetween>
+    </ContentLayout>
   );
 }

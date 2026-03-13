@@ -4,6 +4,7 @@ interface TimeSeriesParams {
   startDate?: string;
   endDate?: string;
   interval?: 'day' | 'week';
+  project?: string;
 }
 
 function getWeekStart(dateStr: string): string {
@@ -15,7 +16,7 @@ function getWeekStart(dateStr: string): string {
 }
 
 export async function getTimeSeries(params: TimeSeriesParams) {
-  const { startDate, endDate, interval = 'day' } = params;
+  const { startDate, endDate, interval = 'day', project } = params;
   const allVectors = await listAllVectors();
 
   if (allVectors.length === 0) {
@@ -26,6 +27,7 @@ export async function getTimeSeries(params: TimeSeriesParams) {
   const totalAllTime = allNonNoise.length;
 
   let filtered = [...allNonNoise];
+  if (project) filtered = filtered.filter((m: any) => m.project === project);
   if (startDate) filtered = filtered.filter((m: any) => { const d = m.thought_date || m.created_at?.slice(0, 10) || ''; return d >= startDate; });
   if (endDate) filtered = filtered.filter((m: any) => { const d = m.thought_date || m.created_at?.slice(0, 10) || ''; return d <= endDate; });
 

@@ -1,7 +1,6 @@
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import ColumnLayout from '@cloudscape-design/components/column-layout';
 import Box from '@cloudscape-design/components/box';
-import Button from '@cloudscape-design/components/button';
 import Header from '@cloudscape-design/components/header';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import { EditThoughtForm } from './EditThoughtForm';
@@ -9,8 +8,6 @@ import type { ThoughtRecord } from '../../api/types';
 
 interface ThoughtDetailProps {
   thought: ThoughtRecord;
-  onEdit: () => void;
-  onDelete: () => void;
   editing: boolean;
   onSave: (updates: Record<string, any>) => void;
   onCancel: () => void;
@@ -18,8 +15,6 @@ interface ThoughtDetailProps {
 
 export function ThoughtDetail({
   thought,
-  onEdit,
-  onDelete,
   editing,
   onSave,
   onCancel,
@@ -35,18 +30,6 @@ export function ThoughtDetail({
 
   return (
     <SpaceBetween size="l">
-      <Header
-        variant="h2"
-        actions={
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button onClick={onEdit}>Edit</Button>
-            <Button onClick={onDelete}>Delete</Button>
-          </SpaceBetween>
-        }
-      >
-        Thought Details
-      </Header>
-
       <ColumnLayout columns={2} variant="text-grid">
         <div>
           <Box variant="awsui-key-label">Type</Box>
@@ -81,7 +64,7 @@ export function ThoughtDetail({
 
       <div>
         <Box variant="awsui-key-label">Topics</Box>
-        <div>{thought.metadata.topics.length > 0 ? thought.metadata.topics.join(', ') : '-'}</div>
+        <div>{thought.metadata.topics?.length > 0 ? thought.metadata.topics.join(', ') : '-'}</div>
       </div>
 
       <div>
@@ -94,14 +77,14 @@ export function ThoughtDetail({
         <div style={{ whiteSpace: 'pre-wrap' }}>{thought.metadata.content}</div>
       </div>
 
-      {thought.metadata.people.length > 0 && (
+      {thought.metadata.people?.length > 0 && (
         <div>
           <Box variant="awsui-key-label">People Mentioned</Box>
           <div>{thought.metadata.people.join(', ')}</div>
         </div>
       )}
 
-      {thought.metadata.action_items.length > 0 && (
+      {thought.metadata.action_items?.length > 0 && (
         <div>
           <Box variant="awsui-key-label">Action Items</Box>
           <ul>
@@ -112,14 +95,14 @@ export function ThoughtDetail({
         </div>
       )}
 
-      {thought.metadata.dates_mentioned.length > 0 && (
+      {thought.metadata.dates_mentioned?.length > 0 && (
         <div>
           <Box variant="awsui-key-label">Dates Mentioned</Box>
           <div>{thought.metadata.dates_mentioned.join(', ')}</div>
         </div>
       )}
 
-      {thought.metadata.related_projects.length > 0 && (
+      {thought.metadata.related_projects?.length > 0 && (
         <div>
           <Box variant="awsui-key-label">Related Projects</Box>
           <div>{thought.metadata.related_projects.join(', ')}</div>
