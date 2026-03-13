@@ -40,7 +40,7 @@ export function ThoughtDetail({ thought }: ThoughtDetailProps) {
 
         <div>
           <Box variant="awsui-key-label">Session</Box>
-          <div>{thought.metadata.session_name || '-'}</div>
+          <div>{thought.metadata.session_name || thought.metadata.session_id || '-'}</div>
         </div>
       </ColumnLayout>
 

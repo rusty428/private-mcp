@@ -48,6 +48,10 @@ AI Tools ──MCP──▶ API Gateway ──▶ mcp-server Lambda
 
 ```
 private-mcp/
+├── hooks/
+│   ├── mcp-session-start.sh          # SessionStart hook — exposes session_id to Claude
+│   ├── mcp-session-hook.sh           # SessionEnd hook — captures session summary
+│   └── mcp-prompt-capture.sh         # UserPromptSubmit hook — captures user prompts
 ├── infra/
 │   ├── bin/app.ts                    # CDK app entry — stack instantiation
 │   └── lib/
@@ -128,7 +132,7 @@ private-mcp/
 | `search_thoughts` | `query, limit?, threshold?` | Semantic search via embedding + cosine similarity |
 | `browse_recent` | `limit?, type?, topic?` | List recent thoughts with optional filters |
 | `stats` | none | Count, type breakdown, top topics, date range |
-| `capture_thought` | `text, source?` | Save a thought via process-thought |
+| `capture_thought` | `text, source?, project?, session_id?, session_name?` | Save a thought via process-thought |
 | `daily_summary` | none | Generate and post yesterday's daily summary to Slack |
 
 ## S3 Vectors Gotchas (MUST FOLLOW)

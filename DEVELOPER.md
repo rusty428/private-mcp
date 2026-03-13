@@ -107,13 +107,65 @@ claude mcp add --transport http --scope user private-mcp \
 | `project` | `.claude/settings.json` in repo | Anyone who clones the repo |
 | `user` | `~/.claude.json` | All projects on your machine |
 
-### SessionEnd Hook (optional, recommended)
+### Claude Code Hooks (optional, recommended)
 
-The MCP tools are only available when Claude Code is running. To ensure session activity is always captured — even if the AI doesn't proactively call `capture_thought` — add a SessionEnd hook to `~/.claude/settings.json`:
+Three hook scripts in the `hooks/` directory automate thought capture throughout a session:
+
+| Hook | Event | Purpose |
+|---|---|---|
+| `mcp-session-start.sh` | SessionStart | Exposes `session_id` to Claude so it includes it in every `capture_thought` call |
+| `mcp-session-hook.sh` | SessionEnd | Captures a session summary (or basic ping) via the MCP HTTP API |
+| `mcp-prompt-capture.sh` | UserPromptSubmit | Captures every user prompt as a thought with session context |
+
+#### Setup
+
+1. Copy the hook scripts to `~/.claude/scripts/`:
+
+```bash
+cp hooks/*.sh ~/.claude/scripts/
+chmod +x ~/.claude/scripts/mcp-*.sh
+```
+
+2. Edit each script and fill in the configuration section with your deployment values:
+
+```bash
+MCP_ENDPOINT=""   # e.g. https://<api-id>.execute-api.<region>.amazonaws.com/api/mcp
+API_KEY_ID=""     # API Gateway key ID from deploy output
+AWS_PROFILE=""    # AWS CLI profile name
+AWS_REGION=""     # e.g. us-west-2
+```
+
+Note: `mcp-session-start.sh` does not need these values (it only outputs text to Claude).
+
+3. Register the hooks in `~/.claude/settings.json`:
 
 ```json
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/mcp-session-start.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/mcp-prompt-capture.sh",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
     "SessionEnd": [
       {
         "matcher": "",
@@ -130,9 +182,9 @@ The MCP tools are only available when Claude Code is running. To ensure session 
 }
 ```
 
-The hook script curls `capture_thought` directly via the MCP HTTP API on every session end. It checks for a session summary JSON (written by a `createSessionSummary` skill or similar) and posts rich content if found, otherwise falls back to a basic session ping with project name, git branch, and timestamp.
+#### How session_id tracking works
 
-See `~/.claude/scripts/mcp-session-hook.sh` for the reference implementation.
+Claude Code provides a `session_id` in the JSON payload sent to hooks via stdin. The **SessionStart** hook extracts this ID and displays it to Claude, which then includes it in every `capture_thought` call during the session. The **SessionEnd** and **UserPromptSubmit** hooks extract it directly and pass it to the MCP API. This means every thought -- whether captured by Claude, by a hook, or by user prompts -- is linked to the originating session.
 
 ### Claude Desktop
 
@@ -203,6 +255,10 @@ API Gateway access logs are sent to CloudWatch with 30-day retention. All Lambda
 
 ```
 private-mcp/
+├── hooks/
+│   ├── mcp-session-start.sh          # SessionStart hook template
+│   ├── mcp-session-hook.sh           # SessionEnd hook template
+│   └── mcp-prompt-capture.sh         # UserPromptSubmit hook template
 ├── infra/
 │   ├── bin/app.ts                    # CDK app entry
 │   └── lib/
