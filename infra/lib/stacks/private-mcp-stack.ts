@@ -102,7 +102,6 @@ export class PrivateMCPStack extends cdk.Stack {
 
     new cr.AwsCustomResource(this, 'SeedEnrichmentSettings', {
       onCreate: seedParams,
-      onUpdate: seedParams,
       policy: cr.AwsCustomResourcePolicy.fromStatements([
         new iam.PolicyStatement({
           actions: ['dynamodb:PutItem'],
