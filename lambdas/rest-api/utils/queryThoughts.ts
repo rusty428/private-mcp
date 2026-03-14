@@ -109,7 +109,7 @@ function buildFilterExpression(params: QueryThoughtsParams): {
 
 export async function queryThoughts(params: QueryThoughtsParams): Promise<QueryThoughtsResult> {
   const pageSize = params.pageSize || 25;
-  const maxRecords = params.maxRecords || 500;
+  const targetCount = Math.min(pageSize, params.maxRecords || 500);
   const items: Array<{ key: string; metadata: Record<string, any> }> = [];
 
   // Determine starting point
@@ -132,7 +132,7 @@ export async function queryThoughts(params: QueryThoughtsParams): Promise<QueryT
   let currentMonthIdx = monthIndex;
   let lastEvaluatedKey = cursor.lastEvaluatedKey;
 
-  while (items.length < pageSize && currentMonthIdx < months.length) {
+  while (items.length < targetCount && currentMonthIdx < months.length) {
     const queryInput: QueryCommandInput = {
       TableName: process.env.TABLE_NAME,
       IndexName: 'gsi-by-month',
@@ -140,7 +140,7 @@ export async function queryThoughts(params: QueryThoughtsParams): Promise<QueryT
       ExpressionAttributeNames: { '#month': 'month', ...expressionNames },
       ExpressionAttributeValues: { ':month': months[currentMonthIdx], ...expressionValues },
       ScanIndexForward: false, // Newest first
-      Limit: pageSize - items.length, // Do NOT over-fetch — LastEvaluatedKey must align with consumed items
+      Limit: targetCount - items.length, // Do NOT over-fetch — LastEvaluatedKey must align with consumed items
       ...(filterExpression ? { FilterExpression: filterExpression } : {}),
       ...(lastEvaluatedKey ? { ExclusiveStartKey: lastEvaluatedKey } : {}),
     };
@@ -149,7 +149,7 @@ export async function queryThoughts(params: QueryThoughtsParams): Promise<QueryT
 
     if (result.Items) {
       for (const item of result.Items) {
-        if (items.length >= pageSize) break;
+        if (items.length >= targetCount) break;
         const { pk, sk, month, enriched, ...metadata } = item;
         items.push({
           key: (pk as string).replace('THOUGHT#', ''),
@@ -158,7 +158,7 @@ export async function queryThoughts(params: QueryThoughtsParams): Promise<QueryT
       }
     }
 
-    if (result.LastEvaluatedKey && items.length < pageSize) {
+    if (result.LastEvaluatedKey && items.length < targetCount) {
       lastEvaluatedKey = result.LastEvaluatedKey;
     } else if (result.LastEvaluatedKey && items.length >= pageSize) {
       // We have enough items but there are more in this month
