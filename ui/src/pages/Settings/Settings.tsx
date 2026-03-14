@@ -520,7 +520,7 @@ export function Settings() {
       {/* Fixed bottom save bar — sits above the app footer */}
       <div style={{
         position: 'fixed',
-        bottom: 40,
+        bottom: 36,
         left: 0,
         right: 0,
         zIndex: 1000,
