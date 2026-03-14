@@ -7,6 +7,7 @@ import { searchThoughts } from './functions/searchThoughts';
 import { captureThought } from './functions/captureThought';
 import { getTimeSeries } from './functions/getTimeSeries';
 import { generateNarrative } from './functions/generateNarrative';
+import { getProjects } from './functions/getProjects';
 import {
   MAX_TEXT_LENGTH,
   MAX_QUERY_LENGTH,
@@ -198,6 +199,16 @@ app.post('/reports/generate', async (req, res) => {
     res.json({ narrative });
   } catch (err: any) {
     console.error('generateNarrative error:', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/projects', async (_req, res) => {
+  try {
+    const projects = await getProjects();
+    res.json({ projects });
+  } catch (err: any) {
+    console.error('getProjects error:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
   }
 });
