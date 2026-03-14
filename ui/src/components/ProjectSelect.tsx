@@ -18,8 +18,8 @@ export function ProjectSelect({ selectedOption, onChange, placeholder = 'Select 
   useEffect(() => {
     if (cachedProjects) return;
     setLoading(true);
-    api.getTimeSeries({}).then((data) => {
-      const sorted = data.projects.map((p) => p.project).sort();
+    api.getProjects().then((data) => {
+      const sorted = data.projects.slice().sort();
       cachedProjects = sorted;
       setProjects(sorted);
     }).catch(() => {}).finally(() => setLoading(false));
