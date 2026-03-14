@@ -78,8 +78,9 @@ function buildFilterExpression(params: QueryThoughtsParams): {
   }
 
   if (params.project) {
-    conditions.push('project = :filterProject');
+    conditions.push('#project = :filterProject');
     values[':filterProject'] = params.project;
+    names['#project'] = 'project';
   }
 
   if (params.source) {
@@ -88,16 +89,16 @@ function buildFilterExpression(params: QueryThoughtsParams): {
     names['#src'] = 'source';
   }
 
+  // Date filtering uses thought_date only (not created_at, which is the GSI sort key
+  // and cannot appear in FilterExpression). The month partition already constrains by date approximately.
   if (params.startDate) {
-    conditions.push('(thought_date >= :startDate OR (attribute_not_exists(thought_date) AND created_at >= :startDateFull))');
+    conditions.push('(attribute_not_exists(thought_date) OR thought_date >= :startDate)');
     values[':startDate'] = params.startDate;
-    values[':startDateFull'] = params.startDate;
   }
 
   if (params.endDate) {
-    conditions.push('(thought_date <= :endDate OR (attribute_not_exists(thought_date) AND created_at <= :endDateFull))');
+    conditions.push('(attribute_not_exists(thought_date) OR thought_date <= :endDate)');
     values[':endDate'] = params.endDate;
-    values[':endDateFull'] = params.endDate + 'T23:59:59';
   }
 
   return {
