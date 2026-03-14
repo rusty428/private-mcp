@@ -477,21 +477,22 @@ export function Settings() {
             </Container>
           </ExpandableSection>
 
-          {/* Spacer for fixed bottom bar */}
-          <div style={{ height: 60 }} />
+          {/* Spacer for fixed bottom bar + footer */}
+          <div style={{ height: 80 }} />
         </SpaceBetween>
       </ContentLayout>
 
-      {/* Fixed bottom save bar */}
+      {/* Fixed bottom save bar — sits above the app footer */}
       <div style={{
         position: 'fixed',
-        bottom: 0,
+        bottom: 40,
         left: 0,
         right: 0,
         zIndex: 1000,
         backgroundColor: 'var(--color-background-container-content)',
         borderTop: '1px solid var(--color-border-divider-default)',
-        padding: '12px 40px',
+        borderBottom: '1px solid var(--color-border-divider-default)',
+        padding: '10px 40px',
         display: 'flex',
         justifyContent: 'flex-end',
         gap: '8px',
