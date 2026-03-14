@@ -261,7 +261,7 @@ app.put('/settings/enrichment', async (req, res) => {
     // Invalidate cached types after settings update
     cachedTypes = null;
     typesCacheTime = 0;
-    res.json(result);
+    res.json(result.settings);
   } catch (err: any) {
     console.error('putEnrichmentSettings error:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
