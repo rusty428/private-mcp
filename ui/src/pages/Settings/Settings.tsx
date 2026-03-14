@@ -280,9 +280,16 @@ export function Settings() {
     <>
       <ContentLayout
         header={
-          <Header
-            variant="h1"
-            actions={
+          <Header variant="h1">
+            Settings
+          </Header>
+        }
+      >
+        <SpaceBetween size="l">
+          <Flashbar items={flashItems} />
+
+          <div style={{ position: 'sticky', top: 0, zIndex: 100, backgroundColor: 'var(--color-background-layout-main)', paddingBottom: '8px', paddingTop: '4px' }}>
+            <Box float="right">
               <SpaceBetween direction="horizontal" size="xs">
                 <Button onClick={() => setResetModalVisible(true)} disabled={saving}>
                   Reset to defaults
@@ -291,14 +298,8 @@ export function Settings() {
                   Save
                 </Button>
               </SpaceBetween>
-            }
-          >
-            Settings
-          </Header>
-        }
-      >
-        <SpaceBetween size="l">
-          <Flashbar items={flashItems} />
+            </Box>
+          </div>
 
           {/* Section 1: Extraction Model */}
           <div style={dimmedStyle}>
@@ -408,7 +409,7 @@ export function Settings() {
                       width: 60,
                     },
                   ]}
-                  items={projects}
+                  items={[...projects].sort((a, b) => a.name.localeCompare(b.name))}
                   empty={
                     <Box textAlign="center" color="inherit" padding="s">
                       No projects configured
