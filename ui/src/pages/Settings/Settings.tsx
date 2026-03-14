@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import Header from '@cloudscape-design/components/header';
 import Container from '@cloudscape-design/components/container';
@@ -62,6 +62,27 @@ export function Settings() {
   const [customPromptActive, setCustomPromptActive] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
 
+  // Dirty tracking — snapshot of last saved state
+  const savedSnapshot = useRef('');
+
+  const getCurrentSnapshot = (): string => {
+    const modelId = selectedModel.value === '__custom__' ? customModelId : selectedModel.value;
+    const projectsMap: Record<string, { aliases: string[] }> = {};
+    for (const p of projects) {
+      projectsMap[p.name] = { aliases: p.aliases };
+    }
+    return JSON.stringify({
+      types,
+      defaultType: defaultType.value,
+      projects: projectsMap,
+      classificationModel: modelId,
+      specialInstructions: specialInstructions.trim() || null,
+      customPrompt: customPromptActive ? (customPrompt.trim() || null) : null,
+    });
+  };
+
+  const isDirty = savedSnapshot.current !== '' && savedSnapshot.current !== getCurrentSnapshot();
+
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
@@ -107,6 +128,20 @@ export function Settings() {
     // Custom Prompt
     setCustomPromptActive(settings.customPrompt !== null);
     setCustomPrompt(settings.customPrompt || '');
+
+    // Snapshot for dirty tracking (deferred so state has settled)
+    const projectsMap: Record<string, { aliases: string[] }> = {};
+    for (const [name, config] of Object.entries(settings.projects)) {
+      projectsMap[name] = { aliases: (config as ProjectConfig).aliases };
+    }
+    savedSnapshot.current = JSON.stringify({
+      types: settings.types,
+      defaultType: settings.defaultType,
+      projects: projectsMap,
+      classificationModel: settings.classificationModel,
+      specialInstructions: settings.specialInstructions || null,
+      customPrompt: settings.customPrompt || null,
+    });
   };
 
   useEffect(() => {
@@ -489,9 +524,8 @@ export function Settings() {
         left: 0,
         right: 0,
         zIndex: 1000,
-        backgroundColor: 'var(--color-background-container-content)',
-        borderTop: '1px solid var(--color-border-divider-default)',
-        borderBottom: '1px solid var(--color-border-divider-default)',
+        backgroundColor: 'var(--color-background-layout-main)',
+        boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)',
         padding: '10px 40px',
         display: 'flex',
         justifyContent: 'flex-end',
@@ -500,7 +534,7 @@ export function Settings() {
         <Button onClick={() => setResetModalVisible(true)} disabled={saving}>
           Reset to defaults
         </Button>
-        <Button variant="primary" onClick={handleSave} loading={saving}>
+        <Button variant="primary" onClick={handleSave} loading={saving} disabled={!isDirty}>
           Save
         </Button>
       </div>
