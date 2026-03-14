@@ -158,12 +158,29 @@ export class PrivateMCPStack extends cdk.Stack {
       ],
     });
 
-    // --- Bedrock IAM policy ---
-    const bedrockPolicy = new iam.PolicyStatement({
+    // --- Settings DynamoDB IAM policies ---
+    const settingsReadPolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:GetItem'],
+      resources: [settingsTable.tableArn],
+    });
+
+    const settingsReadWritePolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:GetItem', 'dynamodb:PutItem'],
+      resources: [settingsTable.tableArn],
+    });
+
+    // --- Bedrock IAM policies ---
+    const bedrockEmbedPolicy = new iam.PolicyStatement({
       actions: ['bedrock:InvokeModel'],
       resources: [
         `arn:aws:bedrock:${config.region}::foundation-model/${EMBEDDING_MODEL_ID}`,
-        `arn:aws:bedrock:${config.region}::foundation-model/${CLASSIFICATION_MODEL_ID}`,
+      ],
+    });
+
+    const bedrockClassifyPolicy = new iam.PolicyStatement({
+      actions: ['bedrock:InvokeModel'],
+      resources: [
+        `arn:aws:bedrock:*::foundation-model/*`,
       ],
     });
 
@@ -206,9 +223,12 @@ export class PrivateMCPStack extends cdk.Stack {
       },
     });
     enrichThoughtFn.addToRolePolicy(s3VectorsPolicy);
-    enrichThoughtFn.addToRolePolicy(bedrockPolicy);
+    enrichThoughtFn.addToRolePolicy(bedrockEmbedPolicy);
+    enrichThoughtFn.addToRolePolicy(bedrockClassifyPolicy);
     enrichThoughtFn.addToRolePolicy(marketplacePolicy);
     enrichThoughtFn.addToRolePolicy(ddbWritePolicy);
+    enrichThoughtFn.addToRolePolicy(settingsReadPolicy);
+    enrichThoughtFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // process-thought invokes enrich-thought async
     enrichThoughtFn.grantInvoke(processThoughtFn);
@@ -253,7 +273,9 @@ export class PrivateMCPStack extends cdk.Stack {
     });
     processThoughtFn.grantInvoke(mcpServerFn);
     mcpServerFn.addToRolePolicy(s3VectorsPolicy);
-    mcpServerFn.addToRolePolicy(bedrockPolicy);
+    mcpServerFn.addToRolePolicy(bedrockEmbedPolicy);
+    mcpServerFn.addToRolePolicy(settingsReadPolicy);
+    mcpServerFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // --- daily-summary Lambda ---
     const dailySummaryFn = new nodejs.NodejsFunction(this, 'DailySummaryFn', {
@@ -310,9 +332,12 @@ export class PrivateMCPStack extends cdk.Stack {
       },
     });
     restApiFn.addToRolePolicy(s3VectorsPolicy);
-    restApiFn.addToRolePolicy(bedrockPolicy);
+    restApiFn.addToRolePolicy(bedrockEmbedPolicy);
+    restApiFn.addToRolePolicy(bedrockClassifyPolicy);
     processThoughtFn.grantInvoke(restApiFn);
     restApiFn.addToRolePolicy(ddbReadWritePolicy);
+    restApiFn.addToRolePolicy(settingsReadWritePolicy);
+    restApiFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // --- API Gateway Access Logs ---
     const apiLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
@@ -408,6 +433,11 @@ export class PrivateMCPStack extends cdk.Stack {
 
     const projectsResource = api.root.addResource('projects');
     projectsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+
+    const settingsResource = api.root.addResource('settings');
+    const enrichmentSettingsResource = settingsResource.addResource('enrichment');
+    enrichmentSettingsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+    enrichmentSettingsResource.addMethod('PUT', restApiIntegration, { apiKeyRequired: true });
 
     // --- Optional: API alarms (only if ALERT_EMAIL is configured) ---
     if (process.env.ALERT_EMAIL) {
