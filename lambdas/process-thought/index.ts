@@ -6,9 +6,13 @@ import { storeThought } from './functions/storeThought';
 import { formatConfirmation } from './functions/formatConfirmation';
 import { replyInSlack } from './functions/replyInSlack';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { randomUUID } from 'crypto';
 
 const lambda = new LambdaClient({ region: process.env.REGION });
+const ddbClient = new DynamoDBClient({ region: process.env.REGION });
+const ddb = DynamoDBDocumentClient.from(ddbClient);
 
 interface SlackReplyContext {
   channel: string;
@@ -71,6 +75,33 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
     thought_date: thoughtDate,
     created_at: createdAt,
   };
+
+  // DDB write first — UI source of truth
+  const month = (metadata.thought_date || metadata.created_at).slice(0, 7);
+  const { topics, people, action_items, dates_mentioned, related_projects, ...metadataRest } = metadata;
+  const ddbItem: Record<string, any> = {
+    pk: `THOUGHT#${id}`,
+    sk: 'METADATA',
+    month,
+    enriched: false,
+    ...metadataRest,
+  };
+  if (topics.length > 0) ddbItem.topics = topics;
+  if (people.length > 0) ddbItem.people = people;
+  if (action_items.length > 0) ddbItem.action_items = action_items;
+  if (dates_mentioned.length > 0) ddbItem.dates_mentioned = dates_mentioned;
+  if (related_projects.length > 0) ddbItem.related_projects = related_projects;
+
+  await ddb.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: ddbItem }));
+
+  if (metadata.project) {
+    await ddb.send(new UpdateCommand({
+      TableName: process.env.TABLE_NAME,
+      Key: { pk: 'META#PROJECTS', sk: 'METADATA' },
+      UpdateExpression: 'ADD projects :p',
+      ExpressionAttributeValues: { ':p': new Set([metadata.project]) },
+    }));
+  }
 
   const vector = getPlaceholderVector();
   await storeThought(id, vector, metadata);
