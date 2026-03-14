@@ -10,7 +10,8 @@
     "diff": "cdk diff",
     "lint": "eslint . --ext .ts --fix",
     "test": "jest",
-    "mcp-ui": "cd ui && pnpm dev"
+    "mcp-ui": "cd ui && pnpm dev",
+    "migrate:ddb": "npx ts-node --project tsconfig.json scripts/migrate-to-dynamodb.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.700.0",

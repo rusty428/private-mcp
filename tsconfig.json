@@ -19,7 +19,8 @@
   "include": [
     "infra/**/*.ts",
     "lambdas/**/*.ts",
-    "types/**/*.ts"
+    "types/**/*.ts",
+    "scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
