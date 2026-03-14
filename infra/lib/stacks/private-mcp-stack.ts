@@ -8,6 +8,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { PrivateMCPConfig } from '../config';
 import {
@@ -17,7 +18,9 @@ import {
   EMBEDDING_MODEL_ID,
   CLASSIFICATION_MODEL_ID,
   THOUGHTS_TABLE_NAME,
+  SETTINGS_TABLE_NAME,
 } from '../../../types/config';
+import { DEFAULT_ENRICHMENT_SETTINGS } from '../../../types/settings';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
   config: PrivateMCPConfig;
@@ -67,6 +70,46 @@ export class PrivateMCPStack extends cdk.Stack {
       partitionKey: { name: 'project', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // --- Settings DynamoDB Table ---
+    const settingsTable = new dynamodb.Table(this, 'SettingsTable', {
+      tableName: SETTINGS_TABLE_NAME,
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Seed enrichment settings on first deploy (won't overwrite existing)
+    const seedParams = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: SETTINGS_TABLE_NAME,
+        Item: {
+          pk: { S: 'enrichment' },
+          sk: { S: 'config' },
+          types: { L: DEFAULT_ENRICHMENT_SETTINGS.types.map(t => ({ S: t })) },
+          defaultType: { S: DEFAULT_ENRICHMENT_SETTINGS.defaultType },
+          projects: { M: {} },
+          classificationModel: { S: DEFAULT_ENRICHMENT_SETTINGS.classificationModel },
+          updatedAt: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(pk)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-enrichment-settings'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedEnrichmentSettings', {
+      onCreate: seedParams,
+      onUpdate: seedParams,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [settingsTable.tableArn],
+        }),
+      ]),
     });
 
     // --- Common Lambda environment ---
