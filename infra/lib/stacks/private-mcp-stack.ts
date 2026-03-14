@@ -107,6 +107,7 @@ export class PrivateMCPStack extends cdk.Stack {
         'dynamodb:UpdateItem',
         'dynamodb:DeleteItem',
         'dynamodb:Query',
+        'dynamodb:DescribeTable',
       ],
       resources: [
         thoughtsTable.tableArn,

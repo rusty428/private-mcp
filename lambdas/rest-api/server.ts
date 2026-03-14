@@ -60,6 +60,8 @@ app.get('/thoughts', async (req, res) => {
     }
     const rawPageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : undefined;
     const pageSize = rawPageSize ? Math.min(rawPageSize, MAX_LIST_LIMIT) : undefined;
+    const rawMaxRecords = req.query.maxRecords ? parseInt(req.query.maxRecords as string) : undefined;
+    const maxRecords = rawMaxRecords ? Math.min(rawMaxRecords, 5000) : undefined;
 
     const results = await listThoughts({
       type,
@@ -69,6 +71,8 @@ app.get('/thoughts', async (req, res) => {
       endDate,
       pageSize,
       nextToken: req.query.nextToken as string,
+      maxRecords,
+      includeCount: req.query.includeCount === 'true',
     });
     res.json(results);
   } catch (err: any) {

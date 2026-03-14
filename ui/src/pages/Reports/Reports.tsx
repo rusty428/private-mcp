@@ -67,7 +67,7 @@ export function Reports() {
 
       const [statsData, thoughtsData] = await Promise.all([
         api.getTimeSeries(params),
-        api.listThoughts({ ...params, pageSize: '1000' }),
+        api.listThoughts({ ...params, pageSize: '5000', maxRecords: '5000' }),
       ]);
 
       setStats(statsData);

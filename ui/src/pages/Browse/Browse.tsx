@@ -6,6 +6,7 @@ import Table from '@cloudscape-design/components/table';
 import Box from '@cloudscape-design/components/box';
 import Button from '@cloudscape-design/components/button';
 import Icon from '@cloudscape-design/components/icon';
+import Pagination from '@cloudscape-design/components/pagination';
 import Modal from '@cloudscape-design/components/modal';
 import Alert from '@cloudscape-design/components/alert';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
@@ -24,7 +25,7 @@ export function Browse() {
   const [items, setItems] = useState<ThoughtRecord[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [currentToken, setCurrentToken] = useState<string | undefined>(undefined);
-  const [tokenStack, setTokenStack] = useState<string[]>([]);
+  const [tokenMap, setTokenMap] = useState<Record<number, string | undefined>>({ 1: undefined });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<ThoughtRecord[]>([]);
@@ -38,13 +39,14 @@ export function Browse() {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
 
   // Filters
   const [filterText, setFilterText] = useState('');
   const [typeFilter, setTypeFilter] = useState<{ label: string; value: string } | null>(null);
   const [projectFilter, setProjectFilter] = useState<{ label: string; value: string } | null>(null);
 
-  const loadPage = useCallback(async (token?: string) => {
+  const loadPage = useCallback(async (token?: string, fetchCount = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -52,10 +54,12 @@ export function Browse() {
       if (token) params.nextToken = token;
       if (typeFilter?.value) params.type = typeFilter.value;
       if (projectFilter?.value) params.project = projectFilter.value;
+      if (fetchCount) params.includeCount = 'true';
       const data = await api.listThoughts(params);
       setItems(data.items);
       setHasMore(data.hasMore);
       setCurrentToken(data.nextToken);
+      if (data.totalCount !== undefined) setTotalCount(data.totalCount);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load thoughts');
     } finally {
@@ -64,7 +68,7 @@ export function Browse() {
   }, [pageSize, typeFilter, projectFilter]);
 
   useEffect(() => {
-    loadPage();
+    loadPage(undefined, true);
   }, [loadPage]);
 
   // Client-side text filter (filters within loaded page only)
@@ -79,24 +83,17 @@ export function Browse() {
 
   const handleNextPage = () => {
     if (currentToken) {
-      setTokenStack(prev => [...prev, currentToken]);
-      setCurrentPage(prev => prev + 1);
+      const nextPage = currentPage + 1;
+      setTokenMap(prev => ({ ...prev, [nextPage]: currentToken }));
+      setCurrentPage(nextPage);
       loadPage(currentToken);
     }
   };
 
-  const handlePreviousPage = () => {
-    const stack = [...tokenStack];
-    stack.pop();
-    const prevToken = stack.length > 0 ? stack[stack.length - 1] : undefined;
-    setTokenStack(stack);
-    setCurrentPage(prev => prev - 1);
-    loadPage(prevToken);
-  };
-
   const resetPagination = () => {
-    setTokenStack([]);
+    setTokenMap({ 1: undefined });
     setCurrentPage(1);
+    setTotalCount(undefined);
   };
 
   const typeOptions = [
@@ -177,11 +174,15 @@ export function Browse() {
           <Table
             header={
               <Header
-                counter={
-                  selectedItems.length
-                    ? `(${selectedItems.length}/${displayedItems.length})`
-                    : `(${displayedItems.length})`
-                }
+                counter={(() => {
+                  const start = (currentPage - 1) * pageSize + 1;
+                  const end = start + displayedItems.length - 1;
+                  const total = totalCount !== undefined ? ` of ~${totalCount}` : '';
+                  const range = `${start}-${end}${total}`;
+                  return selectedItems.length
+                    ? `(${selectedItems.length} selected, ${range})`
+                    : `(${range})`;
+                })()}
                 actions={
                   <Button disabled={selectedItems.length === 0} onClick={handleDeleteClick}>
                     Delete
@@ -308,11 +309,20 @@ export function Browse() {
             sortingDisabled={false}
             stickyHeader
             pagination={
-              <SpaceBetween direction="horizontal" size="xs">
-                <Button disabled={currentPage <= 1} onClick={handlePreviousPage}>Previous</Button>
-                <Box variant="p" padding={{ top: 'xxs' }}>Page {currentPage}</Box>
-                <Button disabled={!hasMore} onClick={handleNextPage}>Next</Button>
-              </SpaceBetween>
+              <Pagination
+                currentPageIndex={currentPage}
+                pagesCount={hasMore ? currentPage + 1 : currentPage}
+                openEnd={hasMore}
+                onChange={({ detail }) => {
+                  const newPage = detail.currentPageIndex;
+                  if (newPage === currentPage + 1) {
+                    handleNextPage();
+                  } else if (newPage in tokenMap) {
+                    setCurrentPage(newPage);
+                    loadPage(tokenMap[newPage]);
+                  }
+                }}
+              />
             }
             preferences={
               <CollectionPreferences
