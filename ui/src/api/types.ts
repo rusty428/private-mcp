@@ -16,6 +16,8 @@ export interface TimeSeriesResponse {
     date: string;
     total: number;
     bySource: Record<string, number>;
+    byType: Record<string, number>;
+    byTopic: Record<string, number>;
   }>;
   byType: Record<string, number>;
   bySource: Record<string, number>;
@@ -30,6 +32,7 @@ export interface PaginatedThoughtsResponse {
   items: ThoughtRecord[];
   hasMore: boolean;
   nextToken?: string;
+  totalCount?: number;
 }
 
 export interface CaptureResult {

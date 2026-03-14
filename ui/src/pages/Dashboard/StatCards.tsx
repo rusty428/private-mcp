@@ -4,22 +4,17 @@ import ColumnLayout from '@cloudscape-design/components/column-layout';
 
 interface StatCardsProps {
   total: number;
-  periodCount: number;
   actionItems: number;
   projectCount: number;
 }
 
-export function StatCards({ total, periodCount, actionItems, projectCount }: StatCardsProps) {
+export function StatCards({ total, actionItems, projectCount }: StatCardsProps) {
   return (
     <Container>
-      <ColumnLayout columns={4} variant="text-grid">
+      <ColumnLayout columns={3} variant="text-grid">
         <div>
-          <Box variant="awsui-key-label">Total Thoughts</Box>
+          <Box variant="awsui-key-label">Activity</Box>
           <Box variant="awsui-value-large">{total.toLocaleString()}</Box>
-        </div>
-        <div>
-          <Box variant="awsui-key-label">This Period</Box>
-          <Box variant="awsui-value-large">{periodCount.toLocaleString()}</Box>
         </div>
         <div>
           <Box variant="awsui-key-label">Action Items</Box>

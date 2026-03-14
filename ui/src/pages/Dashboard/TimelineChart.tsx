@@ -5,34 +5,38 @@ import Box from '@cloudscape-design/components/box';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import SegmentedControl from '@cloudscape-design/components/segmented-control';
 import MixedLineBarChart from '@cloudscape-design/components/mixed-line-bar-chart';
-import type { ThoughtRecord, TimeSeriesResponse } from '../../api/types';
-import { format, parseISO } from 'date-fns';
+import type { TimeSeriesResponse } from '../../api/types';
+import { format, eachDayOfInterval } from 'date-fns';
 import { parseLocalDate } from '../../utils/parseDate';
 
 const CHART_TYPE_KEY = 'dashboard-chart-type';
+const CHART_MODE_KEY = 'dashboard-chart-mode';
 type ChartType = 'line' | 'bar';
+type ChartMode = 'types' | 'sources' | 'topics';
 
 function getSavedChartType(): ChartType {
   const saved = localStorage.getItem(CHART_TYPE_KEY);
   return saved === 'bar' ? 'bar' : 'line';
 }
 
+function getSavedChartMode(): ChartMode {
+  const saved = localStorage.getItem(CHART_MODE_KEY);
+  return saved === 'sources' ? 'sources' : saved === 'topics' ? 'topics' : 'types';
+}
+
 interface TimelineChartProps {
   stats: TimeSeriesResponse;
-  thoughts: ThoughtRecord[];
+  startDate: string;
+  endDate: string;
 }
 
-function safeDate(thought: ThoughtRecord): Date {
-  const raw = thought.metadata.thought_date || thought.metadata.created_at || '';
-  const d = parseLocalDate(raw);
-  return isNaN(d.getTime()) ? new Date() : d;
-}
-
-export function TimelineChart({ stats, thoughts }: TimelineChartProps) {
-  const [chartMode, setChartMode] = useState<string>('types');
+export function TimelineChart({ stats, startDate, endDate }: TimelineChartProps) {
+  const [chartMode, setChartMode] = useState<ChartMode>(getSavedChartMode);
   const [chartType, setChartType] = useState<ChartType>(getSavedChartType);
 
-  if (thoughts.length === 0) return null;
+  const filteredBuckets = stats.buckets.filter((b) => b.date >= startDate && b.date <= endDate);
+
+  if (filteredBuckets.length === 0) return null;
 
   return (
     <Container
@@ -55,7 +59,11 @@ export function TimelineChart({ stats, thoughts }: TimelineChartProps) {
               />
               <SegmentedControl
                 selectedId={chartMode}
-                onChange={({ detail }) => setChartMode(detail.selectedId)}
+                onChange={({ detail }) => {
+                  const val = detail.selectedId as ChartMode;
+                  setChartMode(val);
+                  localStorage.setItem(CHART_MODE_KEY, val);
+                }}
                 options={[
                   { id: 'types', text: 'By Type' },
                   { id: 'sources', text: 'By Source' },
@@ -75,40 +83,26 @@ export function TimelineChart({ stats, thoughts }: TimelineChartProps) {
         stackedBars={chartType === 'bar'}
         hideFilter
         series={(() => {
-          const dateKeys = stats.buckets.map((b) => format(parseISO(b.date), 'M/d'));
+          const dateKeys = eachDayOfInterval({
+            start: parseLocalDate(startDate),
+            end: parseLocalDate(endDate),
+          }).map((d) => format(d, 'M/d'));
           const byDateGroup: Record<string, Record<string, number>> = {};
           const allGroups = new Set<string>();
 
-          if (chartMode === 'types') {
-            thoughts.forEach((t) => {
-              const dateKey = format(safeDate(t), 'M/d');
-              const group = t.metadata.type || 'pending';
+          const bucketField = chartMode === 'types' ? 'byType' : chartMode === 'sources' ? 'bySource' : 'byTopic';
+          const topTopics = chartMode === 'topics' ? new Set(stats.topTopics.slice(0, 10).map((t) => t.topic)) : null;
+
+          filteredBuckets.forEach((bucket) => {
+            const dateKey = format(parseLocalDate(bucket.date), 'M/d');
+            const breakdown = bucket[bucketField];
+            for (const [group, count] of Object.entries(breakdown)) {
+              if (topTopics && !topTopics.has(group)) continue;
               allGroups.add(group);
               if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
-              byDateGroup[dateKey][group] = (byDateGroup[dateKey][group] || 0) + 1;
-            });
-          } else if (chartMode === 'sources') {
-            stats.buckets.forEach((b) => {
-              const dateKey = format(parseISO(b.date), 'M/d');
-              Object.entries(b.bySource).forEach(([source, count]) => {
-                allGroups.add(source);
-                if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
-                byDateGroup[dateKey][source] = (byDateGroup[dateKey][source] || 0) + count;
-              });
-            });
-          } else {
-            const topTopics = stats.topTopics.slice(0, 10).map((t) => t.topic);
-            thoughts.forEach((t) => {
-              const dateKey = format(safeDate(t), 'M/d');
-              (t.metadata.topics || []).forEach((topic) => {
-                if (topTopics.includes(topic)) {
-                  allGroups.add(topic);
-                  if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
-                  byDateGroup[dateKey][topic] = (byDateGroup[dateKey][topic] || 0) + 1;
-                }
-              });
-            });
-          }
+              byDateGroup[dateKey][group] = (byDateGroup[dateKey][group] || 0) + count;
+            }
+          });
 
           return Array.from(allGroups).sort().map((group) => ({
             title: group,

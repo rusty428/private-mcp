@@ -16,7 +16,6 @@ const savedTimeRange = getSavedTimeRange();
 export function Dashboard() {
   const [timeRange, setTimeRange] = useState(savedTimeRange.range);
   const [stats, setStats] = useState<TimeSeriesResponse | null>(null);
-  const [thoughts, setThoughts] = useState<ThoughtRecord[]>([]);
   const [recent, setRecent] = useState<ThoughtRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,12 +23,10 @@ export function Dashboard() {
     setLoading(true);
     Promise.all([
       api.getTimeSeries({ startDate: timeRange.startDate, endDate: timeRange.endDate }),
-      api.listThoughts({ startDate: timeRange.startDate, endDate: timeRange.endDate, pageSize: '1000' }),
       api.listThoughts({ pageSize: '10' }),
     ])
-      .then(([statsData, thoughtsData, recentData]) => {
+      .then(([statsData, recentData]) => {
         setStats(statsData);
-        setThoughts(thoughtsData.items);
         setRecent(recentData.items);
         setLoading(false);
       })
@@ -55,11 +52,10 @@ export function Dashboard() {
               <>
                 <StatCards
                   total={stats.totalAllTime}
-                  periodCount={stats.totalInRange}
                   actionItems={stats.actionItemCount}
                   projectCount={stats.projects.length}
                 />
-                <TimelineChart stats={stats} thoughts={thoughts} />
+                <TimelineChart stats={stats} startDate={timeRange.startDate} endDate={timeRange.endDate} />
               </>
             )}
             <RecentThoughts thoughts={recent} />
