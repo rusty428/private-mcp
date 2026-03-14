@@ -60,11 +60,15 @@ async function migrate() {
         ...metadata,
       };
 
+      // Remove empty arrays (DDB allows them but VDB doesn't — keep consistent)
       for (const key of Object.keys(item)) {
         if (Array.isArray(item[key]) && item[key].length === 0) {
           delete item[key];
         }
       }
+      // Remove empty string GSI key attributes (DDB rejects empty strings in key positions)
+      if (item.project === '') delete item.project;
+      if (item.month === '') delete item.month;
       return item;
     });
 

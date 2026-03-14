@@ -91,6 +91,8 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
   if (action_items.length > 0) ddbItem.action_items = action_items;
   if (dates_mentioned.length > 0) ddbItem.dates_mentioned = dates_mentioned;
   if (related_projects.length > 0) ddbItem.related_projects = related_projects;
+  // Remove empty string GSI key attributes (DDB rejects empty strings in key positions)
+  if (ddbItem.project === '') delete ddbItem.project;
 
   await ddb.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: ddbItem }));
 
