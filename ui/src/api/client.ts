@@ -1,4 +1,4 @@
-import type { ThoughtRecord, SearchResult, TimeSeriesResponse, CaptureResult, NarrativeResponse } from './types';
+import type { ThoughtRecord, PaginatedThoughtsResponse, SearchResult, TimeSeriesResponse, CaptureResult, NarrativeResponse } from './types';
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -30,8 +30,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const api = {
   listThoughts: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
-    return request<ThoughtRecord[]>(`/thoughts${query}`);
+    return request<PaginatedThoughtsResponse>(`/thoughts${query}`);
   },
+
+  getProjects: () =>
+    request<{ projects: string[] }>('/projects'),
 
   getThought: (id: string) =>
     request<ThoughtRecord>(`/thoughts/${id}`),

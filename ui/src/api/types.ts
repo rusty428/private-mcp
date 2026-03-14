@@ -26,6 +26,12 @@ export interface TimeSeriesResponse {
   totalAllTime: number;
 }
 
+export interface PaginatedThoughtsResponse {
+  items: ThoughtRecord[];
+  hasMore: boolean;
+  nextToken?: string;
+}
+
 export interface CaptureResult {
   id: string;
   quality: string;
