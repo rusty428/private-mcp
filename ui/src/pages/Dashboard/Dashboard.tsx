@@ -24,13 +24,13 @@ export function Dashboard() {
     setLoading(true);
     Promise.all([
       api.getTimeSeries({ startDate: timeRange.startDate, endDate: timeRange.endDate }),
-      api.listThoughts({ startDate: timeRange.startDate, endDate: timeRange.endDate, limit: '1000' }),
-      api.listThoughts({ limit: '10' }),
+      api.listThoughts({ startDate: timeRange.startDate, endDate: timeRange.endDate, pageSize: '1000' }),
+      api.listThoughts({ pageSize: '10' }),
     ])
       .then(([statsData, thoughtsData, recentData]) => {
         setStats(statsData);
-        setThoughts(thoughtsData);
-        setRecent(recentData);
+        setThoughts(thoughtsData.items);
+        setRecent(recentData.items);
         setLoading(false);
       })
       .catch(() => setLoading(false));
