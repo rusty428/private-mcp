@@ -4,6 +4,7 @@ import * as nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3vectors from 'aws-cdk-lib/aws-s3vectors';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
@@ -15,6 +16,7 @@ import {
   VECTOR_DIMENSIONS,
   EMBEDDING_MODEL_ID,
   CLASSIFICATION_MODEL_ID,
+  THOUGHTS_TABLE_NAME,
 } from '../../../types/config';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
@@ -43,11 +45,36 @@ export class PrivateMCPStack extends cdk.Stack {
     vectorIndex.addDependency(vectorBucket);
     vectorIndex.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
+    // --- DynamoDB ---
+    const thoughtsTable = new dynamodb.Table(this, 'ThoughtsTable', {
+      tableName: THOUGHTS_TABLE_NAME,
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    thoughtsTable.addGlobalSecondaryIndex({
+      indexName: 'gsi-by-month',
+      partitionKey: { name: 'month', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    thoughtsTable.addGlobalSecondaryIndex({
+      indexName: 'gsi-by-project',
+      partitionKey: { name: 'project', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // --- Common Lambda environment ---
     const commonEnv = {
       REGION: config.region,
       VECTOR_BUCKET_NAME: VECTOR_BUCKET_NAME,
       VECTOR_INDEX_NAME: VECTOR_INDEX_NAME,
+      TABLE_NAME: THOUGHTS_TABLE_NAME,
     };
 
     // --- S3 Vectors IAM policy ---
@@ -64,6 +91,26 @@ export class PrivateMCPStack extends cdk.Stack {
         `arn:aws:s3vectors:${config.region}:${config.accountId}:vector-bucket/${VECTOR_BUCKET_NAME}/*`,
         `arn:aws:s3vectors:${config.region}:${config.accountId}:bucket/${VECTOR_BUCKET_NAME}`,
         `arn:aws:s3vectors:${config.region}:${config.accountId}:bucket/${VECTOR_BUCKET_NAME}/*`,
+      ],
+    });
+
+    // --- DynamoDB IAM policies ---
+    const ddbWritePolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:PutItem', 'dynamodb:UpdateItem'],
+      resources: [thoughtsTable.tableArn],
+    });
+
+    const ddbReadWritePolicy = new iam.PolicyStatement({
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:DeleteItem',
+        'dynamodb:Query',
+      ],
+      resources: [
+        thoughtsTable.tableArn,
+        `${thoughtsTable.tableArn}/index/*`,
       ],
     });
 
@@ -99,6 +146,7 @@ export class PrivateMCPStack extends cdk.Stack {
       },
     });
     processThoughtFn.addToRolePolicy(s3VectorsPolicy);
+    processThoughtFn.addToRolePolicy(ddbWritePolicy);
 
     // --- enrich-thought Lambda (Stage 2 — async enrichment) ---
     const enrichThoughtFn = new nodejs.NodejsFunction(this, 'EnrichThoughtFn', {
@@ -116,6 +164,7 @@ export class PrivateMCPStack extends cdk.Stack {
     enrichThoughtFn.addToRolePolicy(s3VectorsPolicy);
     enrichThoughtFn.addToRolePolicy(bedrockPolicy);
     enrichThoughtFn.addToRolePolicy(marketplacePolicy);
+    enrichThoughtFn.addToRolePolicy(ddbWritePolicy);
 
     // process-thought invokes enrich-thought async
     enrichThoughtFn.grantInvoke(processThoughtFn);
@@ -219,6 +268,7 @@ export class PrivateMCPStack extends cdk.Stack {
     restApiFn.addToRolePolicy(s3VectorsPolicy);
     restApiFn.addToRolePolicy(bedrockPolicy);
     processThoughtFn.grantInvoke(restApiFn);
+    restApiFn.addToRolePolicy(ddbReadWritePolicy);
 
     // --- API Gateway Access Logs ---
     const apiLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
@@ -312,6 +362,9 @@ export class PrivateMCPStack extends cdk.Stack {
     const generateResource = reportsResource.addResource('generate');
     generateResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
 
+    const projectsResource = api.root.addResource('projects');
+    projectsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+
     // --- Optional: API alarms (only if ALERT_EMAIL is configured) ---
     if (process.env.ALERT_EMAIL) {
       const sns = cdk.aws_sns;
@@ -349,6 +402,11 @@ export class PrivateMCPStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'MCPEndpointUrl', {
       value: `${api.url}mcp`,
       description: 'MCP server endpoint URL',
+    });
+
+    new cdk.CfnOutput(this, 'ThoughtsTableName', {
+      value: thoughtsTable.tableName,
+      description: 'DynamoDB thoughts table name',
     });
 
     new cdk.CfnOutput(this, 'ApiKeyId', {
