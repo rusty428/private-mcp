@@ -8,6 +8,8 @@ import { captureThought } from './functions/captureThought';
 import { getTimeSeries } from './functions/getTimeSeries';
 import { generateNarrative } from './functions/generateNarrative';
 import { getProjects } from './functions/getProjects';
+import { getEnrichmentSettings } from './functions/getEnrichmentSettings';
+import { putEnrichmentSettings } from './functions/putEnrichmentSettings';
 import {
   MAX_TEXT_LENGTH,
   MAX_QUERY_LENGTH,
@@ -18,6 +20,23 @@ import {
   VALID_THOUGHT_TYPES,
   VALID_SOURCES,
 } from '../../types/validation';
+
+let cachedTypes: string[] | null = null;
+let typesCacheTime = 0;
+const TYPES_CACHE_TTL = 5 * 60 * 1000;
+
+async function getValidTypes(): Promise<string[]> {
+  const now = Date.now();
+  if (cachedTypes && now - typesCacheTime < TYPES_CACHE_TTL) return cachedTypes;
+  try {
+    const settings = await getEnrichmentSettings();
+    cachedTypes = settings.types;
+    typesCacheTime = now;
+    return cachedTypes;
+  } catch {
+    return VALID_THOUGHT_TYPES as unknown as string[];
+  }
+}
 
 const app: Express = express();
 app.use(express.json({ limit: '50kb' }));
@@ -47,8 +66,11 @@ app.get('/health', (_req, res) => {
 app.get('/thoughts', async (req, res) => {
   try {
     const type = req.query.type as string;
-    if (type && !VALID_THOUGHT_TYPES.includes(type as any)) {
-      return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_THOUGHT_TYPES.join(', ')}` });
+    if (type) {
+      const validTypes = await getValidTypes();
+      if (!validTypes.includes(type)) {
+        return res.status(400).json({ error: `Invalid type. Must be one of: ${validTypes.join(', ')}` });
+      }
     }
     const startDate = req.query.startDate as string;
     if (startDate && !DATE_REGEX.test(startDate)) {
@@ -100,8 +122,11 @@ app.put('/thoughts/:id', async (req, res) => {
     if (!UUID_REGEX.test(req.params.id)) {
       return res.status(400).json({ error: 'Invalid thought ID format. Must be a UUID.' });
     }
-    if (req.body.type && !VALID_THOUGHT_TYPES.includes(req.body.type)) {
-      return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_THOUGHT_TYPES.join(', ')}` });
+    if (req.body.type) {
+      const validTypes = await getValidTypes();
+      if (!validTypes.includes(req.body.type)) {
+        return res.status(400).json({ error: `Invalid type. Must be one of: ${validTypes.join(', ')}` });
+      }
     }
     const result = await editThought(req.params.id, req.body);
     if (result.error === 'not_found') return res.status(404).json({ error: 'Thought not found' });
@@ -213,6 +238,32 @@ app.get('/projects', async (_req, res) => {
     res.json({ projects });
   } catch (err: any) {
     console.error('getProjects error:', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/settings/enrichment', async (_req, res) => {
+  try {
+    const settings = await getEnrichmentSettings();
+    res.json(settings);
+  } catch (err: any) {
+    console.error('getEnrichmentSettings error:', { error: err.message, stack: err.stack });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/settings/enrichment', async (req, res) => {
+  try {
+    const result = await putEnrichmentSettings(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    // Invalidate cached types after settings update
+    cachedTypes = null;
+    typesCacheTime = 0;
+    res.json(result);
+  } catch (err: any) {
+    console.error('putEnrichmentSettings error:', { error: err.message, stack: err.stack });
     res.status(500).json({ error: err.message });
   }
 });
