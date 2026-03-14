@@ -1,6 +1,7 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { CLASSIFICATION_MODEL_ID } from '../../../types/config';
-import { listAllVectors } from '../utils/listAllVectors';
+import { queryThoughts } from '../utils/queryThoughts';
+import { queryByProject } from '../utils/queryByProject';
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.REGION });
 
@@ -12,14 +13,21 @@ interface NarrativeParams {
 
 export async function generateNarrative(params: NarrativeParams): Promise<string> {
   const { startDate, endDate, project } = params;
-  const allVectors = await listAllVectors();
 
-  if (allVectors.length === 0) return 'No thoughts found in the selected date range.';
+  let items: Array<{ key: string; metadata: Record<string, any> }>;
+  if (project) {
+    items = await queryByProject({ project, startDate, endDate });
+  } else {
+    const result = await queryThoughts({
+      startDate,
+      endDate,
+      maxRecords: 5000,
+      pageSize: 5000,
+    });
+    items = result.items;
+  }
 
-  let thoughts = allVectors.map((v) => v.metadata).filter((m: any) => m && m.quality !== 'noise')
-    .filter((m: any) => { const d = m.thought_date || m.created_at?.slice(0, 10) || ''; return d >= startDate && d <= endDate; });
-
-  if (project) thoughts = thoughts.filter((m: any) => m.project === project);
+  const thoughts = items.map((v) => v.metadata);
   if (thoughts.length === 0) return 'No thoughts found in the selected date range.';
 
   thoughts.sort((a: any, b: any) => (a.thought_date || a.created_at || '').localeCompare(b.thought_date || b.created_at || ''));
