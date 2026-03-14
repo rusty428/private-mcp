@@ -57,8 +57,8 @@ app.get('/thoughts', async (req, res) => {
     if (endDate && !DATE_REGEX.test(endDate)) {
       return res.status(400).json({ error: 'Invalid endDate format. Use YYYY-MM-DD.' });
     }
-    const rawLimit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
-    const limit = rawLimit ? Math.min(rawLimit, MAX_LIST_LIMIT) : undefined;
+    const rawPageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : undefined;
+    const pageSize = rawPageSize ? Math.min(rawPageSize, MAX_LIST_LIMIT) : undefined;
 
     const results = await listThoughts({
       type,
@@ -66,7 +66,8 @@ app.get('/thoughts', async (req, res) => {
       project: req.query.project as string,
       startDate,
       endDate,
-      limit,
+      pageSize,
+      nextToken: req.query.nextToken as string,
     });
     res.json(results);
   } catch (err: any) {

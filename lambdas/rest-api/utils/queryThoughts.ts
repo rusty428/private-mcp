@@ -15,7 +15,7 @@ interface QueryThoughtsParams {
   maxRecords?: number;
 }
 
-interface QueryThoughtsResult {
+export interface QueryThoughtsResult {
   items: Array<{ key: string; metadata: Record<string, any> }>;
   hasMore: boolean;
   nextToken?: string;
