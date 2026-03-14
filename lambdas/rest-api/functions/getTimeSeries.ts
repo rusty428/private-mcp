@@ -1,4 +1,5 @@
-import { listAllVectors } from '../utils/listAllVectors';
+import { queryThoughts } from '../utils/queryThoughts';
+import { queryByProject } from '../utils/queryByProject';
 
 interface TimeSeriesParams {
   startDate?: string;
@@ -8,28 +9,36 @@ interface TimeSeriesParams {
 }
 
 function getWeekStart(dateStr: string): string {
-  const d = new Date(dateStr);
-  const day = d.getUTCDay();
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay();
   const diff = day === 0 ? 6 : day - 1;
-  d.setUTCDate(d.getUTCDate() - diff);
+  d.setDate(d.getDate() - diff);
   return d.toISOString().slice(0, 10);
 }
 
 export async function getTimeSeries(params: TimeSeriesParams) {
   const { startDate, endDate, interval = 'day', project } = params;
-  const allVectors = await listAllVectors();
 
-  if (allVectors.length === 0) {
+  // Fetch records — use project GSI if project specified, otherwise month GSI
+  let allItems: Array<{ key: string; metadata: Record<string, any> }>;
+  if (project) {
+    allItems = await queryByProject({ project, startDate, endDate });
+  } else {
+    // Fetch up to maxRecords using the month GSI
+    const result = await queryThoughts({
+      startDate,
+      endDate,
+      maxRecords: 5000,
+      pageSize: 5000,
+    });
+    allItems = result.items;
+  }
+
+  if (allItems.length === 0) {
     return { buckets: [], byType: {}, bySource: {}, topTopics: [], projects: [], actionItemCount: 0, totalInRange: 0, totalAllTime: 0 };
   }
 
-  const allNonNoise = allVectors.map((v) => v.metadata).filter((m: any) => m && m.quality !== 'noise');
-  const totalAllTime = allNonNoise.length;
-
-  let filtered = [...allNonNoise];
-  if (project) filtered = filtered.filter((m: any) => m.project === project);
-  if (startDate) filtered = filtered.filter((m: any) => { const d = m.thought_date || m.created_at?.slice(0, 10) || ''; return d >= startDate; });
-  if (endDate) filtered = filtered.filter((m: any) => { const d = m.thought_date || m.created_at?.slice(0, 10) || ''; return d <= endDate; });
+  const filtered = allItems.map((v) => v.metadata);
 
   const bucketMap: Record<string, { total: number; bySource: Record<string, number> }> = {};
   const byType: Record<string, number> = {};
@@ -57,5 +66,5 @@ export async function getTimeSeries(params: TimeSeriesParams) {
   const topTopics = Object.entries(topicCounts).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([topic, count]) => ({ topic, count }));
   const projects = Object.entries(projectCounts).sort((a, b) => b[1] - a[1]).map(([project, count]) => ({ project, count }));
 
-  return { buckets, byType, bySource, topTopics, projects, actionItemCount, totalInRange: filtered.length, totalAllTime };
+  return { buckets, byType, bySource, topTopics, projects, actionItemCount, totalInRange: filtered.length, totalAllTime: filtered.length };
 }
