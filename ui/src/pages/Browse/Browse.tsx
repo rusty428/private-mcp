@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import Header from '@cloudscape-design/components/header';
 import SpaceBetween from '@cloudscape-design/components/space-between';
@@ -8,7 +8,6 @@ import Button from '@cloudscape-design/components/button';
 import Icon from '@cloudscape-design/components/icon';
 import Modal from '@cloudscape-design/components/modal';
 import Alert from '@cloudscape-design/components/alert';
-import Pagination from '@cloudscape-design/components/pagination';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import TextFilter from '@cloudscape-design/components/text-filter';
 import Select from '@cloudscape-design/components/select';
@@ -22,7 +21,10 @@ import { parseLocalDate } from '../../utils/parseDate';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
 
 export function Browse() {
-  const [thoughts, setThoughts] = useState<ThoughtRecord[]>([]);
+  const [items, setItems] = useState<ThoughtRecord[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentToken, setCurrentToken] = useState<string | undefined>(undefined);
+  const [tokenStack, setTokenStack] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<ThoughtRecord[]>([]);
@@ -42,42 +44,60 @@ export function Browse() {
   const [typeFilter, setTypeFilter] = useState<{ label: string; value: string } | null>(null);
   const [projectFilter, setProjectFilter] = useState<{ label: string; value: string } | null>(null);
 
-  const loadThoughts = async () => {
+  const loadPage = useCallback(async (token?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.listThoughts({ limit: '1000' });
-      setThoughts(data);
+      const params: Record<string, string> = { pageSize: String(pageSize) };
+      if (token) params.nextToken = token;
+      if (typeFilter?.value) params.type = typeFilter.value;
+      if (projectFilter?.value) params.project = projectFilter.value;
+      const data = await api.listThoughts(params);
+      setItems(data.items);
+      setHasMore(data.hasMore);
+      setCurrentToken(data.nextToken);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load thoughts');
     } finally {
       setLoading(false);
     }
-  };
+  }, [pageSize, typeFilter, projectFilter]);
 
   useEffect(() => {
-    loadThoughts();
-  }, []);
+    loadPage();
+  }, [loadPage]);
 
-  // Client-side filtering
-  const filteredThoughts = thoughts.filter((t) => {
-    if (typeFilter && t.metadata.type !== typeFilter.value) return false;
-    if (projectFilter && t.metadata.project !== projectFilter.value) return false;
-    if (filterText) {
-      const text = filterText.toLowerCase();
-      const summary = (t.metadata.summary || '').toLowerCase();
-      const content = (t.metadata.content || '').toLowerCase();
-      const project = (t.metadata.project || '').toLowerCase();
-      if (!summary.includes(text) && !content.includes(text) && !project.includes(text)) return false;
-    }
-    return true;
+  // Client-side text filter (filters within loaded page only)
+  const displayedItems = items.filter((t) => {
+    if (!filterText) return true;
+    const text = filterText.toLowerCase();
+    const summary = (t.metadata.summary || '').toLowerCase();
+    const content = (t.metadata.content || '').toLowerCase();
+    const project = (t.metadata.project || '').toLowerCase();
+    return summary.includes(text) || content.includes(text) || project.includes(text);
   });
 
-  const pageCount = Math.ceil(filteredThoughts.length / pageSize);
-  const paginatedThoughts = filteredThoughts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const handleNextPage = () => {
+    if (currentToken) {
+      setTokenStack(prev => [...prev, currentToken]);
+      setCurrentPage(prev => prev + 1);
+      loadPage(currentToken);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    const stack = [...tokenStack];
+    stack.pop();
+    const prevToken = stack.length > 0 ? stack[stack.length - 1] : undefined;
+    setTokenStack(stack);
+    setCurrentPage(prev => prev - 1);
+    loadPage(prevToken);
+  };
+
+  const resetPagination = () => {
+    setTokenStack([]);
+    setCurrentPage(1);
+  };
 
   const typeOptions = [
     ...VALID_THOUGHT_TYPES.map((t) => ({ label: t, value: t })),
@@ -101,7 +121,7 @@ export function Browse() {
       const updates = editFormRef.current.getUpdates();
       await api.editThought(detailItem.key, updates);
       setEditing(false);
-      await loadThoughts();
+      await loadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save changes');
     }
@@ -122,7 +142,7 @@ export function Browse() {
       setEditing(false);
       setDetailItem(null);
       setSelectedItems([]);
-      await loadThoughts();
+      await loadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete thoughts');
     } finally {
@@ -138,12 +158,12 @@ export function Browse() {
             variant="h1"
             description="Browse and manage all captured thoughts"
             actions={
-              <Button iconName="refresh" onClick={loadThoughts} loading={loading}>
+              <Button iconName="refresh" onClick={() => loadPage()} loading={loading}>
                 Refresh
               </Button>
             }
           >
-            Browse Thoughts
+            Browse Recent
           </Header>
         }
       >
@@ -159,8 +179,8 @@ export function Browse() {
               <Header
                 counter={
                   selectedItems.length
-                    ? `(${selectedItems.length}/${filteredThoughts.length})`
-                    : `(${filteredThoughts.length})`
+                    ? `(${selectedItems.length}/${displayedItems.length})`
+                    : `(${displayedItems.length})`
                 }
                 actions={
                   <Button disabled={selectedItems.length === 0} onClick={handleDeleteClick}>
@@ -175,22 +195,22 @@ export function Browse() {
               <SpaceBetween direction="horizontal" size="xs">
                 <TextFilter
                   filteringText={filterText}
-                  onChange={({ detail }) => { setFilterText(detail.filteringText); setCurrentPage(1); }}
-                  filteringPlaceholder="Search thoughts..."
-                  countText={`${filteredThoughts.length} matches`}
+                  onChange={({ detail }) => { setFilterText(detail.filteringText); }}
+                  filteringPlaceholder="Search within page..."
+                  countText={`${displayedItems.length} matches`}
                 />
                 <Select
                   selectedOption={typeFilter}
                   onChange={({ detail }) => {
                     setTypeFilter(detail.selectedOption.value ? (detail.selectedOption as any) : null);
-                    setCurrentPage(1);
+                    resetPagination();
                   }}
                   options={[{ label: 'All types', value: '' }, ...typeOptions]}
                   placeholder="All types"
                 />
                 <ProjectSelect
                   selectedOption={projectFilter}
-                  onChange={(opt) => { setProjectFilter(opt); setCurrentPage(1); }}
+                  onChange={(opt) => { setProjectFilter(opt); resetPagination(); }}
                 />
               </SpaceBetween>
             }
@@ -282,17 +302,17 @@ export function Browse() {
                 width: 80,
               },
             ]}
-            items={paginatedThoughts}
+            items={displayedItems}
             loading={loading}
             loadingText="Loading thoughts..."
             sortingDisabled={false}
             stickyHeader
             pagination={
-              <Pagination
-                currentPageIndex={currentPage}
-                pagesCount={pageCount}
-                onChange={({ detail }) => setCurrentPage(detail.currentPageIndex)}
-              />
+              <SpaceBetween direction="horizontal" size="xs">
+                <Button disabled={currentPage <= 1} onClick={handlePreviousPage}>Previous</Button>
+                <Box variant="p" padding={{ top: 'xxs' }}>Page {currentPage}</Box>
+                <Button disabled={!hasMore} onClick={handleNextPage}>Next</Button>
+              </SpaceBetween>
             }
             preferences={
               <CollectionPreferences
@@ -311,7 +331,7 @@ export function Browse() {
                 preferences={{ pageSize }}
                 onConfirm={({ detail }) => {
                   setPageSize(detail.pageSize ?? 25);
-                  setCurrentPage(1);
+                  resetPagination();
                 }}
               />
             }
