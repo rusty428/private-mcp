@@ -6,6 +6,7 @@ import Button from '@cloudscape-design/components/button';
 import DatePicker from '@cloudscape-design/components/date-picker';
 import { type SelectProps } from '@cloudscape-design/components/select';
 import { ProjectSelect } from '../../components/ProjectSelect';
+import Alert from '@cloudscape-design/components/alert';
 import Box from '@cloudscape-design/components/box';
 import Spinner from '@cloudscape-design/components/spinner';
 import { format, subDays } from 'date-fns';
@@ -24,6 +25,7 @@ export function Reports() {
   const [thoughts, setThoughts] = useState<ThoughtRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [narrative, setNarrative] = useState<string | null>(null);
   const hasSelected = selectedProject !== null;
   const initialMount = useRef(true);
@@ -37,6 +39,19 @@ export function Reports() {
   }, [selectedProject]);
 
   const handleGenerate = async () => {
+    setError(null);
+
+    // 90-day validation for all-projects reports
+    if (!selectedProject?.value) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 90) {
+        setError('Date range exceeds 90 days. Please select a project or narrow the date range.');
+        return;
+      }
+    }
+
     setLoading(true);
     setHasGenerated(true);
     setNarrative(null);
@@ -52,13 +67,13 @@ export function Reports() {
 
       const [statsData, thoughtsData] = await Promise.all([
         api.getTimeSeries(params),
-        api.listThoughts({ ...params, limit: '1000' }),
+        api.listThoughts({ ...params, pageSize: '1000' }),
       ]);
 
       setStats(statsData);
-      setThoughts(thoughtsData);
-    } catch (error) {
-      console.error('Failed to generate report:', error);
+      setThoughts(thoughtsData.items);
+    } catch (err) {
+      console.error('Failed to generate report:', err);
       setStats(null);
       setThoughts([]);
     } finally {
@@ -178,6 +193,12 @@ export function Reports() {
           </div>
         )}
       </div>
+
+      {error && (
+        <Alert type="error" dismissible onDismiss={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
       {loading && (
         <div style={{ textAlign: 'center', padding: '40px' }}>
