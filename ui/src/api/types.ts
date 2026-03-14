@@ -18,6 +18,7 @@ export interface TimeSeriesResponse {
     bySource: Record<string, number>;
     byType: Record<string, number>;
     byTopic: Record<string, number>;
+    byProject: Record<string, number>;
   }>;
   byType: Record<string, number>;
   bySource: Record<string, number>;

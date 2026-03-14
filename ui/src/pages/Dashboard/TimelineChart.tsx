@@ -12,7 +12,7 @@ import { parseLocalDate } from '../../utils/parseDate';
 const CHART_TYPE_KEY = 'dashboard-chart-type';
 const CHART_MODE_KEY = 'dashboard-chart-mode';
 type ChartType = 'line' | 'bar';
-type ChartMode = 'types' | 'sources' | 'topics';
+type ChartMode = 'types' | 'sources' | 'topics' | 'projects';
 
 function getSavedChartType(): ChartType {
   const saved = localStorage.getItem(CHART_TYPE_KEY);
@@ -21,7 +21,7 @@ function getSavedChartType(): ChartType {
 
 function getSavedChartMode(): ChartMode {
   const saved = localStorage.getItem(CHART_MODE_KEY);
-  return saved === 'sources' ? 'sources' : saved === 'topics' ? 'topics' : 'types';
+  return saved === 'sources' ? 'sources' : saved === 'topics' ? 'topics' : saved === 'projects' ? 'projects' : 'types';
 }
 
 interface TimelineChartProps {
@@ -68,6 +68,7 @@ export function TimelineChart({ stats, startDate, endDate }: TimelineChartProps)
                   { id: 'types', text: 'By Type' },
                   { id: 'sources', text: 'By Source' },
                   { id: 'topics', text: 'By Topic' },
+                  { id: 'projects', text: 'By Project' },
                 ]}
               />
             </SpaceBetween>
@@ -90,14 +91,16 @@ export function TimelineChart({ stats, startDate, endDate }: TimelineChartProps)
           const byDateGroup: Record<string, Record<string, number>> = {};
           const allGroups = new Set<string>();
 
-          const bucketField = chartMode === 'types' ? 'byType' : chartMode === 'sources' ? 'bySource' : 'byTopic';
+          const bucketField = chartMode === 'types' ? 'byType' : chartMode === 'sources' ? 'bySource' : chartMode === 'projects' ? 'byProject' : 'byTopic';
           const topTopics = chartMode === 'topics' ? new Set(stats.topTopics.slice(0, 10).map((t) => t.topic)) : null;
+          const topProjects = chartMode === 'projects' ? new Set(stats.projects.slice(0, 10).map((p) => p.project)) : null;
 
           filteredBuckets.forEach((bucket) => {
             const dateKey = format(parseLocalDate(bucket.date), 'M/d');
             const breakdown = bucket[bucketField];
             for (const [group, count] of Object.entries(breakdown)) {
               if (topTopics && !topTopics.has(group)) continue;
+              if (topProjects && !topProjects.has(group)) continue;
               allGroups.add(group);
               if (!byDateGroup[dateKey]) byDateGroup[dateKey] = {};
               byDateGroup[dateKey][group] = (byDateGroup[dateKey][group] || 0) + count;

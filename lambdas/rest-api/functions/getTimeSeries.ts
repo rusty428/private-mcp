@@ -40,7 +40,7 @@ export async function getTimeSeries(params: TimeSeriesParams) {
 
   const filtered = allItems.map((v) => v.metadata);
 
-  const bucketMap: Record<string, { total: number; bySource: Record<string, number>; byType: Record<string, number>; byTopic: Record<string, number> }> = {};
+  const bucketMap: Record<string, { total: number; bySource: Record<string, number>; byType: Record<string, number>; byTopic: Record<string, number>; byProject: Record<string, number> }> = {};
   const byType: Record<string, number> = {};
   const bySource: Record<string, number> = {};
   const topicCounts: Record<string, number> = {};
@@ -50,7 +50,7 @@ export async function getTimeSeries(params: TimeSeriesParams) {
   for (const m of filtered) {
     const dateStr = m.thought_date || m.created_at?.slice(0, 10) || '';
     const bucketKey = interval === 'week' ? getWeekStart(dateStr) : dateStr;
-    if (!bucketMap[bucketKey]) bucketMap[bucketKey] = { total: 0, bySource: {}, byType: {}, byTopic: {} };
+    if (!bucketMap[bucketKey]) bucketMap[bucketKey] = { total: 0, bySource: {}, byType: {}, byTopic: {}, byProject: {} };
     bucketMap[bucketKey].total++;
     const src = m.source || 'unknown';
     bucketMap[bucketKey].bySource[src] = (bucketMap[bucketKey].bySource[src] || 0) + 1;
@@ -64,7 +64,10 @@ export async function getTimeSeries(params: TimeSeriesParams) {
         bucketMap[bucketKey].byTopic[t] = (bucketMap[bucketKey].byTopic[t] || 0) + 1;
       }
     }
-    if (m.project) projectCounts[m.project] = (projectCounts[m.project] || 0) + 1;
+    if (m.project) {
+      projectCounts[m.project] = (projectCounts[m.project] || 0) + 1;
+      bucketMap[bucketKey].byProject[m.project] = (bucketMap[bucketKey].byProject[m.project] || 0) + 1;
+    }
     if (Array.isArray(m.action_items)) actionItemCount += m.action_items.length;
   }
 

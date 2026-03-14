@@ -37,7 +37,7 @@ export function Dashboard() {
     <ContentLayout
       header={
         <Header variant="h1" actions={<TimeRangeSelector onChange={setTimeRange} defaultRange={savedTimeRange.key} />}>
-          Thought Dashboard
+          Dashboard
         </Header>
       }
     >
@@ -51,13 +51,15 @@ export function Dashboard() {
             {stats && (
               <>
                 <StatCards
-                  total={stats.totalAllTime}
-                  actionItems={stats.actionItemCount}
-                  projectCount={stats.projects.length}
+                  total={stats.buckets
+                    .filter((b) => b.date >= timeRange.startDate && b.date <= timeRange.endDate)
+                    .reduce((sum, b) => sum + b.total, 0)}
+                  projects={stats.projects}
                 />
                 <TimelineChart stats={stats} startDate={timeRange.startDate} endDate={timeRange.endDate} />
               </>
             )}
+            <hr style={{ border: 'none', borderTop: '1px solid currentColor', opacity: 0.15, margin: 0 }} />
             <RecentThoughts thoughts={recent} />
           </>
         )}
