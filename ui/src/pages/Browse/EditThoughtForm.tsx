@@ -14,10 +14,11 @@ export interface EditThoughtFormHandle {
 
 interface EditThoughtFormProps {
   thought: ThoughtRecord;
+  typeOptions?: string[];
 }
 
 export const EditThoughtForm = forwardRef<EditThoughtFormHandle, EditThoughtFormProps>(
-  function EditThoughtForm({ thought }, ref) {
+  function EditThoughtForm({ thought, typeOptions }, ref) {
     const [type, setType] = useState({
       label: thought.metadata.type,
       value: thought.metadata.type,
@@ -49,7 +50,7 @@ export const EditThoughtForm = forwardRef<EditThoughtFormHandle, EditThoughtForm
           <Select
             selectedOption={type}
             onChange={({ detail }) => setType(detail.selectedOption as any)}
-            options={VALID_THOUGHT_TYPES.map(t => ({ label: t, value: t }))}
+            options={(typeOptions || VALID_THOUGHT_TYPES).map(t => ({ label: t, value: t }))}
           />
         </FormField>
 

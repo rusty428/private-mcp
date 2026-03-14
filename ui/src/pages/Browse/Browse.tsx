@@ -20,6 +20,7 @@ import { api } from '../../api/client';
 import type { ThoughtRecord } from '../../api/types';
 import { parseLocalDate } from '../../utils/parseDate';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
+import type { EnrichmentSettings } from '../../api/settingsTypes';
 
 export function Browse() {
   const [items, setItems] = useState<ThoughtRecord[]>([]);
@@ -45,6 +46,15 @@ export function Browse() {
   const [filterText, setFilterText] = useState('');
   const [typeFilter, setTypeFilter] = useState<{ label: string; value: string } | null>(null);
   const [projectFilter, setProjectFilter] = useState<{ label: string; value: string } | null>(null);
+
+  // Dynamic type options from settings
+  const [dynamicTypes, setDynamicTypes] = useState<string[]>([...VALID_THOUGHT_TYPES]);
+
+  useEffect(() => {
+    api.getEnrichmentSettings()
+      .then((settings: EnrichmentSettings) => setDynamicTypes(settings.types))
+      .catch(() => { /* keep static defaults */ });
+  }, []);
 
   const loadPage = useCallback(async (token?: string, fetchCount = false) => {
     try {
@@ -97,7 +107,7 @@ export function Browse() {
   };
 
   const typeOptions = [
-    ...VALID_THOUGHT_TYPES.map((t) => ({ label: t, value: t })),
+    ...dynamicTypes.map((t) => ({ label: t, value: t })),
     { label: 'pending', value: 'pending' },
   ];
 
@@ -394,7 +404,7 @@ export function Browse() {
           </div>
         }
       >
-        {detailItem && <EditThoughtForm ref={editFormRef} thought={detailItem} />}
+        {detailItem && <EditThoughtForm ref={editFormRef} thought={detailItem} typeOptions={dynamicTypes} />}
       </Modal>
 
       <Modal
