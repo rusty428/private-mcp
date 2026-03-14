@@ -19,12 +19,12 @@ async function getValidTypes(): Promise<string[]> {
       TableName: process.env.SETTINGS_TABLE_NAME,
       Key: { pk: 'enrichment', sk: 'config' },
     }));
-    const types = result.Item?.types || VALID_THOUGHT_TYPES as unknown as string[];
+    const types: string[] = result.Item?.types ?? [...VALID_THOUGHT_TYPES];
     cachedTypes = types;
     typesCacheTime = now;
     return types;
   } catch {
-    return VALID_THOUGHT_TYPES as unknown as string[];
+    return [...VALID_THOUGHT_TYPES];
   }
 }
 
