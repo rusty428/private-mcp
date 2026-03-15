@@ -9,6 +9,7 @@ export interface EnrichmentSettings {
   classificationModel: string;
   specialInstructions: string | null;
   customPrompt: string | null;
+  timezone: string;
   updatedAt: string;
   generatedPrompt: string;
 }

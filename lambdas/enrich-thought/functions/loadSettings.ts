@@ -27,6 +27,7 @@ export async function loadSettings(): Promise<EnrichmentSettings> {
         classificationModel: result.Item.classificationModel || DEFAULT_ENRICHMENT_SETTINGS.classificationModel,
         specialInstructions: result.Item.specialInstructions ?? null,
         customPrompt: result.Item.customPrompt ?? null,
+        timezone: result.Item.timezone ?? DEFAULT_ENRICHMENT_SETTINGS.timezone,
         updatedAt: result.Item.updatedAt || '',
       };
     } else {

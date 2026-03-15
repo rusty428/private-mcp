@@ -26,6 +26,17 @@ const MODEL_OPTIONS = [
   { label: 'Custom', value: '__custom__' },
 ];
 
+const TIMEZONE_OPTIONS = [
+  { label: 'Pacific Time (Los Angeles)', value: 'America/Los_Angeles' },
+  { label: 'Mountain Time (Denver)', value: 'America/Denver' },
+  { label: 'Arizona (Phoenix, no DST)', value: 'America/Phoenix' },
+  { label: 'Central Time (Chicago)', value: 'America/Chicago' },
+  { label: 'Eastern Time (New York)', value: 'America/New_York' },
+  { label: 'Alaska (Anchorage)', value: 'America/Anchorage' },
+  { label: 'Hawaii (Honolulu)', value: 'Pacific/Honolulu' },
+  { label: 'UTC', value: 'UTC' },
+];
+
 const DEFAULT_SETTINGS: Omit<EnrichmentSettings, 'updatedAt' | 'generatedPrompt'> = {
   types: ['observation', 'task', 'idea', 'reference', 'person_note', 'decision', 'project_summary', 'milestone'],
   defaultType: 'observation',
@@ -33,6 +44,7 @@ const DEFAULT_SETTINGS: Omit<EnrichmentSettings, 'updatedAt' | 'generatedPrompt'
   classificationModel: 'anthropic.claude-3-haiku-20240307-v1:0',
   specialInstructions: null,
   customPrompt: null,
+  timezone: 'America/Los_Angeles',
 };
 
 export function Settings() {
@@ -40,6 +52,9 @@ export function Settings() {
   const [saving, setSaving] = useState(false);
   const [flashItems, setFlashItems] = useState<any[]>([]);
   const [resetModalVisible, setResetModalVisible] = useState(false);
+
+  // Section 0: Timezone
+  const [timezone, setTimezone] = useState<{ label: string; value: string }>(TIMEZONE_OPTIONS[0]);
 
   // Section 1: Model
   const [selectedModel, setSelectedModel] = useState<{ label: string; value: string }>(MODEL_OPTIONS[0]);
@@ -72,6 +87,7 @@ export function Settings() {
       projectsMap[p.name] = { aliases: p.aliases };
     }
     return JSON.stringify({
+      timezone: timezone.value,
       types,
       defaultType: defaultType.value,
       projects: projectsMap,
@@ -101,6 +117,10 @@ export function Settings() {
   }, []);
 
   const applySettings = (settings: EnrichmentSettings) => {
+    // Timezone
+    const tzOption = TIMEZONE_OPTIONS.find(tz => tz.value === settings.timezone);
+    setTimezone(tzOption || { label: settings.timezone, value: settings.timezone });
+
     // Model
     const modelOption = MODEL_OPTIONS.find(m => m.value === settings.classificationModel);
     if (modelOption) {
@@ -135,6 +155,7 @@ export function Settings() {
       projectsMap[name] = { aliases: (config as ProjectConfig).aliases };
     }
     savedSnapshot.current = JSON.stringify({
+      timezone: settings.timezone,
       types: settings.types,
       defaultType: settings.defaultType,
       projects: projectsMap,
@@ -155,6 +176,7 @@ export function Settings() {
       projectsMap[p.name] = { aliases: p.aliases };
     }
     return {
+      timezone: timezone.value,
       types,
       defaultType: defaultType.value,
       projects: projectsMap,
@@ -322,6 +344,20 @@ export function Settings() {
       >
         <SpaceBetween size="l">
           <Flashbar items={flashItems} />
+
+          {/* Section 0: Timezone */}
+          <Container header={<Header variant="h2">Timezone</Header>}>
+            <FormField
+              label="Local timezone"
+              description="All thought dates are stored relative to this timezone. Default: Pacific Time."
+            >
+              <Select
+                selectedOption={timezone}
+                onChange={({ detail }) => setTimezone(detail.selectedOption as any)}
+                options={TIMEZONE_OPTIONS}
+              />
+            </FormField>
+          </Container>
 
           {/* Section 1: Extraction Model */}
           <div style={dimmedStyle}>
@@ -558,8 +594,8 @@ export function Settings() {
           </Box>
         }
       >
-        Are you sure you want to reset all enrichment settings to their defaults? This will overwrite
-        your current types, projects, model selection, and any custom instructions.
+        Are you sure you want to reset all settings to their defaults? This will overwrite your
+        timezone, types, projects, model selection, and any custom instructions.
       </Modal>
     </>
   );
