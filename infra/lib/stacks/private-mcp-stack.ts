@@ -93,6 +93,7 @@ export class PrivateMCPStack extends cdk.Stack {
           defaultType: { S: DEFAULT_ENRICHMENT_SETTINGS.defaultType },
           projects: { M: {} },
           classificationModel: { S: DEFAULT_ENRICHMENT_SETTINGS.classificationModel },
+          timezone: { S: DEFAULT_ENRICHMENT_SETTINGS.timezone },
           updatedAt: { S: new Date().toISOString() },
         },
         ConditionExpression: 'attribute_not_exists(pk)',
@@ -206,6 +207,8 @@ export class PrivateMCPStack extends cdk.Stack {
     });
     processThoughtFn.addToRolePolicy(s3VectorsPolicy);
     processThoughtFn.addToRolePolicy(ddbWritePolicy);
+    processThoughtFn.addToRolePolicy(settingsReadPolicy);
+    processThoughtFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // --- enrich-thought Lambda (Stage 2 — async enrichment) ---
     const enrichThoughtFn = new nodejs.NodejsFunction(this, 'EnrichThoughtFn', {

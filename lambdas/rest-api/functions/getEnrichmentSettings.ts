@@ -59,6 +59,7 @@ export async function getEnrichmentSettings(): Promise<EnrichmentSettings & { ge
     classificationModel: stored?.classificationModel ?? DEFAULT_ENRICHMENT_SETTINGS.classificationModel,
     specialInstructions: stored?.specialInstructions ?? DEFAULT_ENRICHMENT_SETTINGS.specialInstructions,
     customPrompt: stored?.customPrompt ?? DEFAULT_ENRICHMENT_SETTINGS.customPrompt,
+    timezone: stored?.timezone ?? DEFAULT_ENRICHMENT_SETTINGS.timezone,
     updatedAt: stored?.updatedAt ?? DEFAULT_ENRICHMENT_SETTINGS.updatedAt,
   };
 

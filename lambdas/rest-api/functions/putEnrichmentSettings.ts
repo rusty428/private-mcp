@@ -67,6 +67,16 @@ export async function putEnrichmentSettings(body: any): Promise<PutResult> {
     }
   }
 
+  // Validate timezone
+  if (typeof body.timezone !== 'string' || body.timezone.trim() === '') {
+    return { success: false, error: 'timezone must be a non-empty IANA timezone string' };
+  }
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: body.timezone });
+  } catch {
+    return { success: false, error: `Invalid timezone: "${body.timezone}". Must be a valid IANA timezone (e.g., America/Los_Angeles).` };
+  }
+
   // Validate specialInstructions
   const specialInstructions = body.specialInstructions ?? null;
   if (specialInstructions !== null) {
@@ -101,6 +111,7 @@ export async function putEnrichmentSettings(body: any): Promise<PutResult> {
     classificationModel: body.classificationModel,
     specialInstructions,
     customPrompt,
+    timezone: body.timezone,
     updatedAt: now,
   };
 
@@ -112,6 +123,7 @@ export async function putEnrichmentSettings(body: any): Promise<PutResult> {
     defaultType: settings.defaultType,
     projects: settings.projects,
     classificationModel: settings.classificationModel,
+    timezone: settings.timezone,
     updatedAt: settings.updatedAt,
   };
 
