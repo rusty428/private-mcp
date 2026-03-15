@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Header from '@cloudscape-design/components/header';
 import Box from '@cloudscape-design/components/box';
+import Button from '@cloudscape-design/components/button';
 import Spinner from '@cloudscape-design/components/spinner';
 import { api } from '../../api/client';
 import type { TimeSeriesResponse, ThoughtRecord } from '../../api/types';
@@ -18,8 +19,9 @@ export function Dashboard() {
   const [stats, setStats] = useState<TimeSeriesResponse | null>(null);
   const [recent, setRecent] = useState<ThoughtRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     setLoading(true);
     Promise.all([
       api.getTimeSeries({ startDate: timeRange.startDate, endDate: timeRange.endDate }),
@@ -31,12 +33,24 @@ export function Dashboard() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [timeRange]);
+  }, [timeRange, refreshKey]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <ContentLayout
       header={
-        <Header variant="h1" actions={<TimeRangeSelector onChange={setTimeRange} defaultRange={savedTimeRange.key} />}>
+        <Header
+          variant="h1"
+          actions={
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button iconName="refresh" loading={loading} onClick={() => setRefreshKey((k) => k + 1)} />
+              <TimeRangeSelector onChange={setTimeRange} defaultRange={savedTimeRange.key} />
+            </SpaceBetween>
+          }
+        >
           Dashboard
         </Header>
       }
