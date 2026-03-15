@@ -1,61 +1,42 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
-import { CLASSIFICATION_MODEL_ID } from '../../../types/config';
-import { ThoughtType, ThoughtQuality, VALID_THOUGHT_TYPES } from '../../../types/thought';
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.REGION });
 
 export interface EnrichmentClassification {
-  type: ThoughtType;
+  type: string;
   topics: string[];
   people: string[];
   action_items: string[];
   dates_mentioned: string[];
   related_projects: string[];
   summary: string;
-  quality: ThoughtQuality;
+  quality: 'high' | 'standard' | 'noise';
 }
 
-const SYSTEM_PROMPT = `You are a metadata extractor for a personal knowledge management system. Given a thought with its source context, extract structured metadata and produce a normalized summary.
-
-Return JSON with these fields:
-
-- "type": one of: observation, task, idea, reference, person_note, decision, project_summary, milestone
-- "topics": array of 2-5 short lowercase topic tags
-- "people": array of actual human names mentioned (not products, companies, technologies, or AI models)
-- "action_items": array of explicit to-dos that haven't been done yet
-- "dates_mentioned": array of dates in YYYY-MM-DD format (empty if none)
-- "related_projects": array of project names referenced in the content (other than the primary project). Use consistent canonical names — match the project name format given in the Project field (e.g., if the primary project is "AWSPrivateMCP", use that exact casing/format for references to it, and use similarly precise names for other projects). Do not create variations like abbreviations or lowercase versions.
-- "summary": 1-2 sentence normalized summary capturing the essential meaning. Write as a standalone statement, not referencing "the user" or "this thought". This summary will be used for semantic search embedding.
-- "quality": "high" if this contains an architectural decision, milestone, or significant insight. "standard" for normal content. "noise" if this is trivial or not worth indexing.
-
-Source-specific guidance:
-- "mcp" source: Intentional capture. Trust the content. Likely high quality.
-- "user-prompt" source: Captured automatically from user input. Extract the intent. Be skeptical of action items — the user may be asking, not committing.
-- "session-summary" / "session-hook" source: Session boundary data. Extract key outcomes and decisions.
-- "slack" source: Conversational. May need more normalization in the summary.
-
-Rules:
-- Only extract what is explicitly stated. Do not infer.
-- "people" must be real human names. "Haiku", "Jeep", "WERA", "Bedrock", "Claude" are NOT people.
-- "action_items" are things still needing to be done. Completed work is not an action item.
-- Return valid JSON only, no other text.`;
+export interface ClassifyOptions {
+  systemPrompt: string;
+  modelId: string;
+  validTypes: string[];
+  defaultType: string;
+}
 
 export async function classifyThought(
   content: string,
   source: string,
-  project: string
+  project: string,
+  options: ClassifyOptions,
 ): Promise<EnrichmentClassification> {
   const userMessage = `Source: ${source}\nProject: ${project || 'unknown'}\nContent: ${content}`;
 
   const response = await bedrock.send(new InvokeModelCommand({
-    modelId: CLASSIFICATION_MODEL_ID,
+    modelId: options.modelId,
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
       anthropic_version: 'bedrock-2023-05-31',
       max_tokens: 1024,
       messages: [{ role: 'user', content: userMessage }],
-      system: SYSTEM_PROMPT,
+      system: options.systemPrompt,
     }),
   }));
 
@@ -64,8 +45,8 @@ export async function classifyThought(
 
   try {
     const parsed = JSON.parse(text);
-    if (!VALID_THOUGHT_TYPES.includes(parsed.type)) {
-      parsed.type = 'observation';
+    if (!options.validTypes.includes(parsed.type)) {
+      parsed.type = options.defaultType;
     }
     parsed.topics = (parsed.topics || []).map((t: string) => t.toLowerCase());
     if (!parsed.summary || parsed.summary.trim() === '') {
@@ -86,7 +67,7 @@ export async function classifyThought(
     };
   } catch {
     return {
-      type: 'observation',
+      type: options.defaultType,
       topics: ['uncategorized'],
       people: [],
       action_items: [],

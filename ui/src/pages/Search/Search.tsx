@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ContentLayout from '@cloudscape-design/components/content-layout';
 import SpaceBetween from '@cloudscape-design/components/space-between';
 import Header from '@cloudscape-design/components/header';
@@ -19,6 +19,7 @@ import { api } from '../../api/client';
 import type { SearchResult } from '../../api/types';
 import { parseLocalDate } from '../../utils/parseDate';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
+import type { EnrichmentSettings } from '../../api/settingsTypes';
 
 export function Search() {
   const [query, setQuery] = useState('');
@@ -36,6 +37,15 @@ export function Search() {
   const [filterText, setFilterText] = useState('');
   const [typeFilter, setTypeFilter] = useState<{ label: string; value: string } | null>(null);
   const [projectFilter, setProjectFilter] = useState<{ label: string; value: string } | null>(null);
+
+  // Dynamic type options from settings
+  const [dynamicTypes, setDynamicTypes] = useState<string[]>([...VALID_THOUGHT_TYPES]);
+
+  useEffect(() => {
+    api.getEnrichmentSettings()
+      .then((settings: EnrichmentSettings) => setDynamicTypes(settings.types))
+      .catch(() => { /* keep static defaults */ });
+  }, []);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -76,7 +86,7 @@ export function Search() {
   );
 
   const typeOptions = [
-    ...VALID_THOUGHT_TYPES.map((t) => ({ label: t, value: t })),
+    ...dynamicTypes.map((t) => ({ label: t, value: t })),
     { label: 'pending', value: 'pending' },
   ];
 

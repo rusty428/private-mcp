@@ -11,6 +11,7 @@ import { Browse } from './pages/Browse/Browse';
 import { Search } from './pages/Search/Search';
 import { Reports } from './pages/Reports/Reports';
 import { Capture } from './pages/Capture/Capture';
+import { Settings } from './pages/Settings/Settings';
 
 const THEME_LABELS: Record<ThemePreference, string> = {
   system: 'System',
@@ -64,6 +65,7 @@ function AppContent() {
                 { type: 'link', text: 'Search', href: '/search' },
                 { type: 'link', text: 'Reports', href: '/reports' },
                 { type: 'link', text: 'Capture', href: '/capture' },
+                { type: 'link', text: 'Settings', href: '/settings' },
               ]}
               onFollow={(e) => {
                 e.preventDefault();
@@ -78,6 +80,7 @@ function AppContent() {
               <Route path="/search" element={<Search />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/capture" element={<Capture />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           }
         />

@@ -1,4 +1,5 @@
 import type { ThoughtRecord, PaginatedThoughtsResponse, SearchResult, TimeSeriesResponse, CaptureResult, NarrativeResponse } from './types';
+import type { EnrichmentSettings } from './settingsTypes';
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -69,5 +70,14 @@ export const api = {
     request<NarrativeResponse>('/reports/generate', {
       method: 'POST',
       body: JSON.stringify(params),
+    }),
+
+  getEnrichmentSettings: () =>
+    request<EnrichmentSettings>('/settings/enrichment'),
+
+  putEnrichmentSettings: (settings: Omit<EnrichmentSettings, 'updatedAt' | 'generatedPrompt'>) =>
+    request<EnrichmentSettings>('/settings/enrichment', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
     }),
 };

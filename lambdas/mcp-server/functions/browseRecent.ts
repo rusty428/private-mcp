@@ -1,7 +1,32 @@
 import { S3VectorsClient, ListVectorsCommand, GetVectorsCommand } from '@aws-sdk/client-s3vectors';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { MAX_LIST_LIMIT, VALID_THOUGHT_TYPES } from '../../../types/validation';
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
+const ddbClient = new DynamoDBClient({ region: process.env.REGION });
+const ddb = DynamoDBDocumentClient.from(ddbClient);
+
+let cachedTypes: string[] | null = null;
+let typesCacheTime = 0;
+const TYPES_CACHE_TTL = 5 * 60 * 1000;
+
+async function getValidTypes(): Promise<string[]> {
+  const now = Date.now();
+  if (cachedTypes && now - typesCacheTime < TYPES_CACHE_TTL) return cachedTypes;
+  try {
+    const result = await ddb.send(new GetCommand({
+      TableName: process.env.SETTINGS_TABLE_NAME,
+      Key: { pk: 'enrichment', sk: 'config' },
+    }));
+    const types: string[] = result.Item?.types ?? [...VALID_THOUGHT_TYPES];
+    cachedTypes = types;
+    typesCacheTime = now;
+    return types;
+  } catch {
+    return [...VALID_THOUGHT_TYPES];
+  }
+}
 
 export async function browseRecent(
   limit: number = 20,
@@ -10,8 +35,11 @@ export async function browseRecent(
   project?: string,
 ): Promise<any[]> {
   limit = Math.min(limit, MAX_LIST_LIMIT);
-  if (type && !VALID_THOUGHT_TYPES.includes(type as any)) {
-    throw new Error(`Invalid type. Must be one of: ${VALID_THOUGHT_TYPES.join(', ')}`);
+  if (type) {
+    const validTypes = await getValidTypes();
+    if (!validTypes.includes(type)) {
+      throw new Error(`Invalid type. Must be one of: ${validTypes.join(', ')}`);
+    }
   }
 
   const listResponse = await s3vectors.send(new ListVectorsCommand({

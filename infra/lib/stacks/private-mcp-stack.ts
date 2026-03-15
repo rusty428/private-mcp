@@ -8,6 +8,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { PrivateMCPConfig } from '../config';
 import {
@@ -15,9 +16,10 @@ import {
   VECTOR_INDEX_NAME,
   VECTOR_DIMENSIONS,
   EMBEDDING_MODEL_ID,
-  CLASSIFICATION_MODEL_ID,
   THOUGHTS_TABLE_NAME,
+  SETTINGS_TABLE_NAME,
 } from '../../../types/config';
+import { DEFAULT_ENRICHMENT_SETTINGS } from '../../../types/settings';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
   config: PrivateMCPConfig;
@@ -69,6 +71,45 @@ export class PrivateMCPStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // --- Settings DynamoDB Table ---
+    const settingsTable = new dynamodb.Table(this, 'SettingsTable', {
+      tableName: SETTINGS_TABLE_NAME,
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+
+    // Seed enrichment settings on first deploy (won't overwrite existing)
+    const seedParams = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: SETTINGS_TABLE_NAME,
+        Item: {
+          pk: { S: 'enrichment' },
+          sk: { S: 'config' },
+          types: { L: DEFAULT_ENRICHMENT_SETTINGS.types.map(t => ({ S: t })) },
+          defaultType: { S: DEFAULT_ENRICHMENT_SETTINGS.defaultType },
+          projects: { M: {} },
+          classificationModel: { S: DEFAULT_ENRICHMENT_SETTINGS.classificationModel },
+          updatedAt: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(pk)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-enrichment-settings'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedEnrichmentSettings', {
+      onCreate: seedParams,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [settingsTable.tableArn],
+        }),
+      ]),
+    });
+
     // --- Common Lambda environment ---
     const commonEnv = {
       REGION: config.region,
@@ -115,12 +156,29 @@ export class PrivateMCPStack extends cdk.Stack {
       ],
     });
 
-    // --- Bedrock IAM policy ---
-    const bedrockPolicy = new iam.PolicyStatement({
+    // --- Settings DynamoDB IAM policies ---
+    const settingsReadPolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:GetItem'],
+      resources: [settingsTable.tableArn],
+    });
+
+    const settingsReadWritePolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:GetItem', 'dynamodb:PutItem'],
+      resources: [settingsTable.tableArn],
+    });
+
+    // --- Bedrock IAM policies ---
+    const bedrockEmbedPolicy = new iam.PolicyStatement({
       actions: ['bedrock:InvokeModel'],
       resources: [
         `arn:aws:bedrock:${config.region}::foundation-model/${EMBEDDING_MODEL_ID}`,
-        `arn:aws:bedrock:${config.region}::foundation-model/${CLASSIFICATION_MODEL_ID}`,
+      ],
+    });
+
+    const bedrockClassifyPolicy = new iam.PolicyStatement({
+      actions: ['bedrock:InvokeModel'],
+      resources: [
+        `arn:aws:bedrock:*::foundation-model/*`,
       ],
     });
 
@@ -163,9 +221,12 @@ export class PrivateMCPStack extends cdk.Stack {
       },
     });
     enrichThoughtFn.addToRolePolicy(s3VectorsPolicy);
-    enrichThoughtFn.addToRolePolicy(bedrockPolicy);
+    enrichThoughtFn.addToRolePolicy(bedrockEmbedPolicy);
+    enrichThoughtFn.addToRolePolicy(bedrockClassifyPolicy);
     enrichThoughtFn.addToRolePolicy(marketplacePolicy);
     enrichThoughtFn.addToRolePolicy(ddbWritePolicy);
+    enrichThoughtFn.addToRolePolicy(settingsReadPolicy);
+    enrichThoughtFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // process-thought invokes enrich-thought async
     enrichThoughtFn.grantInvoke(processThoughtFn);
@@ -210,7 +271,9 @@ export class PrivateMCPStack extends cdk.Stack {
     });
     processThoughtFn.grantInvoke(mcpServerFn);
     mcpServerFn.addToRolePolicy(s3VectorsPolicy);
-    mcpServerFn.addToRolePolicy(bedrockPolicy);
+    mcpServerFn.addToRolePolicy(bedrockEmbedPolicy);
+    mcpServerFn.addToRolePolicy(settingsReadPolicy);
+    mcpServerFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // --- daily-summary Lambda ---
     const dailySummaryFn = new nodejs.NodejsFunction(this, 'DailySummaryFn', {
@@ -267,9 +330,12 @@ export class PrivateMCPStack extends cdk.Stack {
       },
     });
     restApiFn.addToRolePolicy(s3VectorsPolicy);
-    restApiFn.addToRolePolicy(bedrockPolicy);
+    restApiFn.addToRolePolicy(bedrockEmbedPolicy);
+    restApiFn.addToRolePolicy(bedrockClassifyPolicy);
     processThoughtFn.grantInvoke(restApiFn);
     restApiFn.addToRolePolicy(ddbReadWritePolicy);
+    restApiFn.addToRolePolicy(settingsReadWritePolicy);
+    restApiFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // --- API Gateway Access Logs ---
     const apiLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
@@ -365,6 +431,11 @@ export class PrivateMCPStack extends cdk.Stack {
 
     const projectsResource = api.root.addResource('projects');
     projectsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+
+    const settingsResource = api.root.addResource('settings');
+    const enrichmentSettingsResource = settingsResource.addResource('enrichment');
+    enrichmentSettingsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+    enrichmentSettingsResource.addMethod('PUT', restApiIntegration, { apiKeyRequired: true });
 
     // --- Optional: API alarms (only if ALERT_EMAIL is configured) ---
     if (process.env.ALERT_EMAIL) {
