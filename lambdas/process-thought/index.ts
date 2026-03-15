@@ -5,6 +5,7 @@ import { getPlaceholderVector } from './functions/placeholderVector';
 import { storeThought } from './functions/storeThought';
 import { formatConfirmation } from './functions/formatConfirmation';
 import { replyInSlack } from './functions/replyInSlack';
+import { loadTimezone } from './functions/loadSettings';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
@@ -52,8 +53,10 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
   }
 
   const id = randomUUID();
-  const createdAt = new Date().toISOString();
-  const thoughtDate = createdAt.slice(0, 10);
+  const now = new Date();
+  const createdAt = now.toISOString();
+  const timezone = await loadTimezone();
+  const thoughtDate = now.toLocaleDateString('en-CA', { timeZone: timezone });
 
   const quality = triageThought(input.text, input.source);
 
