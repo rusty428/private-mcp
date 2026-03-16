@@ -25,7 +25,7 @@ export default function Footer() {
       >
         Source
       </a>
-      {' '}&middot; Made with &#10084; in Seattle
+      {' '}&middot; ♲ Made with 100% recycled electrons in Seattle
     </div>
   );
 }
