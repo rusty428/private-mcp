@@ -12,6 +12,7 @@ import Pagination from '@cloudscape-design/components/pagination';
 import CollectionPreferences from '@cloudscape-design/components/collection-preferences';
 import TextFilter from '@cloudscape-design/components/text-filter';
 import Select from '@cloudscape-design/components/select';
+import Alert from '@cloudscape-design/components/alert';
 import { ThoughtTypeBadge } from '../../components/ThoughtTypeBadge';
 import { ProjectSelect } from '../../components/ProjectSelect';
 import { ThoughtDetail } from '../Browse/ThoughtDetail';
@@ -20,8 +21,10 @@ import type { SearchResult } from '../../api/types';
 import { parseLocalDate } from '../../utils/parseDate';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
 import type { EnrichmentSettings } from '../../api/settingsTypes';
+import { useDemoMode } from '../../contexts/DemoContext';
 
 export function Search() {
+  const { isDemoMode } = useDemoMode();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,6 +109,9 @@ export function Search() {
         header={<Header variant="h1">Semantic Search</Header>}
       >
         <SpaceBetween size="l">
+          {isDemoMode && (
+            <Alert type="info">Search is not available in demo mode.</Alert>
+          )}
           <div style={{ display: 'flex', gap: '8px' }}>
             <div style={{ flex: 1 }}>
               <Input
@@ -115,9 +121,10 @@ export function Search() {
                 onKeyDown={({ detail }) => {
                   if (detail.key === 'Enter') handleSearch();
                 }}
+                disabled={isDemoMode}
               />
             </div>
-            <Button variant="primary" onClick={handleSearch} loading={loading}>
+            <Button variant="primary" onClick={handleSearch} loading={loading} disabled={isDemoMode}>
               Search
             </Button>
           </div>

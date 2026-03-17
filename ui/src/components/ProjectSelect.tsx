@@ -7,11 +7,12 @@ interface ProjectSelectProps {
   onChange: (option: { label: string; value: string } | null) => void;
   placeholder?: string;
   allLabel?: string;
+  disabled?: boolean;
 }
 
 let cachedProjects: string[] | null = null;
 
-export function ProjectSelect({ selectedOption, onChange, placeholder = 'Select project', allLabel = 'All projects' }: ProjectSelectProps) {
+export function ProjectSelect({ selectedOption, onChange, placeholder = 'Select project', allLabel = 'All projects', disabled = false }: ProjectSelectProps) {
   const [projects, setProjects] = useState<string[]>(cachedProjects || []);
   const [loading, setLoading] = useState(!cachedProjects);
 
@@ -44,7 +45,7 @@ export function ProjectSelect({ selectedOption, onChange, placeholder = 'Select 
         placeholder={loading ? 'Loading...' : placeholder}
         loadingText="Loading projects..."
         statusType={loading ? 'loading' : 'finished'}
-        disabled={loading}
+        disabled={loading || disabled}
         expandToViewport
       />
     </div>

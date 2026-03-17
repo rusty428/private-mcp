@@ -21,8 +21,10 @@ import type { ThoughtRecord } from '../../api/types';
 import { parseLocalDate } from '../../utils/parseDate';
 import { VALID_THOUGHT_TYPES } from '@shared-types/thought';
 import type { EnrichmentSettings } from '../../api/settingsTypes';
+import { useDemoMode } from '../../contexts/DemoContext';
 
 export function Browse() {
+  const { isDemoMode } = useDemoMode();
   const [items, setItems] = useState<ThoughtRecord[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const [currentToken, setCurrentToken] = useState<string | undefined>(undefined);
@@ -194,7 +196,7 @@ export function Browse() {
                     : `(${range})`;
                 })()}
                 actions={
-                  <Button disabled={selectedItems.length === 0} onClick={handleDeleteClick}>
+                  <Button disabled={selectedItems.length === 0 || isDemoMode} onClick={handleDeleteClick}>
                     Delete
                   </Button>
                 }
@@ -365,7 +367,7 @@ export function Browse() {
             }
             onSelectionChange={({ detail }) => setSelectedItems(detail.selectedItems)}
             selectedItems={selectedItems}
-            selectionType="multi"
+            selectionType={isDemoMode ? undefined : 'multi'}
           />
         </SpaceBetween>
       </ContentLayout>
@@ -378,7 +380,7 @@ export function Browse() {
         size="large"
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button variant="link" onClick={handleDeleteClick}>Delete</Button>
+            <Button variant="link" onClick={handleDeleteClick} disabled={isDemoMode}>Delete</Button>
             <Button variant="primary" onClick={() => setDetailVisible(false)}>
               Close
             </Button>
@@ -396,10 +398,10 @@ export function Browse() {
         size="large"
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Button variant="link" onClick={handleDeleteClick}>Delete</Button>
+            <Button variant="link" onClick={handleDeleteClick} disabled={isDemoMode}>Delete</Button>
             <SpaceBetween direction="horizontal" size="xs">
               <Button variant="link" onClick={() => setEditing(false)}>Cancel</Button>
-              <Button variant="primary" onClick={handleSave}>Save</Button>
+              <Button variant="primary" onClick={handleSave} disabled={isDemoMode}>Save</Button>
             </SpaceBetween>
           </div>
         }

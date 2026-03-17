@@ -15,8 +15,10 @@ import type { ThoughtRecord, TimeSeriesResponse } from '../../api/types';
 import { parseLocalDate } from '../../utils/parseDate';
 import { StructuredReport } from './StructuredReport';
 import { NarrativeSection } from './NarrativeSection';
+import { useDemoMode } from '../../contexts/DemoContext';
 
 export function Reports() {
+  const { isDemoMode } = useDemoMode();
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [selectedProject, setSelectedProject] = useState<SelectProps.Option | null>(null);
@@ -158,6 +160,9 @@ export function Reports() {
       header={<Header variant="h1">Reports</Header>}
     >
     <SpaceBetween size="m">
+      {isDemoMode && (
+        <Alert type="info">Reports are not available in demo mode.</Alert>
+      )}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div>
           <Box variant="awsui-key-label">Start Date</Box>
@@ -165,6 +170,7 @@ export function Reports() {
             value={startDate}
             onChange={(e) => setStartDate(e.detail.value)}
             placeholder="YYYY-MM-DD"
+            disabled={isDemoMode}
           />
         </div>
         <div>
@@ -173,6 +179,7 @@ export function Reports() {
             value={endDate}
             onChange={(e) => setEndDate(e.detail.value)}
             placeholder="YYYY-MM-DD"
+            disabled={isDemoMode}
           />
         </div>
         <div>
@@ -182,9 +189,10 @@ export function Reports() {
             onChange={(opt) => setSelectedProject(opt)}
             placeholder="Select Project"
             allLabel="All Projects"
+            disabled={isDemoMode}
           />
         </div>
-        <Button variant="primary" onClick={handleGenerate} loading={loading} disabled={!hasSelected}>
+        <Button variant="primary" onClick={handleGenerate} loading={loading} disabled={!hasSelected || isDemoMode}>
           Generate Report
         </Button>
         {!loading && stats && (

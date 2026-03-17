@@ -1,0 +1,3257 @@
+[
+  {
+    "key": "d3m0007a-a1b2-4c3d-9e4f-00000000007a",
+    "metadata": {
+      "content": "Great milestone day. API v2 is live on staging, dashboard beta approved by Jordan, and the pipeline team got stakeholder buy-in. Next week: external beta prep.",
+      "summary": "Milestone day: staging launch, beta approval, stakeholder buy-in",
+      "type": "project_summary",
+      "topics": [
+        "milestones",
+        "weekly-progress",
+        "next-steps"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "End of week review",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T16:20:37.270Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00079-a1b2-4c3d-9e4f-000000000079",
+    "metadata": {
+      "content": "Session wrapping up launch day activities. API v2 on staging, dashboard beta approved, pipeline demo done.",
+      "summary": "Session: launch day wrap up",
+      "type": "project_summary",
+      "topics": [
+        "launch",
+        "progress",
+        "milestones"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "Launch day",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T15:50:34.278Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00078-a1b2-4c3d-9e4f-000000000078",
+    "metadata": {
+      "content": "Pipeline team demo went well. Stakeholders were impressed with the 2.3x throughput improvement and real-time monitoring.",
+      "summary": "Pipeline demo successful, stakeholders impressed",
+      "type": "milestone",
+      "topics": [
+        "demo",
+        "stakeholders",
+        "throughput"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T15:15:28.264Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00077-a1b2-4c3d-9e4f-000000000077",
+    "metadata": {
+      "content": "The docs site analytics show the migration guide is the most visited page this week. Good sign that teams are preparing for v2.",
+      "summary": "Migration guide is top visited docs page",
+      "type": "observation",
+      "topics": [
+        "analytics",
+        "documentation",
+        "migration"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T14:45:44.205Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00076-a1b2-4c3d-9e4f-000000000076",
+    "metadata": {
+      "content": "Deployed API v2 to staging environment. All health checks green. Webhook callbacks verified. Rate limiter configured.",
+      "summary": "API v2 deployed to staging, all checks passing",
+      "type": "milestone",
+      "topics": [
+        "deployment",
+        "staging",
+        "api-v2"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T14:15:58.980Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00075-a1b2-4c3d-9e4f-000000000075",
+    "metadata": {
+      "content": "The data pipeline schema validation rules should be versioned. When source schemas change, we need to support both old and new formats during transition.",
+      "summary": "Version schema validation rules for transition periods",
+      "type": "idea",
+      "topics": [
+        "schema-validation",
+        "versioning",
+        "backward-compatibility"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T13:45:36.944Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00074-a1b2-4c3d-9e4f-000000000074",
+    "metadata": {
+      "content": "Final staging load test results from Alex: 3,100 RPS sustained, p99 at 290ms. Better than yesterday's results after the race condition fix.",
+      "summary": "Final load test: 3,100 RPS, 290ms p99",
+      "type": "milestone",
+      "topics": [
+        "load-testing",
+        "performance",
+        "staging"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T13:15:09.285Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00073-a1b2-4c3d-9e4f-000000000073",
+    "metadata": {
+      "content": "Decided to keep the v1 API running for 6 months after v2 GA. Gives customers enough time to migrate without pressure.",
+      "summary": "v1 API sunset: 6 months after v2 GA",
+      "type": "decision",
+      "topics": [
+        "api-versioning",
+        "sunset-policy",
+        "migration"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T12:00:13.943Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00072-a1b2-4c3d-9e4f-000000000072",
+    "metadata": {
+      "content": "Jordan approved the dashboard beta for internal release. Will gather feedback for two weeks before external beta.",
+      "summary": "Dashboard beta approved for internal release",
+      "type": "person_note",
+      "topics": [
+        "beta",
+        "approval",
+        "release"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T11:30:29.491Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00071-a1b2-4c3d-9e4f-000000000071",
+    "metadata": {
+      "content": "Added a banner to the docs site announcing the v2 API beta and linking to the migration guide.",
+      "summary": "Docs site banner for v2 API beta announcement",
+      "type": "task",
+      "topics": [
+        "announcement",
+        "documentation",
+        "migration"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T11:00:11.247Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00070-a1b2-4c3d-9e4f-000000000070",
+    "metadata": {
+      "content": "The pipeline monitoring dashboard now shows real-time throughput, error rates, and processing latency. Much better visibility than before.",
+      "summary": "Real-time pipeline monitoring dashboard complete",
+      "type": "milestone",
+      "topics": [
+        "monitoring",
+        "dashboard",
+        "real-time"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T10:30:01.311Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0006f-a1b2-4c3d-9e4f-00000000006f",
+    "metadata": {
+      "content": "Dashboard beta deployment checklist finalized. 12 items, all checked off except the user feedback widget which ships tomorrow.",
+      "summary": "Dashboard beta checklist: 11/12 items done",
+      "type": "reference",
+      "topics": [
+        "beta",
+        "deployment",
+        "checklist"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T10:00:33.500Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0006e-a1b2-4c3d-9e4f-00000000006e",
+    "metadata": {
+      "content": "Alex is running the load test on staging one more time with the latest code. Should have results by noon.",
+      "summary": "Alex running final staging load test",
+      "type": "person_note",
+      "topics": [
+        "load-testing",
+        "staging"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T09:35:20.227Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0006d-a1b2-4c3d-9e4f-00000000006d",
+    "metadata": {
+      "content": "Integration test suite: 247 tests passed, 0 failed, 3 skipped (pending webhook callback tests that need a mock server).",
+      "summary": "Integration tests: 247 passed, 0 failed, 3 skipped",
+      "type": "milestone",
+      "topics": [
+        "testing",
+        "integration-tests",
+        "results"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T09:10:53.726Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0006c-a1b2-4c3d-9e4f-00000000006c",
+    "metadata": {
+      "content": "Final testing day before the API v2 staging launch. Running the full integration test suite and checking all monitoring dashboards.",
+      "summary": "Final testing day for API v2 staging launch",
+      "type": "task",
+      "topics": [
+        "testing",
+        "staging",
+        "launch-prep"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0007-f1e2-4d3c-8b4a-000000000007",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-08",
+      "created_at": "2026-01-08T08:45:40.673Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0006b-a1b2-4c3d-9e4f-00000000006b",
+    "metadata": {
+      "content": "Good week overall. API v2 is feature complete for staging, dashboard beta is nearly ready, pipeline throughput doubled, and docs are comprehensive.",
+      "summary": "Week summary: API v2 done, dashboard near beta, pipeline 2x, docs comprehensive",
+      "type": "project_summary",
+      "topics": [
+        "weekly-summary",
+        "progress",
+        "milestones"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "Weekly wrapup",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T17:35:09.746Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0006a-a1b2-4c3d-9e4f-00000000006a",
+    "metadata": {
+      "content": "Wrote the troubleshooting guide for the Acme API. Covers auth errors, rate limiting, webhook failures, and common integration mistakes.",
+      "summary": "API troubleshooting guide completed",
+      "type": "task",
+      "topics": [
+        "troubleshooting",
+        "documentation",
+        "api"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T17:10:45.193Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00069-a1b2-4c3d-9e4f-000000000069",
+    "metadata": {
+      "content": "Session covered mobile improvements, help tooltips, and webhook retry validation.",
+      "summary": "Session: mobile, tooltips, webhook testing",
+      "type": "project_summary",
+      "topics": [
+        "mobile",
+        "tooltips",
+        "testing"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "Dashboard polish and testing",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T16:50:52.313Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00068-a1b2-4c3d-9e4f-000000000068",
+    "metadata": {
+      "content": "Idea: create a shared component library extracted from the dashboard. Other internal tools could reuse the chart components and filter patterns.",
+      "summary": "Extract shared component library from dashboard",
+      "type": "idea",
+      "topics": [
+        "component-library",
+        "code-reuse",
+        "architecture"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [
+        "Internal Docs"
+      ],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T16:20:42.040Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00067-a1b2-4c3d-9e4f-000000000067",
+    "metadata": {
+      "content": "The data pipeline is now processing 4.2M records per day up from 1.8M last month. The Spark optimization was the biggest factor.",
+      "summary": "Pipeline throughput up to 4.2M/day from 1.8M",
+      "type": "observation",
+      "topics": [
+        "throughput",
+        "metrics",
+        "performance"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T15:55:01.025Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00066-a1b2-4c3d-9e4f-000000000066",
+    "metadata": {
+      "content": "Dashboard help tooltips added to all chart components. Each tooltip explains what the chart shows and how to interact with it.",
+      "summary": "Help tooltips added to all dashboard charts",
+      "type": "task",
+      "topics": [
+        "tooltips",
+        "help",
+        "ux",
+        "charts"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T15:25:39.203Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00065-a1b2-4c3d-9e4f-000000000065",
+    "metadata": {
+      "content": "Sam finished the API reference docs for all v2 endpoints. Includes request/response examples and error code tables.",
+      "summary": "API v2 reference docs complete",
+      "type": "person_note",
+      "topics": [
+        "documentation",
+        "api-reference",
+        "completion"
+      ],
+      "people": [
+        "Sam"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T15:00:05.074Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00064-a1b2-4c3d-9e4f-000000000064",
+    "metadata": {
+      "content": "Need to add structured logging to all API endpoints. Currently using console.log which makes CloudWatch queries painful.",
+      "summary": "Switch from console.log to structured logging",
+      "type": "task",
+      "topics": [
+        "logging",
+        "observability",
+        "cloudwatch"
+      ],
+      "people": [],
+      "action_items": [
+        "Implement structured logging across API"
+      ],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T14:30:42.395Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00063-a1b2-4c3d-9e4f-000000000063",
+    "metadata": {
+      "content": "The webhook retry test on staging: simulated 50 failures, all retried correctly with backoff. Max retry time was 47 minutes (under the 1-hour SLA).",
+      "summary": "Webhook retry test passed, max time 47min under SLA",
+      "type": "observation",
+      "topics": [
+        "webhooks",
+        "testing",
+        "retry-logic",
+        "staging"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T14:00:24.953Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00062-a1b2-4c3d-9e4f-000000000062",
+    "metadata": {
+      "content": "Data pipeline DLQ replay tool is working. Tested with 500 failed records, all reprocessed successfully. Added a --dry-run flag.",
+      "summary": "DLQ replay tool working, tested with 500 records",
+      "type": "milestone",
+      "topics": [
+        "dlq",
+        "cli-tool",
+        "testing"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T13:30:34.072Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00061-a1b2-4c3d-9e4f-000000000061",
+    "metadata": {
+      "content": "The internal docs should have a troubleshooting section for each service. Currently developers dig through Slack history to find solutions.",
+      "summary": "Add per-service troubleshooting docs",
+      "type": "idea",
+      "topics": [
+        "troubleshooting",
+        "documentation",
+        "developer-experience"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T12:15:26.153Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00060-a1b2-4c3d-9e4f-000000000060",
+    "metadata": {
+      "content": "Improved chart touch targets by making the tooltip trigger area larger on mobile viewports. Also added swipe gestures for date range navigation.",
+      "summary": "Improved mobile chart UX: larger touch targets and swipe",
+      "type": "task",
+      "topics": [
+        "mobile",
+        "touch",
+        "charts",
+        "ux"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T11:50:52.301Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0005f-a1b2-4c3d-9e4f-00000000005f",
+    "metadata": {
+      "content": "Jordan tested the dashboard on mobile. The responsive layout works but the chart tooltips are hard to tap on smaller screens.",
+      "summary": "Dashboard mobile: charts need touch-friendly tooltips",
+      "type": "person_note",
+      "topics": [
+        "mobile",
+        "responsive",
+        "touch",
+        "ux"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T11:20:27.804Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0005e-a1b2-4c3d-9e4f-00000000005e",
+    "metadata": {
+      "content": "Dashboard user preferences: theme, default date range, chart type, and notification settings. Stored in the user profile API.",
+      "summary": "Dashboard user preferences spec defined",
+      "type": "reference",
+      "topics": [
+        "user-preferences",
+        "settings",
+        "spec"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T10:55:29.985Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0005d-a1b2-4c3d-9e4f-00000000005d",
+    "metadata": {
+      "content": "The pipeline CDC implementation would need Debezium for MySQL change streams. Need to evaluate if the operational complexity is worth it.",
+      "summary": "CDC needs Debezium, evaluate operational complexity",
+      "type": "observation",
+      "topics": [
+        "cdc",
+        "debezium",
+        "evaluation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T10:25:37.891Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0005c-a1b2-4c3d-9e4f-00000000005c",
+    "metadata": {
+      "content": "Added payload size validation to the batch endpoint. Returns 413 with a clear message about the limit and suggests chunking for large payloads.",
+      "summary": "Added 413 payload size validation with chunking suggestion",
+      "type": "task",
+      "topics": [
+        "validation",
+        "error-handling",
+        "implementation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T10:00:45.755Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0005b-a1b2-4c3d-9e4f-00000000005b",
+    "metadata": {
+      "content": "Alex spotted that the API batch endpoint accepts arrays up to 10K items but the Lambda has a 6MB payload limit. Need to add a size check.",
+      "summary": "Batch endpoint needs payload size validation",
+      "type": "observation",
+      "topics": [
+        "validation",
+        "payload-size",
+        "lambda-limits"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T09:30:06.409Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0005a-a1b2-4c3d-9e4f-00000000005a",
+    "metadata": {
+      "content": "The dashboard settings page needs role-based access control. Admins can change all settings, viewers can only adjust their own preferences.",
+      "summary": "Dashboard settings needs RBAC",
+      "type": "task",
+      "topics": [
+        "rbac",
+        "settings",
+        "authorization"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T09:05:34.839Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00059-a1b2-4c3d-9e4f-000000000059",
+    "metadata": {
+      "content": "Overnight load test results for the API: sustained 2,500 RPS with p99 latency at 340ms. Good enough for launch.",
+      "summary": "Load test: 2,500 RPS with 340ms p99 latency",
+      "type": "milestone",
+      "topics": [
+        "load-testing",
+        "performance",
+        "metrics"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0006-f1e2-4d3c-8b4a-000000000006",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-07",
+      "created_at": "2026-01-07T08:40:36.007Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00058-a1b2-4c3d-9e4f-000000000058",
+    "metadata": {
+      "content": "Updated the architecture decision record for the API versioning choice. Added context on why we rejected header-based versioning.",
+      "summary": "ADR updated for API versioning decision",
+      "type": "task",
+      "topics": [
+        "adr",
+        "documentation",
+        "api-versioning"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T17:20:22.512Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00057-a1b2-4c3d-9e4f-000000000057",
+    "metadata": {
+      "content": "Had an idea for the data pipeline: use Change Data Capture from the main database instead of batch ETL. Would give near-real-time analytics.",
+      "summary": "CDC from main DB for near-real-time analytics",
+      "type": "idea",
+      "topics": [
+        "cdc",
+        "real-time",
+        "analytics",
+        "architecture"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T16:55:27.462Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00056-a1b2-4c3d-9e4f-000000000056",
+    "metadata": {
+      "content": "Session covered race condition fix, CSV export, and webhook staging deployment.",
+      "summary": "Session: race condition, export, webhooks",
+      "type": "project_summary",
+      "topics": [
+        "progress",
+        "bug-fix",
+        "deployment"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "Race condition and deployments",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T16:30:05.853Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00055-a1b2-4c3d-9e4f-000000000055",
+    "metadata": {
+      "content": "Dashboard beta checklist: activity chart done, filters done, export done, sidebar done. Still need: settings page, user preferences, and help tooltips.",
+      "summary": "Dashboard beta progress: 4/7 features done",
+      "type": "reference",
+      "topics": [
+        "beta-checklist",
+        "progress",
+        "tracking"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T16:00:25.722Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00054-a1b2-4c3d-9e4f-000000000054",
+    "metadata": {
+      "content": "The pipeline team needs a self-service tool to replay failed records. Building a simple CLI that reads from the DLQ and resubmits.",
+      "summary": "Building CLI tool for DLQ replay",
+      "type": "task",
+      "topics": [
+        "cli-tool",
+        "dead-letter-queue",
+        "self-service"
+      ],
+      "people": [],
+      "action_items": [
+        "Build DLQ replay CLI tool"
+      ],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T15:35:35.853Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00053-a1b2-4c3d-9e4f-000000000053",
+    "metadata": {
+      "content": "Deployed the webhook delivery system to staging. First test: sent 100 events, all delivered within 2 seconds. Retry logic not yet tested.",
+      "summary": "Webhook system deployed to staging, 100 events delivered in 2s",
+      "type": "milestone",
+      "topics": [
+        "webhooks",
+        "deployment",
+        "staging",
+        "performance"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T15:05:07.587Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00052-a1b2-4c3d-9e4f-000000000052",
+    "metadata": {
+      "content": "Sam suggested we add a versioned API changelog that lives alongside the OpenAPI spec. Each version bump gets a changelog entry.",
+      "summary": "Versioned API changelog alongside OpenAPI spec",
+      "type": "person_note",
+      "topics": [
+        "changelog",
+        "api-versioning",
+        "documentation"
+      ],
+      "people": [
+        "Sam"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T14:40:47.767Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00051-a1b2-4c3d-9e4f-000000000051",
+    "metadata": {
+      "content": "The API v2 OpenAPI spec is 80% complete. Missing: webhook callbacks, pagination parameters on list endpoints, and error response schemas.",
+      "summary": "OpenAPI spec 80% done, missing webhooks/pagination/errors",
+      "type": "observation",
+      "topics": [
+        "openapi",
+        "api-spec",
+        "progress"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T14:10:26.558Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00050-a1b2-4c3d-9e4f-000000000050",
+    "metadata": {
+      "content": "Wrote a comprehensive test suite for the dashboard filter panel. 23 test cases covering all filter combinations and edge cases.",
+      "summary": "Dashboard filter panel test suite: 23 test cases",
+      "type": "task",
+      "topics": [
+        "testing",
+        "filters",
+        "test-coverage"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T13:45:03.439Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0004f-a1b2-4c3d-9e4f-00000000004f",
+    "metadata": {
+      "content": "ETL monitoring alerts should use PagerDuty for critical failures and Slack for warnings. Currently everything goes to Slack.",
+      "summary": "Route critical ETL alerts to PagerDuty, warnings to Slack",
+      "type": "decision",
+      "topics": [
+        "alerting",
+        "pagerduty",
+        "monitoring"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T13:15:35.967Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0004e-a1b2-4c3d-9e4f-00000000004e",
+    "metadata": {
+      "content": "The docs CI pipeline failed because of a markdown lint error. The linter caught an inconsistent heading hierarchy. Fixed in 2 minutes.",
+      "summary": "Docs CI fix: markdown heading hierarchy lint error",
+      "type": "observation",
+      "topics": [
+        "ci-cd",
+        "markdown",
+        "linting"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T12:00:27.636Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0004d-a1b2-4c3d-9e4f-00000000004d",
+    "metadata": {
+      "content": "Should we add a GraphQL layer in front of the REST API? Would simplify the dashboard's data fetching significantly.",
+      "summary": "Consider GraphQL layer for dashboard data fetching",
+      "type": "idea",
+      "topics": [
+        "graphql",
+        "api-design",
+        "data-fetching"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [
+        "Acme API"
+      ],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T11:35:00.320Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0004c-a1b2-4c3d-9e4f-00000000004c",
+    "metadata": {
+      "content": "Jordan's feedback on the dashboard: the loading skeletons look great, but the empty state for new users needs more guidance on getting started.",
+      "summary": "Dashboard empty state needs better onboarding guidance",
+      "type": "person_note",
+      "topics": [
+        "empty-state",
+        "onboarding",
+        "ux-feedback"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T11:10:52.007Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0004b-a1b2-4c3d-9e4f-00000000004b",
+    "metadata": {
+      "content": "Implemented the dashboard CSV export with streaming. Large datasets are chunked to avoid memory issues in the browser.",
+      "summary": "Streaming CSV export implemented for dashboard",
+      "type": "task",
+      "topics": [
+        "csv-export",
+        "streaming",
+        "implementation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T10:40:35.587Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0004a-a1b2-4c3d-9e4f-00000000004a",
+    "metadata": {
+      "content": "The pipeline data quality report shows 99.7% valid records over the past week. The 0.3% are all from the same legacy source.",
+      "summary": "Data quality at 99.7%, all errors from legacy source",
+      "type": "observation",
+      "topics": [
+        "data-quality",
+        "metrics",
+        "reporting"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T10:15:31.121Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00049-a1b2-4c3d-9e4f-000000000049",
+    "metadata": {
+      "content": "Fixed the race condition by using a conditional write with a unique constraint. DynamoDB's condition expression handles this atomically.",
+      "summary": "Fixed race condition with DynamoDB conditional write",
+      "type": "task",
+      "topics": [
+        "race-condition",
+        "dynamodb",
+        "concurrency",
+        "bug-fix"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T09:50:54.030Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00048-a1b2-4c3d-9e4f-000000000048",
+    "metadata": {
+      "content": "Alex found a race condition in the API request handler. Two concurrent requests can create duplicate entries because the uniqueness check and insert are not atomic.",
+      "summary": "Race condition: non-atomic uniqueness check causes duplicates",
+      "type": "observation",
+      "topics": [
+        "race-condition",
+        "concurrency",
+        "bug"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T09:25:02.510Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00047-a1b2-4c3d-9e4f-000000000047",
+    "metadata": {
+      "content": "The dashboard data export feature needs to support CSV and JSON formats. PDF can come later.",
+      "summary": "Dashboard export: CSV and JSON first, PDF later",
+      "type": "decision",
+      "topics": [
+        "data-export",
+        "csv",
+        "json",
+        "prioritization"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T09:00:00.944Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00046-a1b2-4c3d-9e4f-000000000046",
+    "metadata": {
+      "content": "Monday planning: this week is focused on getting the dashboard to beta and finalizing Acme API v2 for staging deployment.",
+      "summary": "Weekly focus: dashboard beta and API v2 staging",
+      "type": "task",
+      "topics": [
+        "planning",
+        "sprint",
+        "priorities"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0005-f1e2-4d3c-8b4a-000000000005",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-06",
+      "created_at": "2026-01-06T08:30:11.663Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00045-a1b2-4c3d-9e4f-000000000045",
+    "metadata": {
+      "content": "Updated the getting started guide with the new auth flow and error code reference. Sam confirmed it reads well.",
+      "summary": "Getting started guide updated with v2 auth and error codes",
+      "type": "task",
+      "topics": [
+        "documentation",
+        "getting-started",
+        "auth"
+      ],
+      "people": [
+        "Sam"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T17:10:27.822Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00044-a1b2-4c3d-9e4f-000000000044",
+    "metadata": {
+      "content": "The docs site should have a status page showing API uptime and incident history. Could integrate with our existing monitoring.",
+      "summary": "Add API status page to docs site",
+      "type": "idea",
+      "topics": [
+        "status-page",
+        "monitoring",
+        "uptime"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T16:50:04.932Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00043-a1b2-4c3d-9e4f-000000000043",
+    "metadata": {
+      "content": "Session focused on webhook integration tests and rate limiter improvements for Acme API.",
+      "summary": "Session: webhooks and rate limiting",
+      "type": "project_summary",
+      "topics": [
+        "webhooks",
+        "rate-limiting",
+        "progress"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "Webhooks and rate limiter",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T16:20:38.131Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00042-a1b2-4c3d-9e4f-000000000042",
+    "metadata": {
+      "content": "Data pipeline checkpoint system design: store checkpoint offsets in DynamoDB with TTL for automatic cleanup of completed jobs.",
+      "summary": "Checkpoint design: DynamoDB with TTL",
+      "type": "decision",
+      "topics": [
+        "checkpoints",
+        "dynamodb",
+        "design"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T15:55:16.579Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00041-a1b2-4c3d-9e4f-000000000041",
+    "metadata": {
+      "content": "The ETL pipeline configuration should be externalized to a config file instead of hardcoded in the DAG definition.",
+      "summary": "Externalize ETL pipeline configuration",
+      "type": "task",
+      "topics": [
+        "configuration",
+        "etl",
+        "maintainability"
+      ],
+      "people": [],
+      "action_items": [
+        "Create external config file for ETL pipeline"
+      ],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T15:25:42.848Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00040-a1b2-4c3d-9e4f-000000000040",
+    "metadata": {
+      "content": "Added Retry-After header to the rate limiter response. Also added X-RateLimit-Remaining and X-RateLimit-Reset headers.",
+      "summary": "Added rate limit response headers",
+      "type": "task",
+      "topics": [
+        "rate-limiting",
+        "http-headers",
+        "implementation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T15:00:02.582Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0003f-a1b2-4c3d-9e4f-00000000003f",
+    "metadata": {
+      "content": "Code review feedback from Alex: the rate limiter should return Retry-After header with the reset timestamp. Good catch.",
+      "summary": "Rate limiter needs Retry-After header per Alex's review",
+      "type": "observation",
+      "topics": [
+        "code-review",
+        "rate-limiting",
+        "http-headers"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T14:30:54.863Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0003e-a1b2-4c3d-9e4f-00000000003e",
+    "metadata": {
+      "content": "The dashboard filter panel should persist state in the URL query string. Makes filtered views shareable and bookmarkable.",
+      "summary": "Persist dashboard filters in URL query string",
+      "type": "idea",
+      "topics": [
+        "url-state",
+        "filters",
+        "ux"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T14:00:02.163Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0003d-a1b2-4c3d-9e4f-00000000003d",
+    "metadata": {
+      "content": "Wrote integration tests for the webhook delivery system. Covers successful delivery, retry on failure, and dead letter after max retries.",
+      "summary": "Webhook delivery integration tests complete",
+      "type": "task",
+      "topics": [
+        "testing",
+        "integration-tests",
+        "webhooks"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T13:30:38.562Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0003c-a1b2-4c3d-9e4f-00000000003c",
+    "metadata": {
+      "content": "Jordan wants the dashboard header to show the user's organization name and logo. Need to add an org settings API endpoint.",
+      "summary": "Dashboard header needs org branding from new API endpoint",
+      "type": "person_note",
+      "topics": [
+        "branding",
+        "organization",
+        "api-endpoint"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T12:15:41.499Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0003b-a1b2-4c3d-9e4f-00000000003b",
+    "metadata": {
+      "content": "Refactored the Spark aggregation to use reduceByKey instead of groupByKey. Memory usage dropped by 60%.",
+      "summary": "Spark aggregation refactor reduced memory 60%",
+      "type": "milestone",
+      "topics": [
+        "spark",
+        "performance",
+        "refactoring"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T11:50:05.837Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0003a-a1b2-4c3d-9e4f-00000000003a",
+    "metadata": {
+      "content": "The pipeline Spark job is using too much memory for the aggregation step. Should switch to incremental aggregation instead of collecting all records first.",
+      "summary": "Spark job OOM on aggregation, switch to incremental",
+      "type": "observation",
+      "topics": [
+        "spark",
+        "memory",
+        "aggregation",
+        "performance"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T11:25:02.314Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00039-a1b2-4c3d-9e4f-000000000039",
+    "metadata": {
+      "content": "Added Swagger UI to the internal docs site at /api-explorer. Live interactive docs that use the staging environment.",
+      "summary": "Added Swagger UI API explorer to docs site",
+      "type": "milestone",
+      "topics": [
+        "swagger",
+        "api-explorer",
+        "documentation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T11:00:38.225Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00038-a1b2-4c3d-9e4f-000000000038",
+    "metadata": {
+      "content": "Sam reported that the API docs examples are returning 401 because the sample API keys expired. Need to set up auto-rotating demo keys.",
+      "summary": "Docs example API keys expired, need auto-rotation",
+      "type": "person_note",
+      "topics": [
+        "documentation",
+        "api-keys",
+        "automation"
+      ],
+      "people": [
+        "Sam"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T10:30:37.726Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00037-a1b2-4c3d-9e4f-000000000037",
+    "metadata": {
+      "content": "Implemented the sidebar navigation component with collapsible sections. Each section loads its content lazily.",
+      "summary": "Sidebar nav with collapsible lazy-loaded sections",
+      "type": "task",
+      "topics": [
+        "navigation",
+        "lazy-loading",
+        "components"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "Sidebar navigation",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T10:05:22.878Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00036-a1b2-4c3d-9e4f-000000000036",
+    "metadata": {
+      "content": "The dashboard needs a notification center for async operations. When a report takes more than 5 seconds, show progress and notify on completion.",
+      "summary": "Add notification center for async dashboard operations",
+      "type": "idea",
+      "topics": [
+        "notifications",
+        "async-operations",
+        "ux"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T09:40:51.091Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00035-a1b2-4c3d-9e4f-000000000035",
+    "metadata": {
+      "content": "Going with URL path versioning for the API. It is more visible in logs, easier to route at the gateway level, and simpler for consumers.",
+      "summary": "Chose URL path versioning for simplicity and visibility",
+      "type": "decision",
+      "topics": [
+        "api-versioning",
+        "architecture"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T09:15:41.410Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00034-a1b2-4c3d-9e4f-000000000034",
+    "metadata": {
+      "content": "Woke up thinking about the API versioning strategy. URL path versioning (/v2/) is simpler but header-based versioning is more RESTful.",
+      "summary": "API versioning: URL path vs header-based",
+      "type": "observation",
+      "topics": [
+        "api-versioning",
+        "rest",
+        "architecture"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0004-f1e2-4d3c-8b4a-000000000004",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-05",
+      "created_at": "2026-01-05T08:50:42.268Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00033-a1b2-4c3d-9e4f-000000000033",
+    "metadata": {
+      "content": "Good progress today. Dashboard chart component done, webhook schema and delivery model agreed, pipeline backfill complete.",
+      "summary": "Daily progress: charts, webhooks, backfill",
+      "type": "project_summary",
+      "topics": [
+        "progress",
+        "daily-summary"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "End of day",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T17:05:03.148Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00032-a1b2-4c3d-9e4f-000000000032",
+    "metadata": {
+      "content": "Alex and I reviewed the webhook delivery guarantees. Agreed on at-least-once delivery with idempotency keys for consumers.",
+      "summary": "Webhook delivery: at-least-once with idempotency keys",
+      "type": "decision",
+      "topics": [
+        "webhooks",
+        "delivery-guarantees",
+        "idempotency"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T16:40:51.714Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00031-a1b2-4c3d-9e4f-000000000031",
+    "metadata": {
+      "content": "The data pipeline should support replay from any checkpoint. Currently can only restart from the beginning of a failed stage.",
+      "summary": "Need checkpoint-based replay for pipeline",
+      "type": "idea",
+      "topics": [
+        "checkpoints",
+        "replay",
+        "resilience"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T16:10:40.064Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00030-a1b2-4c3d-9e4f-000000000030",
+    "metadata": {
+      "content": "Session working on Recharts activity chart and widget layout system for the dashboard.",
+      "summary": "Session: chart and layout work",
+      "type": "project_summary",
+      "topics": [
+        "activity-chart",
+        "layout",
+        "progress"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "Dashboard charts and layout",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T15:40:59.845Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0002f-a1b2-4c3d-9e4f-00000000002f",
+    "metadata": {
+      "content": "Dashboard widget grid system needs to handle different screen sizes. Using CSS Grid with auto-fill and minmax for responsive layout.",
+      "summary": "CSS Grid responsive layout for dashboard widgets",
+      "type": "observation",
+      "topics": [
+        "responsive-design",
+        "css-grid",
+        "layout"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T15:10:11.951Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0002e-a1b2-4c3d-9e4f-00000000002e",
+    "metadata": {
+      "content": "Decided to implement feature flags using LaunchDarkly for the v2 API rollout. Gradual traffic shifting per tenant.",
+      "summary": "Using LaunchDarkly for v2 API gradual rollout",
+      "type": "decision",
+      "topics": [
+        "feature-flags",
+        "launchdarkly",
+        "rollout-strategy"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T14:35:48.174Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0002d-a1b2-4c3d-9e4f-00000000002d",
+    "metadata": {
+      "content": "The Acme API health check endpoint should include dependency status. Database, cache, and message queue availability.",
+      "summary": "Add dependency status to health check endpoint",
+      "type": "idea",
+      "topics": [
+        "health-check",
+        "monitoring",
+        "dependencies"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T14:05:09.857Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0002c-a1b2-4c3d-9e4f-00000000002c",
+    "metadata": {
+      "content": "Wrote runbook for handling data pipeline failures. Covers common failure modes, recovery steps, and escalation procedures.",
+      "summary": "Data pipeline failure runbook completed",
+      "type": "milestone",
+      "topics": [
+        "runbook",
+        "documentation",
+        "incident-response"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T13:30:47.995Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0002b-a1b2-4c3d-9e4f-00000000002b",
+    "metadata": {
+      "content": "The internal docs deployment pipeline takes 8 minutes. Most of the time is in the Algolia index rebuild. Should cache unchanged pages.",
+      "summary": "Docs deploy too slow, Algolia rebuild needs caching",
+      "type": "observation",
+      "topics": [
+        "deployment",
+        "performance",
+        "algolia",
+        "caching"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T13:00:05.118Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0002a-a1b2-4c3d-9e4f-00000000002a",
+    "metadata": {
+      "content": "Jordan suggested adding a dark mode toggle to the dashboard. Not a priority for launch but should design the color system to support it later.",
+      "summary": "Dark mode not for launch but design color system to support it",
+      "type": "person_note",
+      "topics": [
+        "dark-mode",
+        "design-system",
+        "color-tokens"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T11:50:33.946Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00029-a1b2-4c3d-9e4f-000000000029",
+    "metadata": {
+      "content": "Pipeline backfill job for December data completed. 2.3M records processed, 47 rejected by schema validation. All rejections were from a single source.",
+      "summary": "December backfill: 2.3M processed, 47 rejected from one source",
+      "type": "milestone",
+      "topics": [
+        "backfill",
+        "data-processing",
+        "schema-validation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T11:20:50.684Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00028-a1b2-4c3d-9e4f-000000000028",
+    "metadata": {
+      "content": "Found a memory leak in the dashboard WebSocket connection. The cleanup function in useEffect wasn't closing the connection properly.",
+      "summary": "Fixed WebSocket memory leak in dashboard useEffect",
+      "type": "observation",
+      "topics": [
+        "memory-leak",
+        "websocket",
+        "react",
+        "bug-fix"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "Debug memory leak",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T10:55:29.957Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00027-a1b2-4c3d-9e4f-000000000027",
+    "metadata": {
+      "content": "The activity chart looks great with stacked bars for different event types. Added tooltip with exact counts on hover.",
+      "summary": "Activity chart stacked bars with hover tooltips done",
+      "type": "observation",
+      "topics": [
+        "activity-chart",
+        "ui",
+        "data-visualization"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T10:25:56.564Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00026-a1b2-4c3d-9e4f-000000000026",
+    "metadata": {
+      "content": "Alex finished the webhook event schema. Includes event type, payload, signature, and retry count in headers.",
+      "summary": "Webhook event schema completed by Alex",
+      "type": "person_note",
+      "topics": [
+        "webhooks",
+        "schema",
+        "events"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T10:00:22.445Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00025-a1b2-4c3d-9e4f-000000000025",
+    "metadata": {
+      "content": "The webhook retry system needs exponential backoff with jitter. Max 5 retries over 24 hours.",
+      "summary": "Webhook retry: exponential backoff with jitter, 5 retries / 24h",
+      "type": "decision",
+      "topics": [
+        "webhooks",
+        "retry-logic",
+        "exponential-backoff"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T09:35:27.025Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00024-a1b2-4c3d-9e4f-000000000024",
+    "metadata": {
+      "content": "Starting implementation of the dashboard activity chart component. Using Recharts after yesterday's evaluation.",
+      "summary": "Starting activity chart with Recharts",
+      "type": "task",
+      "topics": [
+        "activity-chart",
+        "recharts",
+        "implementation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "Activity chart implementation",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T09:10:23.817Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00023-a1b2-4c3d-9e4f-000000000023",
+    "metadata": {
+      "content": "Reviewed overnight batch job results. All 12 ETL tasks completed successfully. The schema validation caught 3 malformed records cleanly.",
+      "summary": "Overnight ETL batch successful, schema validation caught 3 bad records",
+      "type": "observation",
+      "topics": [
+        "etl",
+        "batch-jobs",
+        "schema-validation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0003-f1e2-4d3c-8b4a-000000000003",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-04",
+      "created_at": "2026-01-04T08:45:31.393Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00022-a1b2-4c3d-9e4f-000000000022",
+    "metadata": {
+      "content": "Data pipeline team needs access to the staging environment for testing. Need to set up IAM roles with least-privilege access.",
+      "summary": "Set up staging IAM roles for pipeline team",
+      "type": "task",
+      "topics": [
+        "iam",
+        "staging",
+        "access-control"
+      ],
+      "people": [],
+      "action_items": [
+        "Create staging IAM roles for pipeline team"
+      ],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T17:15:48.739Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00021-a1b2-4c3d-9e4f-000000000021",
+    "metadata": {
+      "content": "Session wrapping up the analytics query optimization and error code documentation.",
+      "summary": "Session: analytics optimization and error codes",
+      "type": "project_summary",
+      "topics": [
+        "analytics",
+        "error-codes",
+        "progress"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "Analytics and error codes",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T16:50:16.705Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00020-a1b2-4c3d-9e4f-000000000020",
+    "metadata": {
+      "content": "The dashboard real-time updates should use Server-Sent Events, not WebSockets. Simpler to implement and sufficient for one-way data flow.",
+      "summary": "Use SSE instead of WebSockets for dashboard updates",
+      "type": "decision",
+      "topics": [
+        "sse",
+        "websockets",
+        "real-time",
+        "architecture"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T16:20:23.493Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0001f-a1b2-4c3d-9e4f-00000000001f",
+    "metadata": {
+      "content": "Deployed the rate limiter config change to staging. Using 100 req/min for standard tier and 1000 req/min for premium.",
+      "summary": "Rate limiter config deployed to staging",
+      "type": "task",
+      "topics": [
+        "rate-limiting",
+        "deployment",
+        "staging"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T15:45:39.286Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0001e-a1b2-4c3d-9e4f-00000000001e",
+    "metadata": {
+      "content": "Sam wants a changelog page on the docs site that auto-generates from git tags. Good idea, should be straightforward with a build plugin.",
+      "summary": "Auto-generated changelog from git tags for docs site",
+      "type": "idea",
+      "topics": [
+        "changelog",
+        "automation",
+        "git-tags"
+      ],
+      "people": [
+        "Sam"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T15:15:26.695Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0001d-a1b2-4c3d-9e4f-00000000001d",
+    "metadata": {
+      "content": "Fixed the Algolia search index. Rebuilt with correct field mappings and added a CI step to rebuild on docs deploy.",
+      "summary": "Fixed Algolia search, added CI rebuild step",
+      "type": "task",
+      "topics": [
+        "search",
+        "algolia",
+        "ci-cd"
+      ],
+      "people": [],
+      "action_items": [
+        "Verify search works after next deploy"
+      ],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T14:50:15.757Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0001c-a1b2-4c3d-9e4f-00000000001c",
+    "metadata": {
+      "content": "The ETL pipeline monitoring dashboard is showing false positives. The health check is pinging the wrong endpoint after last week's routing change.",
+      "summary": "ETL monitoring false positives from wrong health check endpoint",
+      "type": "observation",
+      "topics": [
+        "monitoring",
+        "health-check",
+        "false-positives"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T14:20:33.598Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0001b-a1b2-4c3d-9e4f-00000000001b",
+    "metadata": {
+      "content": "Considering adding OpenAPI spec generation from our TypeScript types. Would keep docs always in sync with the actual API.",
+      "summary": "Idea: auto-generate OpenAPI spec from TypeScript types",
+      "type": "idea",
+      "topics": [
+        "openapi",
+        "typescript",
+        "code-generation",
+        "documentation"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T13:45:18.053Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0001a-a1b2-4c3d-9e4f-00000000001a",
+    "metadata": {
+      "content": "Wrote a migration guide for v1 to v2 API. Covers all breaking changes, deprecated endpoints, and the new auth flow.",
+      "summary": "Completed v1 to v2 migration guide",
+      "type": "milestone",
+      "topics": [
+        "migration-guide",
+        "documentation",
+        "api-versioning"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T13:10:08.513Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00019-a1b2-4c3d-9e4f-000000000019",
+    "metadata": {
+      "content": "The docs site search is broken after the Algolia index update. Need to rebuild the index with the new field mappings.",
+      "summary": "Docs search broken after Algolia index update",
+      "type": "observation",
+      "topics": [
+        "search",
+        "algolia",
+        "docs-site"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T12:00:20.007Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00018-a1b2-4c3d-9e4f-000000000018",
+    "metadata": {
+      "content": "Need to document the new error codes before Alex can implement webhook retries. Blocking dependency.",
+      "summary": "Error code docs blocking webhook retry work",
+      "type": "task",
+      "topics": [
+        "documentation",
+        "error-codes",
+        "webhooks"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [
+        "Document error codes for webhook retry system"
+      ],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T11:30:44.561Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00017-a1b2-4c3d-9e4f-000000000017",
+    "metadata": {
+      "content": "Realized the token bucket implementation should be at the API Gateway level, not in application code. Saves a Lambda invocation on rejected requests.",
+      "summary": "Move rate limiting to API Gateway level",
+      "type": "decision",
+      "topics": [
+        "rate-limiting",
+        "api-gateway",
+        "performance"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T11:05:18.058Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00016-a1b2-4c3d-9e4f-000000000016",
+    "metadata": {
+      "content": "Jordan sent updated mockups. The sidebar navigation is much cleaner. Suggested adding keyboard shortcuts for power users.",
+      "summary": "Updated dashboard mockups look good, add keyboard shortcuts",
+      "type": "person_note",
+      "topics": [
+        "mockups",
+        "navigation",
+        "keyboard-shortcuts",
+        "ux"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T10:40:41.084Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00015-a1b2-4c3d-9e4f-000000000015",
+    "metadata": {
+      "content": "Added composite index on (tenant_id, created_at, type) to the events table. Query time dropped from 4.2s to 180ms.",
+      "summary": "Composite index reduced analytics query from 4.2s to 180ms",
+      "type": "milestone",
+      "topics": [
+        "performance",
+        "database",
+        "indexing"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T10:15:22.992Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00014-a1b2-4c3d-9e4f-000000000014",
+    "metadata": {
+      "content": "Investigating slow query on the analytics endpoint. The JOIN across three tables is doing a full scan because the composite index is missing.",
+      "summary": "Analytics endpoint slow due to missing composite index",
+      "type": "observation",
+      "topics": [
+        "performance",
+        "database",
+        "indexing",
+        "analytics"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "Debug analytics query",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T09:50:42.012Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00013-a1b2-4c3d-9e4f-000000000013",
+    "metadata": {
+      "content": "The data pipeline Airflow DAG is getting unwieldy at 47 tasks. Should break into sub-DAGs or switch to a more modular approach.",
+      "summary": "Airflow DAG too complex, needs modularization",
+      "type": "observation",
+      "topics": [
+        "airflow",
+        "dag-complexity",
+        "refactoring"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T09:25:33.611Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00012-a1b2-4c3d-9e4f-000000000012",
+    "metadata": {
+      "content": "Defined error code taxonomy for v2 API: 4xx for client errors with machine-readable codes, 5xx with correlation IDs for debugging.",
+      "summary": "Error code taxonomy defined for v2 API",
+      "type": "decision",
+      "topics": [
+        "error-codes",
+        "api-design",
+        "error-handling"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T09:00:21.409Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00011-a1b2-4c3d-9e4f-000000000011",
+    "metadata": {
+      "content": "Morning standup: Alex is blocked on the webhook retry system, needs the new error codes defined. Jordan finishing dashboard mockups today.",
+      "summary": "Standup: Alex blocked on webhooks, Jordan on mockups",
+      "type": "reference",
+      "topics": [
+        "standup",
+        "webhooks",
+        "error-codes"
+      ],
+      "people": [
+        "Alex",
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0002-f1e2-4d3c-8b4a-000000000002",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-03",
+      "created_at": "2026-01-03T08:30:20.512Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00010-a1b2-4c3d-9e4f-000000000010",
+    "metadata": {
+      "content": "End of day. Got the auth middleware mostly done, pagination bug fixed, and started on rate limiter redesign.",
+      "summary": "End of day progress update",
+      "type": "project_summary",
+      "topics": [
+        "progress",
+        "daily-summary"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "Daily wrapup",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T17:30:32.748Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0000f-a1b2-4c3d-9e4f-00000000000f",
+    "metadata": {
+      "content": "Data pipeline needs a dead letter queue for failed records. Currently they just get logged and lost.",
+      "summary": "Need DLQ for failed pipeline records",
+      "type": "task",
+      "topics": [
+        "dead-letter-queue",
+        "error-handling",
+        "reliability"
+      ],
+      "people": [],
+      "action_items": [
+        "Implement DLQ for data pipeline"
+      ],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T17:00:09.719Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0000e-a1b2-4c3d-9e4f-00000000000e",
+    "metadata": {
+      "content": "Session working on auth middleware refactor. Moved token validation into shared middleware, added request context propagation.",
+      "summary": "Auth middleware refactor session",
+      "type": "project_summary",
+      "topics": [
+        "auth",
+        "middleware",
+        "refactoring"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "session-hook",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "Auth middleware refactor",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T16:30:50.945Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0000d-a1b2-4c3d-9e4f-00000000000d",
+    "metadata": {
+      "content": "Reviewed pull request from Alex on the batch import endpoint. Good approach but needs retry logic for partial failures.",
+      "summary": "PR review: batch import needs retry logic",
+      "type": "observation",
+      "topics": [
+        "code-review",
+        "batch-import",
+        "retry-logic"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T15:55:56.805Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0000c-a1b2-4c3d-9e4f-00000000000c",
+    "metadata": {
+      "content": "Fixed the off-by-one error in the pagination cursor. The LIMIT was applied before the cursor filter, so page 2 was missing the first item.",
+      "summary": "Fixed pagination cursor off-by-one bug",
+      "type": "observation",
+      "topics": [
+        "pagination",
+        "bug-fix",
+        "cursor"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "Fix pagination cursor",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T15:20:46.693Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0000b-a1b2-4c3d-9e4f-00000000000b",
+    "metadata": {
+      "content": "The dashboard prototype is rendering charts with Chart.js but we should evaluate if Recharts would integrate better with our React stack.",
+      "summary": "Evaluate Recharts vs Chart.js for dashboard",
+      "type": "idea",
+      "topics": [
+        "charting",
+        "react",
+        "frontend"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T14:45:25.182Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m0000a-a1b2-4c3d-9e4f-00000000000a",
+    "metadata": {
+      "content": "Decided to use JWT with short-lived access tokens and refresh tokens for the v2 API. OAuth2 client credentials flow for service-to-service.",
+      "summary": "JWT + refresh tokens for v2, OAuth2 CC for service auth",
+      "type": "decision",
+      "topics": [
+        "jwt",
+        "oauth2",
+        "authentication",
+        "api-design"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T14:10:56.607Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00009-a1b2-4c3d-9e4f-000000000009",
+    "metadata": {
+      "content": "Sam asked if we can add mermaid diagram support to the docs site. Would make architecture docs much clearer.",
+      "summary": "Request for mermaid diagram support in docs",
+      "type": "person_note",
+      "topics": [
+        "mermaid",
+        "diagrams",
+        "documentation"
+      ],
+      "people": [
+        "Sam"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T13:30:43.809Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00008-a1b2-4c3d-9e4f-000000000008",
+    "metadata": {
+      "content": "Wrote the initial API authentication guide for internal docs. Covers API key rotation, OAuth flow, and service account setup.",
+      "summary": "Drafted API authentication guide",
+      "type": "milestone",
+      "topics": [
+        "documentation",
+        "authentication",
+        "api-keys",
+        "oauth"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T13:05:27.691Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00007-a1b2-4c3d-9e4f-000000000007",
+    "metadata": {
+      "content": "Need to add schema validation at the ingestion layer. Right now we just trust the source format and blow up downstream.",
+      "summary": "Add schema validation to data ingestion layer",
+      "type": "task",
+      "topics": [
+        "schema-validation",
+        "data-ingestion",
+        "reliability"
+      ],
+      "people": [],
+      "action_items": [
+        "Add schema validation to ingestion layer"
+      ],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T11:18:50.263Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00006-a1b2-4c3d-9e4f-000000000006",
+    "metadata": {
+      "content": "ETL job for customer usage data failed overnight. The S3 source bucket had a schema change in the CSV headers.",
+      "summary": "ETL failure due to CSV schema change in source bucket",
+      "type": "observation",
+      "topics": [
+        "etl-failure",
+        "schema-change",
+        "csv"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "slack",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T11:00:27.973Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00005-a1b2-4c3d-9e4f-000000000005",
+    "metadata": {
+      "content": "The current dashboard loads all metrics in a single API call. Should split into separate endpoints for parallel loading.",
+      "summary": "Split dashboard metrics into separate API calls",
+      "type": "decision",
+      "topics": [
+        "performance",
+        "api-design",
+        "parallel-loading"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T10:32:56.634Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00004-a1b2-4c3d-9e4f-000000000004",
+    "metadata": {
+      "content": "Reviewed the dashboard wireframes from Jordan. The activity chart needs a date range picker, not just preset buttons.",
+      "summary": "Dashboard wireframes need date range picker",
+      "type": "observation",
+      "topics": [
+        "wireframes",
+        "activity-chart",
+        "date-picker"
+      ],
+      "people": [
+        "Jordan"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T10:15:39.983Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00003-a1b2-4c3d-9e4f-000000000003",
+    "metadata": {
+      "content": "We should consider using token bucket instead of fixed window for rate limiting. Would handle burst traffic much better.",
+      "summary": "Consider token bucket rate limiting algorithm",
+      "type": "idea",
+      "topics": [
+        "rate-limiting",
+        "architecture"
+      ],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T09:45:57.853Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00002-a1b2-4c3d-9e4f-000000000002",
+    "metadata": {
+      "content": "Alex mentioned that the rate limiter on the /users endpoint is too aggressive. Customers are hitting 429s during batch imports.",
+      "summary": "Rate limiter too aggressive on /users endpoint",
+      "type": "observation",
+      "topics": [
+        "rate-limiting",
+        "users-endpoint",
+        "batch-imports"
+      ],
+      "people": [
+        "Alex"
+      ],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T09:22:37.584Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00001-a1b2-4c3d-9e4f-000000000001",
+    "metadata": {
+      "content": "Starting the new sprint focused on Acme API v2 migration. Need to move all auth endpoints to the new middleware before Friday.",
+      "summary": "Sprint kickoff for Acme API v2 auth migration",
+      "type": "task",
+      "topics": [
+        "sprint-planning",
+        "auth",
+        "migration"
+      ],
+      "people": [],
+      "action_items": [
+        "Move auth endpoints to new middleware by Friday"
+      ],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-f1e2-4d3c-8b4a-000000000001",
+      "session_name": "Sprint planning",
+      "quality": "standard",
+      "thought_date": "2026-01-02",
+      "created_at": "2026-01-02T09:05:54.170Z",
+      "enriched": true
+    }
+  }
+]
