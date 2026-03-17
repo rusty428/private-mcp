@@ -6,6 +6,7 @@ import SideNavigation from '@cloudscape-design/components/side-navigation';
 import Footer from './components/Footer';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import type { ThemePreference } from './theme/ThemeContext';
+import { DemoProvider } from './contexts/DemoContext';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { Browse } from './pages/Browse/Browse';
 import { Search } from './pages/Search/Search';
@@ -93,9 +94,11 @@ function AppContent() {
 export function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-        <AppContent />
-      </ThemeProvider>
+      <DemoProvider>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </DemoProvider>
     </BrowserRouter>
   );
 }
