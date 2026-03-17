@@ -18,6 +18,7 @@ import ExpandableSection from '@cloudscape-design/components/expandable-section'
 import Modal from '@cloudscape-design/components/modal';
 import { api } from '../../api/client';
 import type { EnrichmentSettings, ProjectConfig } from '../../api/settingsTypes';
+import { useDemoMode } from '../../contexts/DemoContext';
 
 const MODEL_OPTIONS = [
   { label: 'Claude 3 Haiku', value: 'anthropic.claude-3-haiku-20240307-v1:0' },
@@ -48,6 +49,7 @@ const DEFAULT_SETTINGS: Omit<EnrichmentSettings, 'updatedAt' | 'generatedPrompt'
 };
 
 export function Settings() {
+  const { isDemoMode, toggleDemoMode } = useDemoMode();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [flashItems, setFlashItems] = useState<any[]>([]);
@@ -355,6 +357,7 @@ export function Settings() {
                 selectedOption={timezone}
                 onChange={({ detail }) => setTimezone(detail.selectedOption as any)}
                 options={TIMEZONE_OPTIONS}
+                disabled={isDemoMode}
               />
             </FormField>
           </Container>
@@ -368,6 +371,7 @@ export function Settings() {
                     selectedOption={selectedModel}
                     onChange={({ detail }) => setSelectedModel(detail.selectedOption as any)}
                     options={MODEL_OPTIONS}
+                    disabled={isDemoMode}
                   />
                 </FormField>
                 {selectedModel.value === '__custom__' && (
@@ -376,6 +380,7 @@ export function Settings() {
                       value={customModelId}
                       onChange={({ detail }) => setCustomModelId(detail.value)}
                       placeholder="e.g. anthropic.claude-3-haiku-20240307-v1:0"
+                      disabled={isDemoMode}
                     />
                   </FormField>
                 )}
@@ -390,7 +395,7 @@ export function Settings() {
                 <FormField label="Active types" description="At least one type is required">
                   <TokenGroup
                     items={types.map(t => ({ label: t, dismissLabel: `Remove ${t}` }))}
-                    onDismiss={({ detail }) => handleRemoveType(detail.itemIndex)}
+                    onDismiss={isDemoMode ? undefined : ({ detail }) => handleRemoveType(detail.itemIndex)}
                   />
                 </FormField>
                 <FormField label="Add type">
@@ -402,8 +407,9 @@ export function Settings() {
                       onKeyDown={({ detail }) => {
                         if (detail.key === 'Enter') handleAddType();
                       }}
+                      disabled={isDemoMode}
                     />
-                    <Button onClick={handleAddType} disabled={!newType.trim()}>Add</Button>
+                    <Button onClick={handleAddType} disabled={isDemoMode || !newType.trim()}>Add</Button>
                   </SpaceBetween>
                 </FormField>
                 <FormField label="Default fallback type">
@@ -411,6 +417,7 @@ export function Settings() {
                     selectedOption={defaultType}
                     onChange={({ detail }) => setDefaultType(detail.selectedOption as any)}
                     options={types.map(t => ({ label: t, value: t }))}
+                    disabled={isDemoMode}
                   />
                 </FormField>
               </SpaceBetween>
@@ -438,7 +445,7 @@ export function Settings() {
                           <SpaceBetween size="xs">
                             <TokenGroup
                               items={item.aliases.map(a => ({ label: a, dismissLabel: `Remove ${a}` }))}
-                              onDismiss={({ detail }) => handleRemoveAlias(idx, detail.itemIndex)}
+                              onDismiss={isDemoMode ? undefined : ({ detail }) => handleRemoveAlias(idx, detail.itemIndex)}
                             />
                             <SpaceBetween direction="horizontal" size="xs">
                               <Input
@@ -448,8 +455,9 @@ export function Settings() {
                                 onKeyDown={({ detail: d }) => {
                                   if (d.key === 'Enter') handleAddAlias(idx);
                                 }}
+                                disabled={isDemoMode}
                               />
-                              <Button onClick={() => handleAddAlias(idx)} iconName="add-plus" variant="icon" />
+                              <Button onClick={() => handleAddAlias(idx)} iconName="add-plus" variant="icon" disabled={isDemoMode} />
                             </SpaceBetween>
                           </SpaceBetween>
                         );
@@ -461,7 +469,7 @@ export function Settings() {
                       cell: (item) => {
                         const idx = projects.indexOf(item);
                         return (
-                          <Button onClick={() => handleRemoveProject(idx)} iconName="remove" variant="icon" />
+                          <Button onClick={() => handleRemoveProject(idx)} iconName="remove" variant="icon" disabled={isDemoMode} />
                         );
                       },
                       width: 60,
@@ -482,11 +490,12 @@ export function Settings() {
                     onKeyDown={({ detail }) => {
                       if (detail.key === 'Enter') handleAddProject();
                     }}
+                    disabled={isDemoMode}
                   />
-                  <Button onClick={handleAddProject} disabled={!newProjectName.trim()}>
+                  <Button onClick={handleAddProject} disabled={isDemoMode || !newProjectName.trim()}>
                     Add project
                   </Button>
-                  <Button onClick={handleImportProjects} iconName="download">
+                  <Button onClick={handleImportProjects} iconName="download" disabled={isDemoMode}>
                     Import from existing data
                   </Button>
                 </SpaceBetween>
@@ -508,6 +517,7 @@ export function Settings() {
                   }}
                   rows={4}
                   placeholder="e.g. Always classify meeting notes as 'reference' type..."
+                  disabled={isDemoMode}
                 />
               </FormField>
             </Container>
@@ -520,6 +530,7 @@ export function Settings() {
                 <Toggle
                   checked={customPromptActive}
                   onChange={({ detail }) => setCustomPromptActive(detail.checked)}
+                  disabled={isDemoMode}
                 >
                   Use custom classification prompt
                 </Toggle>
@@ -540,6 +551,7 @@ export function Settings() {
                         }}
                         rows={15}
                         placeholder="Enter your full classification prompt..."
+                        disabled={isDemoMode}
                       />
                     </FormField>
                   </>
@@ -547,6 +559,26 @@ export function Settings() {
               </SpaceBetween>
             </Container>
           </ExpandableSection>
+
+          {/* Danger Zone */}
+          <Container
+            header={<Header variant="h2">Danger Zone</Header>}
+          >
+            <div style={{ borderLeft: '4px solid #d13212', paddingLeft: '16px' }}>
+              <SpaceBetween direction="horizontal" size="l" alignItems="center">
+                <div style={{ flex: 1 }}>
+                  <Box variant="h4">Demo Mode</Box>
+                  <Box variant="small" color="text-body-secondary">
+                    Replace live data with sample data for screenshots and presentations
+                  </Box>
+                </div>
+                <Toggle
+                  checked={isDemoMode}
+                  onChange={() => toggleDemoMode()}
+                />
+              </SpaceBetween>
+            </div>
+          </Container>
 
           {/* Spacer for fixed bottom bar + footer */}
           <div style={{ height: 80 }} />
@@ -565,12 +597,18 @@ export function Settings() {
         padding: '12px 40px',
         display: 'flex',
         justifyContent: 'flex-end',
+        alignItems: 'center',
         gap: '8px',
       }}>
-        <Button onClick={() => setResetModalVisible(true)} disabled={saving}>
+        {isDemoMode && (
+          <Box variant="small" color="text-status-inactive" margin={{ right: 'l' }}>
+            Settings are read-only in demo mode
+          </Box>
+        )}
+        <Button onClick={() => setResetModalVisible(true)} disabled={saving || isDemoMode}>
           Reset to defaults
         </Button>
-        <Button variant="primary" onClick={handleSave} loading={saving} disabled={!isDirty}>
+        <Button variant="primary" onClick={handleSave} loading={saving} disabled={!isDirty || isDemoMode}>
           Save
         </Button>
       </div>
