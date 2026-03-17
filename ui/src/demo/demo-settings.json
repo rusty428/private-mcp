@@ -1,0 +1,33 @@
+{
+  "types": [
+    "observation",
+    "task",
+    "idea",
+    "reference",
+    "person_note",
+    "decision",
+    "project_summary",
+    "milestone"
+  ],
+  "defaultType": "observation",
+  "projects": {
+    "Acme API": {
+      "aliases": ["acme-api", "acme"]
+    },
+    "Dashboard Redesign": {
+      "aliases": ["dashboard-redesign", "dashboard"]
+    },
+    "Data Pipeline": {
+      "aliases": ["data-pipeline", "etl"]
+    },
+    "Internal Docs": {
+      "aliases": ["internal-docs", "docs"]
+    }
+  },
+  "classificationModel": "anthropic.claude-3-haiku-20240307-v1:0",
+  "specialInstructions": null,
+  "customPrompt": null,
+  "timezone": "America/Los_Angeles",
+  "updatedAt": "2026-01-08T00:00:00.000Z",
+  "generatedPrompt": "You are a thought classifier. Analyze the following thought and extract metadata including type, topics, people mentioned, action items, and dates mentioned."
+}

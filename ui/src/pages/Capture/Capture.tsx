@@ -13,6 +13,7 @@ import Badge from '@cloudscape-design/components/badge';
 import { api } from '../../api/client';
 import type { CaptureResult } from '../../api/types';
 import { format } from 'date-fns';
+import { useDemoMode } from '../../contexts/DemoContext';
 
 interface RecentCapture extends CaptureResult {
   text: string;
@@ -20,6 +21,7 @@ interface RecentCapture extends CaptureResult {
 }
 
 export function Capture() {
+  const { isDemoMode } = useDemoMode();
   const [text, setText] = useState('');
   const [project, setProject] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +78,9 @@ export function Capture() {
       header={<Header variant="h1">Capture Thought</Header>}
     >
       <SpaceBetween size="l">
+        {isDemoMode && (
+          <Alert type="info">Capture is not available in demo mode.</Alert>
+        )}
         {success && (
           <Alert
             type="success"
@@ -104,7 +109,7 @@ export function Capture() {
                 }}
                 placeholder="Enter your thought here..."
                 rows={6}
-                disabled={submitting}
+                disabled={submitting || isDemoMode}
               />
             </FormField>
 
@@ -114,14 +119,14 @@ export function Capture() {
                 onChange={({ detail }) => setProject(detail.value)}
                 options={projectOptions}
                 placeholder="e.g., AWSPrivateMCP"
-                disabled={submitting}
+                disabled={submitting || isDemoMode}
                 enteredTextLabel={(value) => `Use: "${value}"`}
                 empty="No matching projects"
               />
             </FormField>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button variant="primary" onClick={handleSubmit} loading={submitting}>
+              <Button variant="primary" onClick={handleSubmit} loading={submitting} disabled={isDemoMode}>
                 Capture Thought
               </Button>
             </div>
