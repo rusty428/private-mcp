@@ -16,7 +16,7 @@ import Alert from '@cloudscape-design/components/alert';
 import Flashbar from '@cloudscape-design/components/flashbar';
 import ExpandableSection from '@cloudscape-design/components/expandable-section';
 import Modal from '@cloudscape-design/components/modal';
-import { api } from '../../api/client';
+import { api, setDemoMode } from '../../api/client';
 import type { EnrichmentSettings, ProjectConfig } from '../../api/settingsTypes';
 import { useDemoMode } from '../../contexts/DemoContext';
 
@@ -574,7 +574,12 @@ export function Settings() {
                 </div>
                 <Toggle
                   checked={isDemoMode}
-                  onChange={() => toggleDemoMode()}
+                  onChange={() => {
+                    toggleDemoMode();
+                    // Sync the API module flag immediately, then reload settings data
+                    setDemoMode(!isDemoMode);
+                    loadSettings();
+                  }}
                 />
               </SpaceBetween>
             </div>
