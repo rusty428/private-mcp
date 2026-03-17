@@ -4,6 +4,7 @@ import TopNavigation from '@cloudscape-design/components/top-navigation';
 import AppLayout from '@cloudscape-design/components/app-layout';
 import SideNavigation from '@cloudscape-design/components/side-navigation';
 import Footer from './components/Footer';
+import { DemoBanner } from './components/DemoBanner';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import type { ThemePreference } from './theme/ThemeContext';
 import { setDemoMode } from './api/client';
@@ -58,6 +59,7 @@ function AppContent() {
           },
         ]}
       />
+      <DemoBanner />
       <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         <AppLayout
           navigationOpen={navigationOpen}
