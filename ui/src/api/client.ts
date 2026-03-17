@@ -1,5 +1,9 @@
 import type { ThoughtRecord, PaginatedThoughtsResponse, SearchResult, TimeSeriesResponse, CaptureResult, NarrativeResponse } from './types';
 import type { EnrichmentSettings } from './settingsTypes';
+import { demoApi } from '../demo/demoApi';
+
+let _demoMode = false;
+export function setDemoMode(flag: boolean) { _demoMode = flag; }
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 const API_KEY = import.meta.env.VITE_API_KEY;
@@ -30,12 +34,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   listThoughts: (params?: Record<string, string>) => {
+    if (_demoMode) return Promise.resolve(demoApi.listThoughts(params));
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
     return request<PaginatedThoughtsResponse>(`/thoughts${query}`);
   },
 
-  getProjects: () =>
-    request<{ projects: string[] }>('/projects'),
+  getProjects: () => {
+    if (_demoMode) return Promise.resolve(demoApi.getProjects());
+    return request<{ projects: string[] }>('/projects');
+  },
 
   getThought: (id: string) =>
     request<ThoughtRecord>(`/thoughts/${id}`),
@@ -49,11 +56,13 @@ export const api = {
   deleteThought: (id: string) =>
     request<{ success: boolean }>(`/thoughts/${id}`, { method: 'DELETE' }),
 
-  search: (params: { query: string; limit?: number; threshold?: number; project?: string }) =>
-    request<SearchResult[]>('/search', {
+  search: (params: { query: string; limit?: number; threshold?: number; project?: string }) => {
+    if (_demoMode) return Promise.resolve(demoApi.search());
+    return request<SearchResult[]>('/search', {
       method: 'POST',
       body: JSON.stringify(params),
-    }),
+    });
+  },
 
   capture: (params: { text: string; source?: string; project?: string }) =>
     request<CaptureResult>('/capture', {
@@ -62,6 +71,7 @@ export const api = {
     }),
 
   getTimeSeries: (params?: Record<string, string>) => {
+    if (_demoMode) return Promise.resolve(demoApi.getTimeSeries(params));
     const query = params ? '?' + new URLSearchParams(params).toString() : '';
     return request<TimeSeriesResponse>(`/stats/timeseries${query}`);
   },
@@ -72,8 +82,10 @@ export const api = {
       body: JSON.stringify(params),
     }),
 
-  getEnrichmentSettings: () =>
-    request<EnrichmentSettings>('/settings/enrichment'),
+  getEnrichmentSettings: () => {
+    if (_demoMode) return Promise.resolve(demoApi.getEnrichmentSettings());
+    return request<EnrichmentSettings>('/settings/enrichment');
+  },
 
   putEnrichmentSettings: (settings: Omit<EnrichmentSettings, 'updatedAt' | 'generatedPrompt'>) =>
     request<EnrichmentSettings>('/settings/enrichment', {

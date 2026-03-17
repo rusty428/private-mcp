@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import TopNavigation from '@cloudscape-design/components/top-navigation';
 import AppLayout from '@cloudscape-design/components/app-layout';
@@ -6,7 +6,8 @@ import SideNavigation from '@cloudscape-design/components/side-navigation';
 import Footer from './components/Footer';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import type { ThemePreference } from './theme/ThemeContext';
-import { DemoProvider } from './contexts/DemoContext';
+import { setDemoMode } from './api/client';
+import { DemoProvider, useDemoMode } from './contexts/DemoContext';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { Browse } from './pages/Browse/Browse';
 import { Search } from './pages/Search/Search';
@@ -19,6 +20,12 @@ const THEME_LABELS: Record<ThemePreference, string> = {
   light: 'Light',
   dark: 'Dark',
 };
+
+function DemoSync() {
+  const { isDemoMode } = useDemoMode();
+  useEffect(() => { setDemoMode(isDemoMode); }, [isDemoMode]);
+  return null;
+}
 
 function AppContent() {
   const [navigationOpen, setNavigationOpen] = useState(true);
@@ -95,6 +102,7 @@ export function App() {
   return (
     <BrowserRouter>
       <DemoProvider>
+        <DemoSync />
         <ThemeProvider>
           <AppContent />
         </ThemeProvider>
