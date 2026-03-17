@@ -23,7 +23,7 @@ export const EditThoughtForm = forwardRef<EditThoughtFormHandle, EditThoughtForm
       label: thought.metadata.type,
       value: thought.metadata.type,
     });
-    const [topics, setTopics] = useState(thought.metadata.topics.join(', '));
+    const [topics, setTopics] = useState((thought.metadata.topics || []).join(', '));
     const [project, setProject] = useState(thought.metadata.project || '');
     const [summary, setSummary] = useState(thought.metadata.summary || '');
 

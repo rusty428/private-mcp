@@ -70,8 +70,9 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
   const exprNames: Record<string, string> = { '#t': 'type' };
 
   if (project !== event.project) {
-    updateExprParts.push('project = :project');
+    updateExprParts.push('#project = :project');
     exprValues[':project'] = project;
+    exprNames['#project'] = 'project';
   }
 
   if (classification.topics.length > 0) {
