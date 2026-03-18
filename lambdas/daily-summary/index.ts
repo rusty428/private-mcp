@@ -1,6 +1,7 @@
 import { getTodaysThoughts } from './functions/getTodaysThoughts';
 import { formatReport } from './functions/formatReport';
 import { postToSlack } from './functions/postToSlack';
+import { loadSettings } from './functions/loadSettings';
 
 interface DailySummaryResult {
   text: string;
@@ -16,7 +17,8 @@ export const handler = async (): Promise<DailySummaryResult> => {
   const todayDateStr = yesterday.toLocaleDateString('en-CA', { timeZone: timezone });
 
   const thoughts = await getTodaysThoughts(todayDateStr);
-  const report = formatReport(todayDateStr, thoughts);
+  const settings = await loadSettings();
+  const report = formatReport(todayDateStr, thoughts, settings);
 
   const channel = process.env.SLACK_CAPTURE_CHANNEL;
   const botToken = process.env.SLACK_BOT_TOKEN;

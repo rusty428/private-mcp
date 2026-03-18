@@ -1,4 +1,4 @@
-// All demo JSON files use this anchor. Data spans anchor-6d through anchor.
+// All demo JSON files use this anchor. Data spans anchor-7d through anchor.
 export const DEMO_ANCHOR = '2026-01-08';
 
 function getOffsetMs(): number {

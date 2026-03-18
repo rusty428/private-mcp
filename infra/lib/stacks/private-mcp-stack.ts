@@ -297,6 +297,8 @@ export class PrivateMCPStack extends cdk.Stack {
       },
     });
     dailySummaryFn.addToRolePolicy(s3VectorsPolicy);
+    dailySummaryFn.addToRolePolicy(settingsReadPolicy);
+    dailySummaryFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
     // EventBridge scheduled rule for daily summary
     const summaryHour = process.env.DAILY_SUMMARY_HOUR || '14';

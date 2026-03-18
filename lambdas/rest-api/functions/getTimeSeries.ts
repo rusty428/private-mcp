@@ -1,5 +1,7 @@
 import { queryThoughts } from '../utils/queryThoughts';
 import { queryByProject } from '../utils/queryByProject';
+import { loadSettings } from './loadSettings';
+import { resolveProjectAlias } from './resolveProjectAlias';
 
 interface TimeSeriesParams {
   startDate?: string;
@@ -38,6 +40,7 @@ export async function getTimeSeries(params: TimeSeriesParams) {
     return { buckets: [], byType: {}, bySource: {}, topTopics: [], projects: [], actionItemCount: 0, totalInRange: 0, totalAllTime: 0 };
   }
 
+  const settings = await loadSettings();
   const filtered = allItems.map((v) => v.metadata);
 
   const bucketMap: Record<string, { total: number; bySource: Record<string, number>; byType: Record<string, number>; byTopic: Record<string, number>; byProject: Record<string, number> }> = {};
@@ -64,9 +67,10 @@ export async function getTimeSeries(params: TimeSeriesParams) {
         bucketMap[bucketKey].byTopic[t] = (bucketMap[bucketKey].byTopic[t] || 0) + 1;
       }
     }
-    if (m.project) {
-      projectCounts[m.project] = (projectCounts[m.project] || 0) + 1;
-      bucketMap[bucketKey].byProject[m.project] = (bucketMap[bucketKey].byProject[m.project] || 0) + 1;
+    const project = m.project ? resolveProjectAlias(m.project, settings) : undefined;
+    if (project) {
+      projectCounts[project] = (projectCounts[project] || 0) + 1;
+      bucketMap[bucketKey].byProject[project] = (bucketMap[bucketKey].byProject[project] || 0) + 1;
     }
     if (Array.isArray(m.action_items)) actionItemCount += m.action_items.length;
   }

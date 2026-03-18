@@ -1,6 +1,50 @@
 {
   "buckets": [
     {
+      "date": "2026-01-01",
+      "total": 14,
+      "bySource": {
+        "mcp": 6,
+        "user-prompt": 5,
+        "session-hook": 2,
+        "slack": 1
+      },
+      "byType": {
+        "task": 3,
+        "observation": 4,
+        "decision": 2,
+        "idea": 2,
+        "project_summary": 1,
+        "milestone": 1,
+        "person_note": 1
+      },
+      "byTopic": {
+        "api-design": 2,
+        "authentication": 1,
+        "rate-limiting": 1,
+        "documentation": 2,
+        "progress": 1,
+        "architecture": 1,
+        "database": 1,
+        "indexing": 1,
+        "performance": 1,
+        "monitoring": 1,
+        "deployment": 1,
+        "data-quality": 1,
+        "sprint": 1,
+        "planning": 1,
+        "schema": 1,
+        "csv": 1,
+        "etl": 1
+      },
+      "byProject": {
+        "Acme API": 5,
+        "Data Pipeline": 4,
+        "Dashboard Redesign": 3,
+        "Internal Docs": 2
+      }
+    },
+    {
       "date": "2026-01-02",
       "total": 16,
       "bySource": {
@@ -498,20 +542,20 @@
     }
   ],
   "byType": {
-    "project_summary": 11,
-    "task": 27,
-    "observation": 26,
-    "idea": 14,
-    "decision": 13,
-    "person_note": 12,
-    "milestone": 15,
+    "project_summary": 12,
+    "task": 30,
+    "observation": 30,
+    "idea": 16,
+    "decision": 15,
+    "person_note": 13,
+    "milestone": 16,
     "reference": 4
   },
   "bySource": {
-    "session-hook": 11,
-    "slack": 9,
-    "user-prompt": 53,
-    "mcp": 49
+    "session-hook": 13,
+    "slack": 10,
+    "user-prompt": 58,
+    "mcp": 55
   },
   "topTopics": [
     {
@@ -598,22 +642,22 @@
   "projects": [
     {
       "project": "Acme API",
-      "count": 46
+      "count": 51
     },
     {
       "project": "Dashboard Redesign",
-      "count": 33
+      "count": 36
     },
     {
       "project": "Data Pipeline",
-      "count": 23
+      "count": 27
     },
     {
       "project": "Internal Docs",
-      "count": 20
+      "count": 22
     }
   ],
-  "actionItemCount": 9,
-  "totalInRange": 122,
-  "totalAllTime": 122
+  "actionItemCount": 11,
+  "totalInRange": 136,
+  "totalAllTime": 136
 }
