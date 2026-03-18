@@ -131,12 +131,13 @@ app.post('/mcp', async (req, res) => {
     return;
   }
 
-  // Only accept JSON-RPC requests (must have method + id)
-  // Reject notifications (no id) and fabricated responses (no method)
-  if (!body?.method || body.id === undefined) {
+  // Reject messages without a method (e.g. fabricated JSON-RPC responses)
+  // NOTE: Notifications (method present, no id) are valid MCP protocol messages
+  // (e.g. notifications/initialized). The SDK handles them natively (returns 204).
+  if (!body?.method) {
     res.status(400).json({
       jsonrpc: '2.0',
-      error: { code: -32600, message: 'Only JSON-RPC requests are accepted' },
+      error: { code: -32600, message: 'Invalid JSON-RPC message' },
       id: null,
     });
     return;
