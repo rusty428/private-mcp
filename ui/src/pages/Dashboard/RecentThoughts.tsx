@@ -52,7 +52,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
                   <ThoughtTypeBadge type={item.metadata.type} />
                 </div>
               ),
-              width: 140,
+              width: 120,
             },
             {
               id: 'summary',
@@ -75,7 +75,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
                   {item.metadata.project || '-'}
                 </div>
               ),
-              width: 150,
+              width: 120,
             },
             {
               id: 'source',
@@ -85,7 +85,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
                   {item.metadata.source}
                 </div>
               ),
-              width: 120,
+              width: 90,
             },
             {
               id: 'date',
@@ -99,7 +99,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
                   </div>
                 );
               },
-              width: 120,
+              width: 100,
             },
             {
               id: 'actions',
@@ -113,7 +113,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
                   <Icon name="status-info" />
                 </span>
               ),
-              width: 50,
+              width: 40,
             },
           ]}
           items={thoughts}
