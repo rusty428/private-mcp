@@ -44,6 +44,9 @@ export async function classifyThought(
   const text = result.content[0].text;
 
   try {
+    // NOTE: These fallbacks are load-bearing. The LLM classifier sometimes returns
+    // types not in the taxonomy (e.g. "problem") or invalid quality values.
+    // The guardrails below force outputs back to valid values.
     const parsed = JSON.parse(text);
     if (!options.validTypes.includes(parsed.type)) {
       parsed.type = options.defaultType;

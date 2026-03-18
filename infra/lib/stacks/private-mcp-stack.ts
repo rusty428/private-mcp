@@ -80,7 +80,9 @@ export class PrivateMCPStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
 
-    // Seed enrichment settings on first deploy (won't overwrite existing)
+    // NOTE: First-deploy-only seed. The ConditionExpression below prevents
+    // overwriting user-customized settings on subsequent deploys. Removing it
+    // would reset enrichment config every time you run `cdk deploy`.
     const seedParams = {
       service: 'DynamoDB',
       action: 'putItem',
@@ -120,6 +122,8 @@ export class PrivateMCPStack extends cdk.Stack {
     };
 
     // --- S3 Vectors IAM policy ---
+    // NOTE: S3 Vectors requires both `vector-bucket/` and `bucket/` ARN prefixes.
+    // Missing either causes hard-to-diagnose permission errors. This is not redundancy.
     const s3VectorsPolicy = new iam.PolicyStatement({
       actions: [
         's3vectors:PutVectors',

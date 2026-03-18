@@ -4,6 +4,9 @@ import { VECTOR_BUCKET_NAME, VECTOR_INDEX_NAME } from '../../../types/config';
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 
+// NOTE: S3 Vectors PutVectors rejects empty arrays in metadata values.
+// Removing this filter will cause writes to fail. All array fields must be
+// stripped when empty before the PutVectors call.
 function filterEmptyArrays(obj: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
   for (const [key, value] of Object.entries(obj)) {
