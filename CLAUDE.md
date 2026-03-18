@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Private MCP is a private MCP server on AWS for personal thought capture and semantic retrieval. Type a thought in Slack or any MCP-connected AI tool — it gets embedded, classified, and stored in S3 Vectors. Any AI tool can search your thoughts by meaning.
+Private MCP is a private MCP server on AWS for personal thought capture and semantic retrieval. Capture thoughts from any MCP-connected AI tool, the web UI, or Slack — they get embedded, classified, and stored in S3 Vectors. Any connected tool can search your thoughts by meaning.
 
 All data stays within a dedicated AWS account. No third-party API routing.
 
@@ -22,14 +22,11 @@ npm run deploy         # Deploy all stacks (cdk deploy)
 
 AWS profile: `--profile <YOUR_AWS_PROFILE>` (set account ID, region, and credentials in `.env`)
 
-Slack config is loaded from `.env` automatically (see `.env.example` for required vars).
+Config is loaded from `.env` automatically (see `.env.example` for required vars).
 
 ## Architecture
 
 ```
-Slack ──webhook──▶ API Gateway ──▶ ingest-thought Lambda
-                                        │
-                                        ▼
 AI Tools ──MCP──▶ API Gateway ──▶ mcp-server Lambda
                   (x-api-key)           │
                                         ▼
@@ -42,6 +39,8 @@ AI Tools ──MCP──▶ API Gateway ──▶ mcp-server Lambda
                                     └─────┬─────┘
                                           ▼
                                      S3 Vectors
+
+Slack ──webhook──▶ API Gateway ──▶ ingest-thought Lambda ──▶ process-thought
 ```
 
 ## Source Layout
@@ -59,7 +58,7 @@ private-mcp/
 │       └── stacks/
 │           └── private-mcp-stack.ts      # Single stack: all resources
 ├── lambdas/
-│   ├── process-thought/              # Core: embed + classify + store + Slack reply
+│   ├── process-thought/              # Core: embed + classify + store
 │   │   ├── index.ts                  # Handler (parallel Bedrock calls → S3 Vectors → optional Slack reply)
 │   │   ├── functions/
 │   │   │   ├── generateEmbedding.ts  # Bedrock Titan Embeddings v2
@@ -69,10 +68,6 @@ private-mcp/
 │   │   │   └── replyInSlack.ts       # Post threaded Slack reply
 │   │   └── utils/
 │   │       └── createResponse.ts
-│   ├── ingest-thought/               # Slack webhook handler (async fire-and-forget)
-│   │   ├── index.ts                  # Slack event filtering + URL verification
-│   │   └── functions/
-│   │       └── invokeProcessThought.ts  # Async (Event) Lambda invocation
 │   ├── mcp-server/                   # MCP protocol server
 │   │   ├── index.ts                  # Lambda entry (serverless-express)
 │   │   ├── server.ts                 # Express app + MCP tool registration
@@ -103,6 +98,10 @@ private-mcp/
 │           ├── generateNarrative.ts  # AI-generated report narrative (Bedrock)
 │           ├── getEnrichmentSettings.ts  # Read enrichment config from DDB
 │           └── putEnrichmentSettings.ts  # Update enrichment config
+│   └── ingest-thought/               # Slack webhook handler (optional)
+│       ├── index.ts                  # Slack event filtering + URL verification
+│       └── functions/
+│           └── invokeProcessThought.ts  # Async (Event) Lambda invocation
 ├── scripts/
 │   └── migrate-to-dynamodb.ts        # One-time migration: S3 Vectors metadata → DDB
 ├── types/
@@ -123,12 +122,12 @@ private-mcp/
 
 **Each Lambda is self-contained.** No shared code directories across Lambdas. Each Lambda has its own `functions/` and `utils/` subdirectories.
 
-- **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. Invoked by both other Lambdas. When triggered from Slack (via `slackReply` context), replies in the Slack thread after processing.
-- **ingest-thought** — Slack webhook handler. Handles `url_verification` challenge, filters messages, invokes process-thought asynchronously (Event invocation), returns 200 immediately to avoid Slack's 3-second retry.
+- **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. All capture sources invoke this Lambda.
 - **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` in stateless mode. Express + `@codegenie/serverless-express`. Five tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`.
-- **daily-summary** — Generates a two-section report (performance metrics + content highlights) and posts to Slack. Triggered daily by EventBridge cron (~7am Pacific) for previous day's thoughts, or on-demand via `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
-- **enrich-thought** — Async enrichment pipeline. Performs deeper metadata extraction (related projects, refined summaries) after initial capture. Invoked asynchronously so it doesn't block the capture response.
 - **rest-api** — REST backend for the web UI. Express + `@codegenie/serverless-express`. CRUD for thoughts, semantic search, timeseries stats, AI narrative reports, enrichment settings. Data stored in DynamoDB (`private-mcp-thoughts` table) with GSIs for type, source, project, and date queries.
+- **daily-summary** — Generates a two-section report (performance metrics + content highlights). Triggered daily by EventBridge cron or on-demand via `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
+- **enrich-thought** — Async enrichment pipeline. Performs deeper metadata extraction (related projects, refined summaries) after initial capture. Invoked asynchronously so it doesn't block the capture response.
+- **ingest-thought** — Optional Slack webhook handler. Filters messages, invokes process-thought asynchronously, returns 200 immediately to avoid Slack's 3-second retry.
 
 ## Tech Stack
 
@@ -147,7 +146,6 @@ private-mcp/
 
 | Method | Path | Lambda | Auth |
 |---|---|---|---|
-| POST | `/slack/events` | ingest-thought | Public (Slack webhook) |
 | POST | `/mcp` | mcp-server | API key required |
 | GET | `/mcp` | mcp-server | API key required |
 | DELETE | `/mcp` | mcp-server | API key required |
@@ -162,6 +160,7 @@ private-mcp/
 | POST | `/api/reports/generate` | rest-api | API key required |
 | GET | `/api/settings/enrichment` | rest-api | API key required |
 | PUT | `/api/settings/enrichment` | rest-api | API key required |
+| POST | `/slack/events` | ingest-thought | Public (optional Slack webhook) |
 
 ## MCP Tools
 

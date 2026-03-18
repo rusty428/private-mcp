@@ -16,36 +16,37 @@
 ┌─────────────────────────────────────────────────────────┐
 │                      API Gateway                         │
 │                                                          │
-│   POST /slack/events (public)    POST/GET/DELETE /mcp    │
-│          │                        (API key required)     │
-│          ▼                               │               │
-│   ┌──────────────┐              ┌────────▼───────┐       │
-│   │ ingest-      │              │ mcp-server     │       │
-│   │ thought      │              │                │       │
-│   │              │              │ 5 MCP tools:   │       │
-│   │ Slack events │              │ - search       │       │
-│   │ filtering    │              │ - browse       │       │
-│   │ + reply      │              │ - stats        │       │
-│   │              │              │ - capture      │       │
-│   └──────┬───────┘              │ - daily_summary│       │
-│          │                      └───┬────────┬───┘       │
-│          │     Lambda invoke        │        │           │
-│          ▼                          ▼        │           │
-│   ┌──────────────────────────────────┐       │           │
-│   │ process-thought (core)           │       │           │
-│   │                                  │       │           │
-│   │  ┌────────────┐ ┌────────────┐   │       │           │
-│   │  │ Bedrock    │ │ Bedrock    │   │       │           │
-│   │  │ Titan v2   │ │ Haiku      │   │       │           │
-│   │  │ (embed)    │ │ (classify) │   │       │           │
-│   │  └─────┬──────┘ └─────┬──────┘   │       │           │
-│   │        │    parallel   │          │       │           │
-│   │        └───────┬───────┘          │       │           │
-│   │                ▼                  │       │           │
-│   │         ┌────────────┐            │       │           │
-│   │         │ S3 Vectors │ ◀──────────────────┘           │
+│   POST/GET/DELETE /mcp          POST /slack/events       │
+│   (API key required)            (optional, public)       │
+│          │                               │               │
+│          ▼                               ▼               │
+│   ┌────────────────┐           ┌──────────────┐          │
+│   │ mcp-server     │           │ ingest-      │          │
+│   │                │           │ thought      │          │
+│   │ 5 MCP tools:   │           │              │          │
+│   │ - search       │           │ Slack events │          │
+│   │ - browse       │           │ filtering    │          │
+│   │ - stats        │           │ + reply      │          │
+│   │ - capture      │           └──────┬───────┘          │
+│   │ - daily_summary│                  │                  │
+│   └───┬────────┬───┘    Lambda invoke │                  │
+│       │        │                      │                  │
+│       ▼        │                      ▼                  │
+│   ┌──────────────────────────────────┐                   │
+│   │ process-thought (core)           │                   │
+│   │                                  │                   │
+│   │  ┌────────────┐ ┌────────────┐   │                   │
+│   │  │ Bedrock    │ │ Bedrock    │   │                   │
+│   │  │ Titan v2   │ │ Haiku      │   │                   │
+│   │  │ (embed)    │ │ (classify) │   │                   │
+│   │  └─────┬──────┘ └─────┬──────┘   │                   │
+│   │        │    parallel   │          │                   │
+│   │        └───────┬───────┘          │                   │
+│   │                ▼                  │                   │
+│   │         ┌────────────┐            │                   │
+│   │         │ S3 Vectors │ ◀──────────┘                   │
 │   │         │ (store)    │  (search/browse/stats)         │
-│   │         └────────────┘            │                   │
+│   │         └────────────┘                               │
 │   └──────────────────────────────────┘                   │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -56,14 +57,14 @@
 
 REST API with two route groups:
 
-- **`POST /slack/events`** — Public. Receives Slack webhook events. Slack verifies the URL during setup and sends message events here.
 - **`POST|GET|DELETE /mcp`** — Secured with API Gateway API key + usage plan (10 rps, 20 burst). Handles the MCP protocol.
+- **`POST /slack/events`** — Optional. Public webhook for Slack capture, verified via HMAC-SHA256 signature.
 
 CORS is enabled on all routes.
 
 ### process-thought Lambda
 
-The core of the system. Both other Lambdas invoke it.
+The core of the system. All capture sources invoke it.
 
 **Input:** `{ text, source, sourceRef? }`
 
@@ -76,15 +77,6 @@ The core of the system. Both other Lambdas invoke it.
 **Output:** `{ id, type, topics, people, action_items, created_at }`
 
 The metadata extraction prompt asks Haiku to classify the thought as one of: `observation`, `task`, `idea`, `reference`, `person_note`, `decision`, `project_summary`, `milestone`. It also extracts topic tags, mentioned people, implied action items, and dates. If Haiku returns malformed JSON, a safe fallback is used.
-
-### ingest-thought Lambda
-
-Handles Slack webhook events.
-
-1. Responds to Slack's `url_verification` challenge during setup
-2. Filters events: only `message` type, no bot messages, no subtypes, configured channel only
-3. Invokes `process-thought` via Lambda-to-Lambda call
-4. Posts a threaded reply in Slack with the classification summary
 
 ### mcp-server Lambda
 
@@ -102,7 +94,7 @@ MCP protocol server using `@modelcontextprotocol/sdk` in stateless mode.
 | `search_thoughts` | Embeds the query via Bedrock, runs cosine similarity search against S3 Vectors, returns ranked results |
 | `browse_recent` | Lists vectors, fetches metadata, filters by type/topic, sorts by `created_at` descending |
 | `stats` | Aggregates: total count, breakdown by type, top 10 topics, date range |
-| `capture_thought` | Invokes `process-thought` — same pipeline as Slack capture |
+| `capture_thought` | Invokes `process-thought` — same embed + classify + store pipeline |
 | `daily_summary` | Generates and posts a daily activity summary to Slack |
 
 ### daily-summary Lambda
@@ -125,6 +117,15 @@ The `private-mcp-thoughts` table stores thought metadata with GSIs for efficient
 
 Vite + React + Cloudscape Design System. Six pages: Dashboard (activity charts, stats), Browse (paginated list with filters), Search (semantic search), Capture (manual thought entry), Reports (AI-generated narratives), and Settings (enrichment configuration). Connects to the rest-api Lambda via API Gateway. Runs locally via `npm run mcp-ui` or can be deployed as a static site behind CloudFront.
 
+### ingest-thought Lambda (optional)
+
+Handles Slack webhook events. Only needed if using Slack as a capture source.
+
+1. Responds to Slack's `url_verification` challenge during setup
+2. Filters events: only `message` type, no bot messages, no subtypes, configured channel only
+3. Invokes `process-thought` via Lambda-to-Lambda call
+4. Posts a threaded reply in Slack with the classification summary
+
 ### S3 Vectors
 
 Vector storage with native similarity search.
@@ -142,23 +143,18 @@ Each vector record:
 
 Metadata fields that are empty arrays are omitted (S3 Vectors does not allow empty arrays).
 
-## Data Flow: Slack Capture
+## Data Flow: MCP Capture
 
 ```
-User types in Slack
+AI tool calls capture_thought via MCP
        │
        ▼
-Slack sends POST to /slack/events
-       │
-       ▼
-ingest-thought Lambda
-  ├── Validates: message type, no bot, correct channel
-  ├── Invokes process-thought Lambda
-  │     ├── Bedrock Titan v2 → 1024-dim embedding
-  │     ├── Bedrock Haiku → { type, topics, people, action_items, dates }
-  │     │   (parallel)
-  │     └── S3 Vectors PutVectors → stored
-  └── Posts threaded reply in Slack: "Captured as *type* — topics"
+mcp-server Lambda
+  └── Invokes process-thought Lambda
+        ├── Bedrock Titan v2 → 1024-dim embedding
+        ├── Bedrock Haiku → { type, topics, people, action_items, dates }
+        │   (parallel)
+        └── S3 Vectors PutVectors → stored
 ```
 
 ## Data Flow: MCP Search
@@ -173,11 +169,23 @@ mcp-server Lambda (search_thoughts tool)
   └── Returns ranked results with metadata
 ```
 
+## Data Flow: Slack Capture (optional)
+
+```
+User types in Slack
+       │
+       ▼
+ingest-thought Lambda
+  ├── Validates: message type, no bot, correct channel
+  ├── Invokes process-thought Lambda (same pipeline as above)
+  └── Posts threaded reply in Slack: "Captured as *type* — topics"
+```
+
 ## Security
 
-- **MCP endpoint** — API Gateway API key required on every request. Key managed by CDK, retrievable via AWS CLI.
-- **Slack webhook** — Public endpoint, verified via HMAC-SHA256 signature using `SLACK_SIGNING_SECRET` with 5-minute replay protection. Also filters on channel ID and ignores bot messages.
-- **IAM** — Each Lambda has least-privilege permissions: process-thought gets S3 Vectors write + Bedrock invoke, ingest-thought gets Lambda invoke, mcp-server gets S3 Vectors read + Bedrock invoke + Lambda invoke.
+- **MCP endpoint** — API Gateway API key required on every request. Key managed by CDK, retrievable via AWS CLI. Batch requests rejected, body size limited to 16KB.
+- **IAM** — Each Lambda has least-privilege permissions scoped to specific resources.
+- **Slack webhook** — If enabled, verified via HMAC-SHA256 signature with 5-minute replay protection. Filters on channel ID and ignores bot messages.
 - **No VPC** — All services are accessed via service endpoints. No public-facing compute beyond Lambda behind API Gateway.
 
 ## Design Decisions

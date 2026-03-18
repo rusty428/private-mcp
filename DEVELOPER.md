@@ -35,7 +35,7 @@ Copy `.env.example` to `.env` and fill in your values:
 cp .env.example .env
 ```
 
-All deployment config lives in `.env` — your AWS account ID, region, Slack credentials, and optional settings. See `.env.example` for descriptions of each variable.
+All deployment config lives in `.env` — your AWS account ID, region, and optional settings. See `.env.example` for descriptions of each variable.
 
 Authenticate via SSO:
 
@@ -62,42 +62,15 @@ npx cdk deploy PrivateMCPStack --profile <your-profile>
 
 After deployment, CDK outputs:
 
-- **ApiUrl** — Base API Gateway URL
-- **SlackWebhookUrl** — URL to paste into Slack Event Subscriptions
 - **MCPEndpointUrl** — MCP server endpoint for AI tool connections
+- **ApiUrl** — Base API Gateway URL
 - **ApiKeyId** — Retrieve the actual key value with:
 
 ```bash
 aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --profile <your-profile>
 ```
 
-## Slack App Setup
-
-### Create the App
-
-1. Go to api.slack.com/apps → Create New App → From scratch
-2. Name: whatever you want. Select your workspace.
-
-### Set Permissions
-
-1. OAuth & Permissions → Bot Token Scopes → add:
-   - `channels:history`
-   - `groups:history`
-   - `chat:write`
-2. Install to Workspace → copy the Bot User OAuth Token (`xoxb-...`)
-
-### Configure Events
-
-1. Event Subscriptions → Enable Events
-2. Request URL: paste the **SlackWebhookUrl** from deploy output
-3. Subscribe to bot events: `message.channels` and `message.groups`
-4. Save Changes (reinstall if prompted)
-
-### Invite Bot to Channel
-
-In your capture channel: `/invite @YourAppName`
-
-Get the channel ID: right-click channel → View channel details → scroll to bottom.
+- **SlackWebhookUrl** — URL for Slack Event Subscriptions (if using Slack integration)
 
 ## Web UI
 
@@ -249,15 +222,51 @@ Settings → Connectors → Add custom connector:
 
 Note: no space after the colon in the header value.
 
+## Slack Integration (optional)
+
+Slack is an optional capture source. Skip this section if you only plan to use MCP tools and the web UI.
+
+### Create the App
+
+1. Go to api.slack.com/apps → Create New App → From scratch
+2. Name: whatever you want. Select your workspace.
+
+### Set Permissions
+
+1. OAuth & Permissions → Bot Token Scopes → add:
+   - `channels:history`
+   - `groups:history`
+   - `chat:write`
+2. Install to Workspace → copy the Bot User OAuth Token (`xoxb-...`)
+
+### Configure Events
+
+1. Event Subscriptions → Enable Events
+2. Request URL: paste the **SlackWebhookUrl** from deploy output
+3. Subscribe to bot events: `message.channels` and `message.groups`
+4. Save Changes (reinstall if prompted)
+
+### Invite Bot to Channel
+
+In your capture channel: `/invite @YourAppName`
+
+Get the channel ID: right-click channel → View channel details → scroll to bottom.
+
+### Add Slack credentials to `.env`
+
+Add these values to your `.env` and redeploy:
+
+```
+SLACK_BOT_TOKEN=xoxb-your-token
+SLACK_SIGNING_SECRET=your-signing-secret
+SLACK_CAPTURE_CHANNEL=your-channel-id
+```
+
 ## Security
 
 ### Authentication
 
-All API endpoints require an API Gateway API key (`x-api-key` header), except the Slack webhook (`/slack/events`), which is publicly accessible but verified via signature.
-
-### Slack Webhook Verification
-
-Incoming Slack requests are verified using HMAC-SHA256 signature validation with the `SLACK_SIGNING_SECRET` (stored in `.env`). Includes replay protection — requests with timestamps older than 5 minutes are rejected.
+All API endpoints require an API Gateway API key (`x-api-key` header). The Slack webhook (`/slack/events`), if enabled, is publicly accessible but verified via HMAC-SHA256 signature with replay protection (5-minute window).
 
 ### CORS
 
@@ -277,7 +286,7 @@ All REST API endpoints validate input:
 
 ### Secrets Management
 
-Slack tokens (`SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`) are stored in `.env` (gitignored) and passed as Lambda environment variables at deploy time. For multi-user AWS accounts, consider migrating to AWS Secrets Manager.
+Secrets (Slack tokens, if using Slack integration) are stored in `.env` (gitignored) and passed as Lambda environment variables at deploy time. For multi-user AWS accounts, consider migrating to AWS Secrets Manager.
 
 ### IAM
 
@@ -303,11 +312,11 @@ private-mcp/
 │           └── private-mcp-stack.ts
 ├── lambdas/
 │   ├── process-thought/              # Core: embed + classify + store
-│   ├── ingest-thought/               # Slack webhook handler
 │   ├── mcp-server/                   # MCP protocol server
+│   ├── rest-api/                     # REST backend for web UI
 │   ├── daily-summary/                # Daily report (EventBridge scheduled)
 │   ├── enrich-thought/               # Async enrichment pipeline
-│   └── rest-api/                     # REST backend for web UI
+│   └── ingest-thought/               # Slack webhook handler (optional)
 ├── scripts/
 │   └── migrate-to-dynamodb.ts        # One-time migration (not needed for fresh installs)
 ├── types/
@@ -329,12 +338,6 @@ One function per file. File name matches the exported function name.
 
 ## Troubleshooting
 
-### Slack messages not triggering the function
-
-- Verify both `message.channels` and `message.groups` are subscribed in Event Subscriptions
-- Confirm the bot is invited to the channel
-- Check the channel ID in the deploy context matches the actual channel
-
 ### Check Lambda logs
 
 ```bash
@@ -344,10 +347,6 @@ aws logs describe-log-groups --profile <your-profile> --region us-west-2
 # Tail a specific Lambda's logs
 aws logs tail "/aws/lambda/<function-name>" --since 5m --profile <your-profile> --region us-west-2
 ```
-
-### S3 Vectors empty array error
-
-S3 Vectors does not allow empty arrays in metadata. The `storeThought` function filters these out. If you add new array fields to metadata, apply the same pattern.
 
 ### MCP tools missing in some projects
 
@@ -360,12 +359,22 @@ claude mcp add --transport http --scope user private-mcp \
   --header "x-api-key: <YOUR_API_KEY>"
 ```
 
+### S3 Vectors empty array error
+
+S3 Vectors does not allow empty arrays in metadata. The `storeThought` function filters these out. If you add new array fields to metadata, apply the same pattern.
+
 ### Daily summary shows zero activity
 
 The daily summary reports on the previous day's thoughts. If zero thoughts were captured, check:
 1. MCP server is registered at `--scope user` (see above)
 2. AWS SSO token hasn't expired (run `aws sso login --profile <your-profile>`)
 3. The SessionEnd hook is configured and the script is executable
+
+### Slack messages not triggering the function
+
+- Verify both `message.channels` and `message.groups` are subscribed in Event Subscriptions
+- Confirm the bot is invited to the channel
+- Check the channel ID matches the `SLACK_CAPTURE_CHANNEL` in `.env`
 
 ### Duplicate Slack replies
 
