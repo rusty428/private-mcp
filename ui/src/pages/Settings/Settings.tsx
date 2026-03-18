@@ -19,6 +19,7 @@ import Modal from '@cloudscape-design/components/modal';
 import { api, setDemoMode } from '../../api/client';
 import type { EnrichmentSettings, ProjectConfig } from '../../api/settingsTypes';
 import { useDemoMode } from '../../contexts/DemoContext';
+import { useTheme } from '../../theme/ThemeContext';
 
 const MODEL_OPTIONS = [
   { label: 'Claude 3 Haiku', value: 'anthropic.claude-3-haiku-20240307-v1:0' },
@@ -50,6 +51,7 @@ const DEFAULT_SETTINGS: Omit<EnrichmentSettings, 'updatedAt' | 'generatedPrompt'
 
 export function Settings() {
   const { isDemoMode, toggleDemoMode } = useDemoMode();
+  const { resolvedMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [flashItems, setFlashItems] = useState<any[]>([]);
@@ -597,7 +599,7 @@ export function Settings() {
         left: 0,
         right: 0,
         zIndex: 1000,
-        background: 'var(--color-background-container-content, #ffffff)',
+        background: resolvedMode === 'dark' ? '#161d26' : '#ffffff',
         boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.15)',
         padding: '12px 40px',
         display: 'flex',
