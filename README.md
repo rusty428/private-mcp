@@ -1,6 +1,6 @@
 # PrivateMCP
 
-A private MCP server built entirely on AWS. Captures, embeds, classifies, and semantically searches your thoughts. No third-party API routing — your data never leaves your AWS account.
+A private MCP server built entirely in your AWS account. Captures, embeds, classifies, and semantically searches your thoughts. No third-party API routing — your data never leaves your AWS account.
 
 ## Quick Start
 
@@ -19,7 +19,7 @@ After deploy, connect your AI tools using the MCP endpoint from the CDK output. 
 
 ## What It Does
 
-Type a thought in Slack — it gets embedded, classified, and stored automatically. Then any MCP-connected AI tool (Claude, ChatGPT, Cursor, Claude Code) can search your thoughts by meaning and write new ones directly.
+Capture thoughts from Slack, AI tools, or the web UI — they get embedded, classified, and stored automatically. Any MCP-connected tool (Claude Code, Cursor, Claude Desktop) can then search your thoughts by meaning and capture new ones as you work.
 
 ![Dashboard](docs/images/demo-dashboard.png)
 
