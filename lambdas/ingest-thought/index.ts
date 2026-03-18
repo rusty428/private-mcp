@@ -85,7 +85,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return { statusCode: 200, headers: {}, body: 'ok' };
     }
 
-    // Fire-and-forget: invoke process-thought asynchronously so Slack gets 200 within 3s
+    // NOTE: Slack retries if it doesn't get 200 within 3 seconds. This Lambda must
+    // return immediately — process-thought is invoked async (Event invocation type).
+    // Switching to synchronous invocation will cause duplicate captures from retries.
     await invokeProcessThought(messageText, 'slack', `slack_ts:${messageTs}`, {
       channel,
       threadTs: messageTs,

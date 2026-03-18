@@ -142,6 +142,11 @@ app.post('/mcp', async (req, res) => {
     return;
   }
 
+  // NOTE: Stateless mode — each request creates a fresh server+transport pair.
+  // sessionIdGenerator: undefined disables session tracking. The MCP protocol
+  // requires GET (SSE streams) and DELETE (session teardown) endpoints, but in
+  // stateless mode they're no-ops. All three HTTP methods route to this Lambda
+  // because API Gateway doesn't know which the client will use.
   const server = createServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,

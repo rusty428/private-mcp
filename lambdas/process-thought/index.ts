@@ -55,6 +55,9 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
   const id = randomUUID();
   const now = new Date();
   const createdAt = now.toISOString();
+  // NOTE: thought_date is the human-calendar date, computed using the user's
+  // configured timezone. Without this, evening captures (e.g. 8pm PST) would
+  // be attributed to the next day's UTC date. created_at stays canonical UTC.
   const timezone = await loadTimezone();
   const thoughtDate = now.toLocaleDateString('en-CA', { timeZone: timezone });
 
@@ -118,6 +121,10 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
     created_at: createdAt,
   };
 
+  // NOTE: Two-stage pipeline. This Lambda writes a minimal "pending" record and
+  // returns fast. enrich-thought runs async (InvocationType: 'Event') to do the
+  // expensive Bedrock classification + embedding. The caller already has a response
+  // by the time enrichment starts. The DDB record stays type:'pending' until then.
   if (quality !== 'noise' && process.env.ENRICH_THOUGHT_FN_NAME) {
     const enrichInput: EnrichThoughtInput = {
       id,

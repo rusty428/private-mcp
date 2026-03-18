@@ -55,6 +55,8 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
 
   await storeThought(id, embedding, metadata);
 
+  // NOTE: Empty arrays are excluded intentionally — see storeThought.ts.
+  // S3 Vectors rejects empty arrays in metadata, so DDB stays consistent with what's stored there.
   const updateExprParts: string[] = [
     'SET enriched = :enriched',
     '#t = :type',
