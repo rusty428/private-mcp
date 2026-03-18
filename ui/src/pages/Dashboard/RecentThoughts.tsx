@@ -59,7 +59,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
               header: 'Summary',
               cell: (item) => {
                 const text = item.metadata.summary || item.metadata.content || '';
-                const display = text.length > 100 ? text.substring(0, 100) + '...' : text;
+                const display = text.length > 80 ? text.substring(0, 80) + '...' : text;
                 return (
                   <div style={{ cursor: 'pointer' }} onClick={() => openDetail(item)}>
                     {display}
@@ -118,6 +118,7 @@ export function RecentThoughts({ thoughts }: RecentThoughtsProps) {
           ]}
           items={thoughts}
           variant="embedded"
+          stickyColumns={{ last: 1 }}
         />
       </Container>
 
