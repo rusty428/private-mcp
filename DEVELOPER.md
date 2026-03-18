@@ -314,7 +314,7 @@ private-mcp/
 │   ├── thought.ts                    # Domain types
 │   └── config.ts                     # Constants (bucket, index, model IDs)
 ├── ui/                               # Web dashboard (Vite + React + Cloudscape)
-└── docs/plans/                       # Historical design docs (not current instructions)
+└── docs/images/                      # README screenshots
 ```
 
 ### Lambda Convention

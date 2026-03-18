@@ -116,7 +116,7 @@ private-mcp/
 │       ├── Capture/                  # Manual thought capture form
 │       ├── Reports/                  # AI-generated narrative reports
 │       └── Settings/                 # Enrichment settings (types, topics, prompts)
-└── docs/plans/                       # Design and implementation docs
+└── docs/images/                      # README screenshots
 ```
 
 ## Lambda Architecture
