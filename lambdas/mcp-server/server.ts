@@ -133,7 +133,7 @@ app.post('/mcp', async (req, res) => {
 
   // Reject messages without a method (e.g. fabricated JSON-RPC responses)
   // NOTE: Notifications (method present, no id) are valid MCP protocol messages
-  // (e.g. notifications/initialized). The SDK handles them natively (returns 204).
+  // (e.g. notifications/initialized). The SDK handles them natively (returns 202).
   if (!body?.method) {
     res.status(400).json({
       jsonrpc: '2.0',
@@ -148,19 +148,30 @@ app.post('/mcp', async (req, res) => {
   // requires GET (SSE streams) and DELETE (session teardown) endpoints, but in
   // stateless mode they're no-ops. All three HTTP methods route to this Lambda
   // because API Gateway doesn't know which the client will use.
-  const server = createServer();
-  const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-    enableJsonResponse: true,
-  });
+  try {
+    const server = createServer();
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+      enableJsonResponse: true,
+    });
 
-  res.on('close', () => {
-    transport.close();
-    server.close();
-  });
+    res.on('close', () => {
+      transport.close();
+      server.close();
+    });
 
-  await server.connect(transport);
-  await transport.handleRequest(req, res, req.body);
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  } catch (error) {
+    console.error('MCP request handling failed:', error);
+    if (!res.headersSent) {
+      res.status(500).json({
+        jsonrpc: '2.0',
+        error: { code: -32603, message: 'Internal server error' },
+        id: null,
+      });
+    }
+  }
 });
 
 app.get('/mcp', (_req, res) => {
