@@ -30,9 +30,19 @@ fi
 CACHE_FILE="/tmp/.mcp-api-key-cache"
 CACHE_MAX_AGE=3600
 
-if [ -f "$CACHE_FILE" ] && [ $(($(date +%s) - $(stat -f %m "$CACHE_FILE"))) -lt $CACHE_MAX_AGE ]; then
-  API_KEY=$(cat "$CACHE_FILE")
-else
+# Check cache (stat -f %m is macOS, stat -c %Y is Linux)
+if [ -f "$CACHE_FILE" ]; then
+  if [ "$(uname)" = "Darwin" ]; then
+    CACHE_MTIME=$(stat -f %m "$CACHE_FILE")
+  else
+    CACHE_MTIME=$(stat -c %Y "$CACHE_FILE")
+  fi
+  if [ $(($(date +%s) - CACHE_MTIME)) -lt $CACHE_MAX_AGE ]; then
+    API_KEY=$(cat "$CACHE_FILE")
+  fi
+fi
+
+if [ -z "$API_KEY" ]; then
   API_KEY=$(aws apigateway get-api-key --api-key "$API_KEY_ID" --include-value \
     --profile "$AWS_PROFILE" --region "$AWS_REGION" --query 'value' --output text 2>/dev/null)
   if [ -z "$API_KEY" ] || [ "$API_KEY" = "None" ]; then
