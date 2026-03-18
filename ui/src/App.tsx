@@ -34,6 +34,19 @@ function AppContent() {
   const { preference, setPreference } = useTheme();
   const { isDemoMode } = useDemoMode();
 
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      '/': 'Dashboard',
+      '/browse': 'Browse',
+      '/search': 'Search',
+      '/reports': 'Reports',
+      '/capture': 'Capture',
+      '/settings': 'Settings',
+    };
+    const page = titles[location.pathname] || 'PrivateMCP';
+    document.title = page === 'PrivateMCP' ? page : `${page} - PrivateMCP`;
+  }, [location.pathname]);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <TopNavigation
