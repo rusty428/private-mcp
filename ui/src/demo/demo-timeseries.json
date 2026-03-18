@@ -1,0 +1,663 @@
+{
+  "buckets": [
+    {
+      "date": "2026-01-01",
+      "total": 14,
+      "bySource": {
+        "mcp": 6,
+        "user-prompt": 5,
+        "session-hook": 2,
+        "slack": 1
+      },
+      "byType": {
+        "task": 3,
+        "observation": 4,
+        "decision": 2,
+        "idea": 2,
+        "project_summary": 1,
+        "milestone": 1,
+        "person_note": 1
+      },
+      "byTopic": {
+        "api-design": 2,
+        "authentication": 1,
+        "rate-limiting": 1,
+        "documentation": 2,
+        "progress": 1,
+        "architecture": 1,
+        "database": 1,
+        "indexing": 1,
+        "performance": 1,
+        "monitoring": 1,
+        "deployment": 1,
+        "data-quality": 1,
+        "sprint": 1,
+        "planning": 1,
+        "schema": 1,
+        "csv": 1,
+        "etl": 1
+      },
+      "byProject": {
+        "Acme API": 5,
+        "Data Pipeline": 4,
+        "Dashboard Redesign": 3,
+        "Internal Docs": 2
+      }
+    },
+    {
+      "date": "2026-01-02",
+      "total": 16,
+      "bySource": {
+        "session-hook": 2,
+        "slack": 2,
+        "user-prompt": 7,
+        "mcp": 5
+      },
+      "byType": {
+        "project_summary": 2,
+        "task": 3,
+        "observation": 5,
+        "idea": 2,
+        "decision": 2,
+        "person_note": 1,
+        "milestone": 1
+      },
+      "byTopic": {
+        "progress": 1,
+        "daily-summary": 1,
+        "dead-letter-queue": 1,
+        "error-handling": 1,
+        "reliability": 2,
+        "auth": 2,
+        "middleware": 1,
+        "refactoring": 1,
+        "code-review": 1,
+        "batch-import": 1,
+        "retry-logic": 1,
+        "pagination": 1,
+        "bug-fix": 1,
+        "cursor": 1,
+        "charting": 1,
+        "react": 1,
+        "frontend": 1,
+        "jwt": 1,
+        "oauth2": 1,
+        "authentication": 2,
+        "api-design": 2,
+        "mermaid": 1,
+        "diagrams": 1,
+        "documentation": 2,
+        "api-keys": 1,
+        "oauth": 1,
+        "schema-validation": 1,
+        "data-ingestion": 1,
+        "etl-failure": 1,
+        "schema-change": 1,
+        "csv": 1,
+        "performance": 1,
+        "parallel-loading": 1,
+        "wireframes": 1,
+        "activity-chart": 1,
+        "date-picker": 1,
+        "rate-limiting": 2,
+        "architecture": 1,
+        "users-endpoint": 1,
+        "batch-imports": 1,
+        "sprint-planning": 1,
+        "migration": 1
+      },
+      "byProject": {
+        "Acme API": 8,
+        "Data Pipeline": 3,
+        "Dashboard Redesign": 3,
+        "Internal Docs": 2
+      }
+    },
+    {
+      "date": "2026-01-03",
+      "total": 18,
+      "bySource": {
+        "slack": 2,
+        "session-hook": 1,
+        "mcp": 7,
+        "user-prompt": 8
+      },
+      "byType": {
+        "task": 4,
+        "project_summary": 1,
+        "decision": 3,
+        "idea": 2,
+        "observation": 4,
+        "milestone": 2,
+        "person_note": 1,
+        "reference": 1
+      },
+      "byTopic": {
+        "iam": 1,
+        "staging": 2,
+        "access-control": 1,
+        "analytics": 2,
+        "error-codes": 4,
+        "progress": 1,
+        "sse": 1,
+        "websockets": 1,
+        "real-time": 1,
+        "architecture": 1,
+        "rate-limiting": 2,
+        "deployment": 1,
+        "changelog": 1,
+        "automation": 1,
+        "git-tags": 1,
+        "search": 2,
+        "algolia": 2,
+        "ci-cd": 1,
+        "monitoring": 1,
+        "health-check": 1,
+        "false-positives": 1,
+        "openapi": 1,
+        "typescript": 1,
+        "code-generation": 1,
+        "documentation": 3,
+        "migration-guide": 1,
+        "api-versioning": 1,
+        "docs-site": 1,
+        "webhooks": 2,
+        "api-gateway": 1,
+        "performance": 3,
+        "mockups": 1,
+        "navigation": 1,
+        "keyboard-shortcuts": 1,
+        "ux": 1,
+        "database": 2,
+        "indexing": 2,
+        "airflow": 1,
+        "dag-complexity": 1,
+        "refactoring": 1,
+        "api-design": 1,
+        "error-handling": 1,
+        "standup": 1
+      },
+      "byProject": {
+        "Data Pipeline": 3,
+        "Acme API": 7,
+        "Dashboard Redesign": 4,
+        "Internal Docs": 4
+      }
+    },
+    {
+      "date": "2026-01-04",
+      "total": 17,
+      "bySource": {
+        "session-hook": 2,
+        "mcp": 6,
+        "slack": 1,
+        "user-prompt": 8
+      },
+      "byType": {
+        "project_summary": 2,
+        "decision": 3,
+        "idea": 2,
+        "observation": 5,
+        "milestone": 2,
+        "person_note": 2,
+        "task": 1
+      },
+      "byTopic": {
+        "progress": 2,
+        "daily-summary": 1,
+        "webhooks": 3,
+        "delivery-guarantees": 1,
+        "idempotency": 1,
+        "checkpoints": 1,
+        "replay": 1,
+        "resilience": 1,
+        "activity-chart": 3,
+        "layout": 2,
+        "responsive-design": 1,
+        "css-grid": 1,
+        "feature-flags": 1,
+        "launchdarkly": 1,
+        "rollout-strategy": 1,
+        "health-check": 1,
+        "monitoring": 1,
+        "dependencies": 1,
+        "runbook": 1,
+        "documentation": 1,
+        "incident-response": 1,
+        "deployment": 1,
+        "performance": 1,
+        "algolia": 1,
+        "caching": 1,
+        "dark-mode": 1,
+        "design-system": 1,
+        "color-tokens": 1,
+        "backfill": 1,
+        "data-processing": 1,
+        "schema-validation": 2,
+        "memory-leak": 1,
+        "websocket": 1,
+        "react": 1,
+        "bug-fix": 1,
+        "ui": 1,
+        "data-visualization": 1,
+        "schema": 1,
+        "events": 1,
+        "retry-logic": 1,
+        "exponential-backoff": 1,
+        "recharts": 1,
+        "implementation": 1,
+        "etl": 1,
+        "batch-jobs": 1
+      },
+      "byProject": {
+        "Acme API": 6,
+        "Data Pipeline": 3,
+        "Dashboard Redesign": 6,
+        "Internal Docs": 2
+      }
+    },
+    {
+      "date": "2026-01-05",
+      "total": 18,
+      "bySource": {
+        "mcp": 8,
+        "user-prompt": 8,
+        "session-hook": 1,
+        "slack": 1
+      },
+      "byType": {
+        "task": 5,
+        "idea": 3,
+        "project_summary": 1,
+        "decision": 2,
+        "observation": 3,
+        "person_note": 2,
+        "milestone": 2
+      },
+      "byTopic": {
+        "documentation": 3,
+        "getting-started": 1,
+        "auth": 1,
+        "status-page": 1,
+        "monitoring": 1,
+        "uptime": 1,
+        "webhooks": 2,
+        "rate-limiting": 3,
+        "progress": 1,
+        "checkpoints": 1,
+        "dynamodb": 1,
+        "design": 1,
+        "configuration": 1,
+        "etl": 1,
+        "maintainability": 1,
+        "http-headers": 2,
+        "implementation": 1,
+        "code-review": 1,
+        "url-state": 1,
+        "filters": 1,
+        "ux": 2,
+        "testing": 1,
+        "integration-tests": 1,
+        "branding": 1,
+        "organization": 1,
+        "api-endpoint": 1,
+        "spark": 2,
+        "performance": 2,
+        "refactoring": 1,
+        "memory": 1,
+        "aggregation": 1,
+        "swagger": 1,
+        "api-explorer": 1,
+        "api-keys": 1,
+        "automation": 1,
+        "navigation": 1,
+        "lazy-loading": 1,
+        "components": 1,
+        "notifications": 1,
+        "async-operations": 1,
+        "api-versioning": 2,
+        "architecture": 2,
+        "rest": 1
+      },
+      "byProject": {
+        "Internal Docs": 4,
+        "Acme API": 6,
+        "Data Pipeline": 4,
+        "Dashboard Redesign": 4
+      }
+    },
+    {
+      "date": "2026-01-06",
+      "total": 19,
+      "bySource": {
+        "mcp": 9,
+        "slack": 1,
+        "session-hook": 1,
+        "user-prompt": 8
+      },
+      "byType": {
+        "task": 6,
+        "idea": 2,
+        "project_summary": 1,
+        "reference": 1,
+        "milestone": 1,
+        "person_note": 2,
+        "observation": 4,
+        "decision": 2
+      },
+      "byTopic": {
+        "adr": 1,
+        "documentation": 2,
+        "api-versioning": 2,
+        "cdc": 1,
+        "real-time": 1,
+        "analytics": 1,
+        "architecture": 1,
+        "progress": 3,
+        "bug-fix": 2,
+        "deployment": 2,
+        "beta-checklist": 1,
+        "tracking": 1,
+        "cli-tool": 1,
+        "dead-letter-queue": 1,
+        "self-service": 1,
+        "webhooks": 1,
+        "staging": 1,
+        "performance": 1,
+        "changelog": 1,
+        "openapi": 1,
+        "api-spec": 1,
+        "testing": 1,
+        "filters": 1,
+        "test-coverage": 1,
+        "alerting": 1,
+        "pagerduty": 1,
+        "monitoring": 1,
+        "ci-cd": 1,
+        "markdown": 1,
+        "linting": 1,
+        "graphql": 1,
+        "api-design": 1,
+        "data-fetching": 1,
+        "empty-state": 1,
+        "onboarding": 1,
+        "ux-feedback": 1,
+        "csv-export": 1,
+        "streaming": 1,
+        "implementation": 1,
+        "data-quality": 1,
+        "metrics": 1,
+        "reporting": 1,
+        "race-condition": 2,
+        "dynamodb": 1,
+        "concurrency": 2,
+        "bug": 1,
+        "data-export": 1,
+        "csv": 1,
+        "json": 1,
+        "prioritization": 1,
+        "planning": 1,
+        "sprint": 1,
+        "priorities": 1
+      },
+      "byProject": {
+        "Internal Docs": 3,
+        "Data Pipeline": 4,
+        "Acme API": 5,
+        "Dashboard Redesign": 7
+      }
+    },
+    {
+      "date": "2026-01-07",
+      "total": 19,
+      "bySource": {
+        "session-hook": 2,
+        "mcp": 8,
+        "user-prompt": 8,
+        "slack": 1
+      },
+      "byType": {
+        "project_summary": 2,
+        "task": 6,
+        "idea": 2,
+        "observation": 4,
+        "person_note": 2,
+        "milestone": 2,
+        "reference": 1
+      },
+      "byTopic": {
+        "weekly-summary": 1,
+        "progress": 1,
+        "milestones": 1,
+        "troubleshooting": 2,
+        "documentation": 3,
+        "api": 1,
+        "mobile": 3,
+        "tooltips": 2,
+        "testing": 3,
+        "component-library": 1,
+        "code-reuse": 1,
+        "architecture": 1,
+        "throughput": 1,
+        "metrics": 2,
+        "performance": 2,
+        "help": 1,
+        "ux": 3,
+        "charts": 2,
+        "api-reference": 1,
+        "completion": 1,
+        "logging": 1,
+        "observability": 1,
+        "cloudwatch": 1,
+        "webhooks": 1,
+        "retry-logic": 1,
+        "staging": 1,
+        "dlq": 1,
+        "cli-tool": 1,
+        "developer-experience": 1,
+        "touch": 2,
+        "responsive": 1,
+        "user-preferences": 1,
+        "settings": 2,
+        "spec": 1,
+        "cdc": 1,
+        "debezium": 1,
+        "evaluation": 1,
+        "validation": 2,
+        "error-handling": 1,
+        "implementation": 1,
+        "payload-size": 1,
+        "lambda-limits": 1,
+        "rbac": 1,
+        "authorization": 1,
+        "load-testing": 1
+      },
+      "byProject": {
+        "Acme API": 6,
+        "Internal Docs": 3,
+        "Dashboard Redesign": 7,
+        "Data Pipeline": 3
+      }
+    },
+    {
+      "date": "2026-01-08",
+      "total": 15,
+      "bySource": {
+        "session-hook": 2,
+        "slack": 1,
+        "user-prompt": 6,
+        "mcp": 6
+      },
+      "byType": {
+        "project_summary": 2,
+        "milestone": 5,
+        "observation": 1,
+        "idea": 1,
+        "decision": 1,
+        "person_note": 2,
+        "task": 2,
+        "reference": 1
+      },
+      "byTopic": {
+        "milestones": 2,
+        "weekly-progress": 1,
+        "next-steps": 1,
+        "launch": 1,
+        "progress": 1,
+        "demo": 1,
+        "stakeholders": 1,
+        "throughput": 1,
+        "analytics": 1,
+        "documentation": 2,
+        "migration": 3,
+        "deployment": 2,
+        "staging": 4,
+        "api-v2": 1,
+        "schema-validation": 1,
+        "versioning": 1,
+        "backward-compatibility": 1,
+        "load-testing": 2,
+        "performance": 1,
+        "api-versioning": 1,
+        "sunset-policy": 1,
+        "beta": 2,
+        "approval": 1,
+        "release": 1,
+        "announcement": 1,
+        "monitoring": 1,
+        "dashboard": 1,
+        "real-time": 1,
+        "checklist": 1,
+        "testing": 2,
+        "integration-tests": 1,
+        "results": 1,
+        "launch-prep": 1
+      },
+      "byProject": {
+        "Acme API": 8,
+        "Data Pipeline": 3,
+        "Internal Docs": 2,
+        "Dashboard Redesign": 2
+      }
+    }
+  ],
+  "byType": {
+    "project_summary": 12,
+    "task": 30,
+    "observation": 30,
+    "idea": 16,
+    "decision": 15,
+    "person_note": 13,
+    "milestone": 16,
+    "reference": 4
+  },
+  "bySource": {
+    "session-hook": 13,
+    "slack": 10,
+    "user-prompt": 58,
+    "mcp": 55
+  },
+  "topTopics": [
+    {
+      "topic": "documentation",
+      "count": 16
+    },
+    {
+      "topic": "performance",
+      "count": 11
+    },
+    {
+      "topic": "progress",
+      "count": 10
+    },
+    {
+      "topic": "webhooks",
+      "count": 9
+    },
+    {
+      "topic": "staging",
+      "count": 8
+    },
+    {
+      "topic": "rate-limiting",
+      "count": 7
+    },
+    {
+      "topic": "testing",
+      "count": 7
+    },
+    {
+      "topic": "architecture",
+      "count": 6
+    },
+    {
+      "topic": "deployment",
+      "count": 6
+    },
+    {
+      "topic": "api-versioning",
+      "count": 6
+    },
+    {
+      "topic": "ux",
+      "count": 6
+    },
+    {
+      "topic": "monitoring",
+      "count": 5
+    },
+    {
+      "topic": "bug-fix",
+      "count": 4
+    },
+    {
+      "topic": "api-design",
+      "count": 4
+    },
+    {
+      "topic": "schema-validation",
+      "count": 4
+    },
+    {
+      "topic": "activity-chart",
+      "count": 4
+    },
+    {
+      "topic": "migration",
+      "count": 4
+    },
+    {
+      "topic": "analytics",
+      "count": 4
+    },
+    {
+      "topic": "error-codes",
+      "count": 4
+    },
+    {
+      "topic": "implementation",
+      "count": 4
+    }
+  ],
+  "projects": [
+    {
+      "project": "Acme API",
+      "count": 51
+    },
+    {
+      "project": "Dashboard Redesign",
+      "count": 36
+    },
+    {
+      "project": "Data Pipeline",
+      "count": 27
+    },
+    {
+      "project": "Internal Docs",
+      "count": 22
+    }
+  ],
+  "actionItemCount": 11,
+  "totalInRange": 136,
+  "totalAllTime": 136
+}
