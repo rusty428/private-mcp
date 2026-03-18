@@ -35,7 +35,7 @@ Copy `.env.example` to `.env` and fill in your values:
 cp .env.example .env
 ```
 
-All deployment config lives in `.env` — your AWS account ID, region, and optional settings. See `.env.example` for descriptions of each variable.
+All deployment config lives in `.env` — your AWS account ID, region, and optional settings (Slack integration, daily summary schedule, CORS origins, alert email). See `.env.example` for descriptions of each variable.
 
 Authenticate via SSO:
 
