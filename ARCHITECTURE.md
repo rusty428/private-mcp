@@ -22,11 +22,12 @@
 │   ┌──────────────┐              ┌────────▼───────┐       │
 │   │ ingest-      │              │ mcp-server     │       │
 │   │ thought      │              │                │       │
-│   │              │              │ 4 MCP tools:   │       │
+│   │              │              │ 5 MCP tools:   │       │
 │   │ Slack events │              │ - search       │       │
 │   │ filtering    │              │ - browse       │       │
 │   │ + reply      │              │ - stats        │       │
-│   └──────┬───────┘              │ - capture      │       │
+│   │              │              │ - capture      │       │
+│   └──────┬───────┘              │ - daily_summary│       │
 │          │                      └───┬────────┬───┘       │
 │          │     Lambda invoke        │        │           │
 │          ▼                          ▼        │           │
@@ -74,7 +75,7 @@ The core of the system. Both other Lambdas invoke it.
 
 **Output:** `{ id, type, topics, people, action_items, created_at }`
 
-The metadata extraction prompt asks Haiku to classify the thought as one of: `observation`, `task`, `idea`, `reference`, `person_note`. It also extracts topic tags, mentioned people, implied action items, and dates. If Haiku returns malformed JSON, a safe fallback is used.
+The metadata extraction prompt asks Haiku to classify the thought as one of: `observation`, `task`, `idea`, `reference`, `person_note`, `decision`, `project_summary`, `milestone`. It also extracts topic tags, mentioned people, implied action items, and dates. If Haiku returns malformed JSON, a safe fallback is used.
 
 ### ingest-thought Lambda
 
@@ -92,7 +93,7 @@ MCP protocol server using `@modelcontextprotocol/sdk` in stateless mode.
 - Express app wrapped with `@codegenie/serverless-express` for API Gateway compatibility
 - Creates a fresh `McpServer` + `StreamableHTTPServerTransport` per request (stateless — no session tracking)
 - `enableJsonResponse: true` — returns JSON instead of SSE (API Gateway doesn't support streaming)
-- Registers four tools that AI clients discover via the MCP protocol
+- Registers five tools that AI clients discover via the MCP protocol
 
 **Tools:**
 
@@ -102,12 +103,33 @@ MCP protocol server using `@modelcontextprotocol/sdk` in stateless mode.
 | `browse_recent` | Lists vectors, fetches metadata, filters by type/topic, sorts by `created_at` descending |
 | `stats` | Aggregates: total count, breakdown by type, top 10 topics, date range |
 | `capture_thought` | Invokes `process-thought` — same pipeline as Slack capture |
+| `daily_summary` | Generates and posts a daily activity summary to Slack |
+
+### daily-summary Lambda
+
+Generates a two-section report (performance metrics + content highlights) and posts to Slack. Triggered daily by an EventBridge cron rule, or on-demand via the `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
+
+### enrich-thought Lambda
+
+Async enrichment pipeline. After `process-thought` stores the initial embedding and classification, this Lambda performs deeper metadata extraction — related projects, refined summaries, and additional context. Invoked asynchronously so it doesn't block the initial capture response.
+
+### rest-api Lambda
+
+REST backend for the web UI. Express app wrapped with `@codegenie/serverless-express`. Provides CRUD for thoughts, semantic search, timeseries stats, AI-generated narrative reports, project listing, and enrichment settings management. Data is read from both DynamoDB (metadata, settings) and S3 Vectors (embeddings, search).
+
+### DynamoDB
+
+The `private-mcp-thoughts` table stores thought metadata with GSIs for efficient querying by type, source, project, and date. The `private-mcp-settings` table stores enrichment configuration (type taxonomy, topic lists, prompt templates). DynamoDB complements S3 Vectors — vectors handle embedding storage and similarity search, DDB handles structured queries and pagination.
+
+### Web UI
+
+Vite + React + Cloudscape Design System. Six pages: Dashboard (activity charts, stats), Browse (paginated list with filters), Search (semantic search), Capture (manual thought entry), Reports (AI-generated narratives), and Settings (enrichment configuration). Connects to the rest-api Lambda via API Gateway. Runs locally via `npm run mcp-ui` or can be deployed as a static site behind CloudFront.
 
 ### S3 Vectors
 
 Vector storage with native similarity search.
 
-- **Bucket:** `private-mcp-thoughts-951921971435`
+- **Bucket:** `private-mcp-thoughts-<YOUR_ACCOUNT_ID>`
 - **Index:** `thoughts`
 - **Dimensions:** 1024 (Titan Embeddings v2)
 - **Distance metric:** cosine
@@ -154,7 +176,7 @@ mcp-server Lambda (search_thoughts tool)
 ## Security
 
 - **MCP endpoint** — API Gateway API key required on every request. Key managed by CDK, retrievable via AWS CLI.
-- **Slack webhook** — Public endpoint, but the Lambda filters on channel ID and ignores bot messages.
+- **Slack webhook** — Public endpoint, verified via HMAC-SHA256 signature using `SLACK_SIGNING_SECRET` with 5-minute replay protection. Also filters on channel ID and ignores bot messages.
 - **IAM** — Each Lambda has least-privilege permissions: process-thought gets S3 Vectors write + Bedrock invoke, ingest-thought gets Lambda invoke, mcp-server gets S3 Vectors read + Bedrock invoke + Lambda invoke.
 - **No VPC** — All services are accessed via service endpoints. No public-facing compute beyond Lambda behind API Gateway.
 
@@ -162,7 +184,7 @@ mcp-server Lambda (search_thoughts tool)
 
 ### Why three Lambdas instead of two?
 
-The Open Brain guide uses two functions (Slack handler + MCP server). We split the core logic into `process-thought` so that:
+A simpler approach would use two functions (Slack handler + MCP server). We split the core logic into `process-thought` so that:
 - No code is duplicated between Slack and MCP capture paths
 - Adding a new capture source is a thin adapter Lambda, not a copy of the embed+classify+store pipeline
 - The core can be tested and deployed independently

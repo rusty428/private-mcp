@@ -2,27 +2,23 @@
 
 ## Project Overview
 - **PrivateMCP** = private MCP server on AWS for personal thought capture and semantic retrieval
-- Inspired by "Open Brain" guide, rebuilt entirely on AWS — no third-party data routing
 - All data stays within a dedicated AWS account
-- GitHub: rusty428/private-mcp (private)
+- GitHub: rusty428/private-mcp
 
 ## AWS Account
-- **private-mcp** `951921971435` | Profile: `private-mcp` | Region: `us-west-2`
-- Part of FeO Organization (mgmt: `145676147420`)
+- **private-mcp** `<YOUR_ACCOUNT_ID>` | Profile: `<YOUR_AWS_PROFILE>` | Region: `us-west-2`
 - CDK bootstrapped in us-west-2
-- Account registry updated in badgerfy runbook
 
 ## Deployed Endpoints
-- **API Gateway**: `https://h5digtl3r8.execute-api.us-west-2.amazonaws.com/api/`
-- **Slack webhook**: `.../api/slack/events`
-- **MCP endpoint**: `.../api/mcp`
-- **API Key ID**: `p8o0sxzj9c`
+- **API Gateway**: CDK output `ApiUrl`
+- **Slack webhook**: `<ApiUrl>/slack/events`
+- **MCP endpoint**: `<ApiUrl>/mcp`
+- **API Key ID**: CDK output `ApiKeyId`
 
 ## Slack App
-- App name: "Open Brain" (can rename)
 - Bot scopes: `channels:history`, `groups:history`, `chat:write`
 - Event subscriptions: `message.channels`, `message.groups`
-- Capture channel ID: `C0AJKJBSGSW`
+- Capture channel ID: set in `.env` as `SLACK_CAPTURE_CHANNEL`
 
 ## Gotchas Discovered During Build
 - **S3 Vectors bucket names are globally unique** — use account ID suffix

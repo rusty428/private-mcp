@@ -30,8 +30,14 @@ function encodeToken(cursor: DecodedCursor): string {
   return Buffer.from(JSON.stringify(cursor)).toString('base64');
 }
 
+const MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
+
 function decodeToken(token: string): DecodedCursor {
-  return JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
+  const parsed = JSON.parse(Buffer.from(token, 'base64').toString('utf8'));
+  if (!parsed.month || typeof parsed.month !== 'string' || !MONTH_REGEX.test(parsed.month)) {
+    throw new Error('Invalid cursor: bad month format');
+  }
+  return parsed;
 }
 
 function getMonthRange(startDate?: string, endDate?: string): string[] {

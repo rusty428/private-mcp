@@ -5,9 +5,13 @@ export interface PrivateMCPConfig {
   tags: Record<string, string>;
 }
 
+if (!process.env.AWS_ACCOUNT_ID) {
+  throw new Error('AWS_ACCOUNT_ID is required in .env — see .env.example');
+}
+
 export const config: PrivateMCPConfig = {
-  accountId: '951921971435',
-  region: 'us-west-2',
+  accountId: process.env.AWS_ACCOUNT_ID,
+  region: process.env.AWS_REGION || 'us-west-2',
   applicationId: 'private-mcp',
   tags: {
     Project: 'PrivateMCP',

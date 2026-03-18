@@ -10,17 +10,17 @@ All data stays within a dedicated AWS account. No third-party API routing.
 
 ## Commands
 
-Package manager is **pnpm**. All commands run from the repo root.
+Package manager is **npm**. All commands run from the repo root.
 
 ```bash
-pnpm install           # Install dependencies
-pnpm build             # TypeScript compile (tsc)
-pnpm synth             # Generate CloudFormation templates (cdk synth)
-pnpm diff              # Preview infrastructure changes (cdk diff)
-pnpm deploy            # Deploy all stacks (cdk deploy)
+npm install            # Install dependencies
+npm run build          # TypeScript compile (tsc)
+npm run synth          # Generate CloudFormation templates (cdk synth)
+npm run diff           # Preview infrastructure changes (cdk diff)
+npm run deploy         # Deploy all stacks (cdk deploy)
 ```
 
-AWS profile: `--profile private-mcp` (account `951921971435`, us-west-2)
+AWS profile: `--profile <YOUR_AWS_PROFILE>` (set account ID, region, and credentials in `.env`)
 
 Slack config is loaded from `.env` automatically (see `.env.example` for required vars).
 
@@ -82,15 +82,40 @@ private-mcp/
 │   │       ├── getStats.ts           # Aggregate stats
 │   │       ├── captureThought.ts     # Invoke process-thought
 │   │       └── invokeDailySummary.ts # Invoke daily-summary Lambda
-│   └── daily-summary/                # Daily report (EventBridge + MCP on-demand)
-│       ├── index.ts                  # Handler: gather yesterday's data, format, post to Slack
+│   ├── daily-summary/                # Daily report (EventBridge + MCP on-demand)
+│   │   ├── index.ts                  # Handler: gather yesterday's data, format, post to Slack
+│   │   └── functions/
+│   │       ├── getTodaysThoughts.ts  # ListVectors + GetVectors filtered by date
+│   │       ├── formatReport.ts       # Build two-section Slack message
+│   │       └── postToSlack.ts        # Post to Slack channel
+│   └── rest-api/                     # REST API backend for the web UI
+│       ├── index.ts                  # Lambda entry (serverless-express)
+│       ├── server.ts                 # Express app + route definitions
 │       └── functions/
-│           ├── getTodaysThoughts.ts  # ListVectors + GetVectors filtered by date
-│           ├── formatReport.ts       # Build two-section Slack message
-│           └── postToSlack.ts        # Post to Slack channel
+│           ├── listThoughts.ts       # Paginated list with filters
+│           ├── getThought.ts         # Get single thought by ID
+│           ├── editThought.ts        # Update thought metadata
+│           ├── deleteThought.ts      # Delete thought from DDB + S3 Vectors
+│           ├── searchThoughts.ts     # Semantic search (same as MCP but via REST)
+│           ├── captureThought.ts     # Capture via REST
+│           ├── getTimeSeries.ts      # Activity timeseries for dashboard charts
+│           ├── getProjects.ts        # List distinct projects
+│           ├── generateNarrative.ts  # AI-generated report narrative (Bedrock)
+│           ├── getEnrichmentSettings.ts  # Read enrichment config from DDB
+│           └── putEnrichmentSettings.ts  # Update enrichment config
+├── scripts/
+│   └── migrate-to-dynamodb.ts        # One-time migration: S3 Vectors metadata → DDB
 ├── types/
 │   ├── thought.ts                    # ThoughtMetadata, ProcessThoughtInput/Result, etc.
 │   └── config.ts                     # Constants: bucket name, index, dimensions, model IDs
+├── ui/                               # Web dashboard (Vite + React + Cloudscape)
+│   └── src/pages/
+│       ├── Dashboard/                # Activity charts, stats, recent thoughts
+│       ├── Browse/                   # Paginated thought list with filters
+│       ├── Search/                   # Semantic search interface
+│       ├── Capture/                  # Manual thought capture form
+│       ├── Reports/                  # AI-generated narrative reports
+│       └── Settings/                 # Enrichment settings (types, topics, prompts)
 └── docs/plans/                       # Design and implementation docs
 ```
 
@@ -102,12 +127,14 @@ private-mcp/
 - **ingest-thought** — Slack webhook handler. Handles `url_verification` challenge, filters messages, invokes process-thought asynchronously (Event invocation), returns 200 immediately to avoid Slack's 3-second retry.
 - **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` in stateless mode. Express + `@codegenie/serverless-express`. Five tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`.
 - **daily-summary** — Generates a two-section report (performance metrics + content highlights) and posts to Slack. Triggered daily by EventBridge cron (~7am Pacific) for previous day's thoughts, or on-demand via `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
+- **enrich-thought** — Async enrichment pipeline. Performs deeper metadata extraction (related projects, refined summaries) after initial capture. Invoked asynchronously so it doesn't block the capture response.
+- **rest-api** — REST backend for the web UI. Express + `@codegenie/serverless-express`. CRUD for thoughts, semantic search, timeseries stats, AI narrative reports, enrichment settings. Data stored in DynamoDB (`private-mcp-thoughts` table) with GSIs for type, source, project, and date queries.
 
 ## Tech Stack
 
 - **IaC**: CDK v2 (TypeScript), single stack
 - **Runtime**: Lambda Node.js 22, esbuild bundling via NodejsFunction
-- **Storage**: S3 Vectors (bucket: `private-mcp-thoughts-951921971435`, index: `thoughts`, 1024-dim, cosine)
+- **Storage**: S3 Vectors (bucket: `private-mcp-thoughts-<YOUR_ACCOUNT_ID>`, index: `thoughts`, 1024-dim, cosine)
 - **Embeddings**: Amazon Titan Text Embeddings v2 (Bedrock)
 - **Classification**: Claude 3 Haiku (Bedrock)
 - **API**: API Gateway REST API, stage `api`
@@ -124,6 +151,17 @@ private-mcp/
 | POST | `/mcp` | mcp-server | API key required |
 | GET | `/mcp` | mcp-server | API key required |
 | DELETE | `/mcp` | mcp-server | API key required |
+| GET | `/api/thoughts` | rest-api | API key required |
+| GET | `/api/thoughts/:id` | rest-api | API key required |
+| PUT | `/api/thoughts/:id` | rest-api | API key required |
+| DELETE | `/api/thoughts/:id` | rest-api | API key required |
+| POST | `/api/search` | rest-api | API key required |
+| POST | `/api/capture` | rest-api | API key required |
+| GET | `/api/stats/timeseries` | rest-api | API key required |
+| GET | `/api/projects` | rest-api | API key required |
+| POST | `/api/reports/generate` | rest-api | API key required |
+| GET | `/api/settings/enrichment` | rest-api | API key required |
+| PUT | `/api/settings/enrichment` | rest-api | API key required |
 
 ## MCP Tools
 
@@ -153,7 +191,7 @@ private-mcp/
 
 | Account | ID | Profile | Purpose |
 |---|---|---|---|
-| private-mcp | `951921971435` | `private-mcp` | All Private MCP infrastructure |
+| private-mcp | `<YOUR_ACCOUNT_ID>` | `<YOUR_AWS_PROFILE>` | All Private MCP infrastructure |
 
 Region: `us-west-2`
 
@@ -163,12 +201,12 @@ To connect Claude Code to this MCP server as a native tool provider:
 
 ```bash
 # Get the API key value
-API_KEY=$(aws apigateway get-api-key --api-key p8o0sxzj9c --include-value \
-  --profile private-mcp --region us-west-2 --query 'value' --output text)
+API_KEY=$(aws apigateway get-api-key --api-key <API_KEY_ID> --include-value \
+  --profile <YOUR_AWS_PROFILE> --region us-west-2 --query 'value' --output text)
 
 # Register the MCP server (--scope user makes it available in ALL projects)
 claude mcp add --transport http --scope user private-mcp \
-  "https://h5digtl3r8.execute-api.us-west-2.amazonaws.com/api/mcp" \
+  "https://<API_GATEWAY_ID>.execute-api.<REGION>.amazonaws.com/api/mcp" \
   --header "x-api-key: $API_KEY"
 ```
 
@@ -185,5 +223,4 @@ Restart Claude Code after adding. The five MCP tools (`stats`, `browse_recent`, 
 
 ## Future Plans
 
-- Web UI frontend (separate repo)
 - Additional capture sources

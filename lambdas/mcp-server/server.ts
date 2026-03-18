@@ -7,9 +7,10 @@ import { browseRecent } from './functions/browseRecent';
 import { getStats } from './functions/getStats';
 import { captureThought } from './functions/captureThought';
 import { invokeDailySummary } from './functions/invokeDailySummary';
+import { VALID_SOURCES, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH } from '../../types/validation';
 
 const app: Express = express();
-app.use(express.json());
+app.use(express.json({ limit: '16kb' }));
 
 function createServer(): McpServer {
   const server = new McpServer({
@@ -79,10 +80,10 @@ function createServer(): McpServer {
       description: 'Save a thought to your brain. It gets embedded, classified, and stored automatically.',
       inputSchema: {
         text: z.string().describe('The thought to capture'),
-        source: z.string().optional().default('mcp').describe('Where this thought came from'),
-        project: z.string().optional().describe('Project name this thought relates to'),
-        session_id: z.string().optional().describe('Claude Code session ID'),
-        session_name: z.string().optional().describe('Claude Code session name (/rename label)'),
+        source: z.enum(VALID_SOURCES as unknown as [string, ...string[]]).optional().default('mcp').describe('Where this thought came from'),
+        project: z.string().max(MAX_PROJECT_LENGTH).optional().describe('Project name this thought relates to'),
+        session_id: z.string().max(MAX_SESSION_FIELD_LENGTH).optional().describe('Claude Code session ID'),
+        session_name: z.string().max(MAX_SESSION_FIELD_LENGTH).optional().describe('Claude Code session name (/rename label)'),
       },
     },
     async ({ text, source, project, session_id, session_name }) => {
@@ -117,6 +118,30 @@ function createServer(): McpServer {
 }
 
 app.post('/mcp', async (req, res) => {
+  const body = req.body;
+
+  // Reject batch requests — 1 HTTP request = 1 JSON-RPC message
+  // Prevents amplification attacks that bypass API Gateway throttling
+  if (Array.isArray(body)) {
+    res.status(400).json({
+      jsonrpc: '2.0',
+      error: { code: -32600, message: 'Batch requests are not supported' },
+      id: null,
+    });
+    return;
+  }
+
+  // Only accept JSON-RPC requests (must have method + id)
+  // Reject notifications (no id) and fabricated responses (no method)
+  if (!body?.method || body.id === undefined) {
+    res.status(400).json({
+      jsonrpc: '2.0',
+      error: { code: -32600, message: 'Only JSON-RPC requests are accepted' },
+      id: null,
+    });
+    return;
+  }
+
   const server = createServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,

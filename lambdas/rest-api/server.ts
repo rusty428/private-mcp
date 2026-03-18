@@ -19,6 +19,7 @@ import {
   DATE_REGEX,
   VALID_THOUGHT_TYPES,
   VALID_SOURCES,
+  MAX_PROJECT_LENGTH,
 } from '../../types/validation';
 
 let cachedTypes: string[] | null = null;
@@ -81,14 +82,25 @@ app.get('/thoughts', async (req, res) => {
       return res.status(400).json({ error: 'Invalid endDate format. Use YYYY-MM-DD.' });
     }
     const rawPageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : undefined;
+    if (rawPageSize !== undefined && isNaN(rawPageSize)) {
+      return res.status(400).json({ error: 'pageSize must be a number.' });
+    }
     const pageSize = rawPageSize ? Math.min(rawPageSize, MAX_LIST_LIMIT) : undefined;
     const rawMaxRecords = req.query.maxRecords ? parseInt(req.query.maxRecords as string) : undefined;
+    if (rawMaxRecords !== undefined && isNaN(rawMaxRecords)) {
+      return res.status(400).json({ error: 'maxRecords must be a number.' });
+    }
     const maxRecords = rawMaxRecords ? Math.min(rawMaxRecords, 5000) : undefined;
+
+    const project = req.query.project as string;
+    if (project && project.length > MAX_PROJECT_LENGTH) {
+      return res.status(400).json({ error: `Project name too long. Maximum ${MAX_PROJECT_LENGTH} characters.` });
+    }
 
     const results = await listThoughts({
       type,
       source: req.query.source as string,
-      project: req.query.project as string,
+      project,
       startDate,
       endDate,
       pageSize,
@@ -99,7 +111,7 @@ app.get('/thoughts', async (req, res) => {
     res.json(results);
   } catch (err: any) {
     console.error('listThoughts error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -113,7 +125,7 @@ app.get('/thoughts/:id', async (req, res) => {
     res.json(result);
   } catch (err: any) {
     console.error('getThought error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -134,7 +146,7 @@ app.put('/thoughts/:id', async (req, res) => {
     res.json(result);
   } catch (err: any) {
     console.error('editThought error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -147,7 +159,7 @@ app.delete('/thoughts/:id', async (req, res) => {
     res.json(result);
   } catch (err: any) {
     console.error('deleteThought error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -164,7 +176,7 @@ app.post('/search', async (req, res) => {
     res.json(results);
   } catch (err: any) {
     console.error('searchThoughts error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -177,11 +189,14 @@ app.post('/capture', async (req, res) => {
     if (req.body.source && !VALID_SOURCES.includes(req.body.source)) {
       return res.status(400).json({ error: `Invalid source. Must be one of: ${VALID_SOURCES.join(', ')}` });
     }
+    if (req.body.project && req.body.project.length > MAX_PROJECT_LENGTH) {
+      return res.status(400).json({ error: `Project name too long. Maximum ${MAX_PROJECT_LENGTH} characters.` });
+    }
     const result = await captureThought(req.body);
     res.json(result);
   } catch (err: any) {
     console.error('captureThought error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -209,7 +224,7 @@ app.get('/stats/timeseries', async (req, res) => {
     res.json(results);
   } catch (err: any) {
     console.error('getTimeSeries error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -228,7 +243,7 @@ app.post('/reports/generate', async (req, res) => {
     res.json({ narrative });
   } catch (err: any) {
     console.error('generateNarrative error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -238,7 +253,7 @@ app.get('/projects', async (_req, res) => {
     res.json({ projects });
   } catch (err: any) {
     console.error('getProjects error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -248,7 +263,7 @@ app.get('/settings/enrichment', async (_req, res) => {
     res.json(settings);
   } catch (err: any) {
     console.error('getEnrichmentSettings error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -264,7 +279,7 @@ app.put('/settings/enrichment', async (req, res) => {
     res.json(result.settings);
   } catch (err: any) {
     console.error('putEnrichmentSettings error:', { error: err.message, stack: err.stack });
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

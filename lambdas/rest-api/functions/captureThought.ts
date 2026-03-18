@@ -18,7 +18,8 @@ export async function captureThought(params: CaptureParams): Promise<ProcessThou
   }));
   const payload = JSON.parse(new TextDecoder().decode(response.Payload));
   if (response.FunctionError) {
-    throw new Error(`process-thought error: ${JSON.stringify(payload)}`);
+    console.error('process-thought error:', JSON.stringify(payload));
+    throw new Error('Failed to process thought');
   }
   return payload;
 }

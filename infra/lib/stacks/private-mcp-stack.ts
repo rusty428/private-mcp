@@ -299,7 +299,7 @@ export class PrivateMCPStack extends cdk.Stack {
     dailySummaryFn.addToRolePolicy(s3VectorsPolicy);
 
     // EventBridge scheduled rule for daily summary
-    const summaryHour = process.env.DAILY_SUMMARY_HOUR || '18';
+    const summaryHour = process.env.DAILY_SUMMARY_HOUR || '14';
     new events.Rule(this, 'DailySummarySchedule', {
       schedule: events.Schedule.cron({
         minute: '0',

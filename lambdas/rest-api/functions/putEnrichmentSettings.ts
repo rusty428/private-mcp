@@ -1,6 +1,7 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { EnrichmentSettings } from '../../../types/settings';
+import { VALID_CLASSIFICATION_MODELS } from '../../../types/validation';
 
 const ddbClient = new DynamoDBClient({ region: process.env.REGION });
 const ddb = DynamoDBDocumentClient.from(ddbClient);
@@ -33,9 +34,9 @@ export async function putEnrichmentSettings(body: any): Promise<PutResult> {
     return { success: false, error: `defaultType must be one of: ${body.types.join(', ')}` };
   }
 
-  // Validate classificationModel
-  if (typeof body.classificationModel !== 'string' || body.classificationModel.trim() === '') {
-    return { success: false, error: 'classificationModel must be a non-empty string' };
+  // Validate classificationModel against allowlist
+  if (typeof body.classificationModel !== 'string' || !VALID_CLASSIFICATION_MODELS.includes(body.classificationModel as any)) {
+    return { success: false, error: `classificationModel must be one of: ${VALID_CLASSIFICATION_MODELS.join(', ')}` };
   }
 
   // Validate projects
@@ -99,6 +100,9 @@ export async function putEnrichmentSettings(body: any): Promise<PutResult> {
     }
     if (customPrompt.length > 10000) {
       return { success: false, error: 'customPrompt cannot exceed 10000 characters' };
+    }
+    if (CONTROL_CHAR_PATTERN.test(customPrompt)) {
+      return { success: false, error: 'customPrompt contains control characters' };
     }
   }
 
