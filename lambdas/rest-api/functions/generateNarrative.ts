@@ -2,6 +2,8 @@ import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedroc
 import { CLASSIFICATION_MODEL_ID } from '../../../types/config';
 import { queryThoughts } from '../utils/queryThoughts';
 import { queryByProject } from '../utils/queryByProject';
+import { loadSettings } from './loadSettings';
+import { resolveProjectAlias } from './resolveProjectAlias';
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.REGION });
 
@@ -30,12 +32,14 @@ export async function generateNarrative(params: NarrativeParams): Promise<string
   const thoughts = items.map((v) => v.metadata);
   if (thoughts.length === 0) return 'No thoughts found in the selected date range.';
 
+  const settings = await loadSettings();
+
   thoughts.sort((a: any, b: any) => (a.thought_date || a.created_at || '').localeCompare(b.thought_date || b.created_at || ''));
 
   const context = thoughts.map((m: any) => {
     const date = m.thought_date || m.created_at?.slice(0, 10) || 'unknown';
     const type = m.type || 'unknown';
-    const proj = m.project || 'unspecified';
+    const proj = m.project ? resolveProjectAlias(m.project, settings) : 'unspecified';
     const content = m.summary || m.content || '';
     return `[${date}] (${type}, ${proj}) ${content}`;
   }).join('\n');

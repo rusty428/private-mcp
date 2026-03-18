@@ -3253,5 +3253,93 @@
       "created_at": "2026-01-02T09:05:54.170Z",
       "enriched": true
     }
+  },
+  {
+    "key": "d3m00080-a1b2-4c3d-9e4f-000000000080",
+    "metadata": {
+      "content": "Kicked off the week reviewing the API auth flow. Current JWT setup needs refresh token rotation before we can open the beta.",
+      "summary": "API auth review: JWT refresh token rotation needed before beta",
+      "type": "decision",
+      "topics": ["authentication", "api-design", "planning"],
+      "people": [],
+      "action_items": ["Implement refresh token rotation for API auth"],
+      "dates_mentioned": [],
+      "project": "Acme API",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-a1b2-4c3d-8e4f-000000000001",
+      "session_name": "Week kickoff",
+      "quality": "high",
+      "thought_date": "2026-01-01",
+      "created_at": "2026-01-01T09:15:22.410Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00081-a1b2-4c3d-9e4f-000000000081",
+    "metadata": {
+      "content": "Pipeline indexing job is taking 45 minutes for the full dataset. Need to investigate partition strategy — probably need to shard by date.",
+      "summary": "Pipeline indexing bottleneck at 45 min for full dataset, investigating date-based sharding",
+      "type": "observation",
+      "topics": ["performance", "indexing", "database"],
+      "people": [],
+      "action_items": ["Investigate date-based sharding for pipeline indexing"],
+      "dates_mentioned": [],
+      "project": "Data Pipeline",
+      "related_projects": [],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-a1b2-4c3d-8e4f-000000000001",
+      "session_name": "Week kickoff",
+      "quality": "standard",
+      "thought_date": "2026-01-01",
+      "created_at": "2026-01-01T10:30:18.550Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00082-a1b2-4c3d-9e4f-000000000082",
+    "metadata": {
+      "content": "Dashboard wireframes for the activity chart are looking good. Going with a stacked bar chart for the project breakdown view.",
+      "summary": "Dashboard activity chart: stacked bar chart selected for project breakdown",
+      "type": "decision",
+      "topics": ["architecture", "data-quality", "csv"],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Dashboard Redesign",
+      "related_projects": [],
+      "source": "user-prompt",
+      "source_ref": "",
+      "session_id": "s3ss0001-a1b2-4c3d-8e4f-000000000002",
+      "session_name": "Dashboard design",
+      "quality": "standard",
+      "thought_date": "2026-01-01",
+      "created_at": "2026-01-01T11:45:09.320Z",
+      "enriched": true
+    }
+  },
+  {
+    "key": "d3m00083-a1b2-4c3d-9e4f-000000000083",
+    "metadata": {
+      "content": "Updated the API rate limiting docs to include the new tier-based limits. Also added a troubleshooting section for common 429 errors.",
+      "summary": "API rate limiting docs updated with tier-based limits and 429 troubleshooting",
+      "type": "task",
+      "topics": ["documentation", "rate-limiting", "api-design"],
+      "people": [],
+      "action_items": [],
+      "dates_mentioned": [],
+      "project": "Internal Docs",
+      "related_projects": ["Acme API"],
+      "source": "mcp",
+      "source_ref": "",
+      "session_id": "s3ss0001-a1b2-4c3d-8e4f-000000000003",
+      "session_name": "Docs update",
+      "quality": "standard",
+      "thought_date": "2026-01-01",
+      "created_at": "2026-01-01T14:20:44.180Z",
+      "enriched": true
+    }
   }
 ]

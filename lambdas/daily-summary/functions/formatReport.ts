@@ -1,4 +1,6 @@
 import { ThoughtMetadata } from '../../../types/thought';
+import { EnrichmentSettings } from '../../../types/settings';
+import { resolveProjectAlias } from './resolveProjectAlias';
 
 interface ThoughtWithKey {
   key: string;
@@ -50,7 +52,8 @@ function formatCappedList(
 
 export function formatReport(
   todayDateStr: string,
-  thoughts: ThoughtWithKey[]
+  thoughts: ThoughtWithKey[],
+  settings?: EnrichmentSettings,
 ): DailySummaryReport {
   const count = thoughts.length;
 
@@ -99,26 +102,30 @@ export function formatReport(
 
   for (const t of thoughts) {
     const m = t.metadata;
+    const project = m.project && settings ? resolveProjectAlias(m.project, settings) : m.project;
     byType[m.type] = (byType[m.type] || 0) + 1;
     bySource[m.source] = (bySource[m.source] || 0) + 1;
 
     if (m.type === 'decision') {
-      addTaggedItem(decisions, decisionKeys, m.summary || m.content, m.project);
+      addTaggedItem(decisions, decisionKeys, m.summary || m.content, project);
     }
     if (m.type === 'milestone') {
-      addTaggedItem(milestones, milestoneKeys, m.summary || m.content, m.project);
+      addTaggedItem(milestones, milestoneKeys, m.summary || m.content, project);
     }
     if (Array.isArray(m.action_items)) {
       for (const ai of m.action_items) {
-        addTaggedItem(actionItems, actionItemKeys, ai, m.project);
+        addTaggedItem(actionItems, actionItemKeys, ai, project);
       }
     }
     if (Array.isArray(m.people)) {
       for (const p of m.people) peopleSet.add(p);
     }
-    if (m.project) addProject(m.project);
+    if (project) addProject(project);
     if (Array.isArray(m.related_projects)) {
-      for (const rp of m.related_projects) addProject(rp);
+      for (const rp of m.related_projects) {
+        const resolvedRp = settings ? resolveProjectAlias(rp, settings) : rp;
+        addProject(resolvedRp);
+      }
     }
   }
 

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Select from '@cloudscape-design/components/select';
 import { api } from '../api/client';
+import { useDemoMode } from '../contexts/DemoContext';
 
 interface ProjectSelectProps {
   selectedOption: { label: string; value: string } | null;
@@ -11,20 +12,29 @@ interface ProjectSelectProps {
 }
 
 let cachedProjects: string[] | null = null;
+let cachedForDemo: boolean | null = null;
 
 export function ProjectSelect({ selectedOption, onChange, placeholder = 'Select project', allLabel = 'All projects', disabled = false }: ProjectSelectProps) {
-  const [projects, setProjects] = useState<string[]>(cachedProjects || []);
-  const [loading, setLoading] = useState(!cachedProjects);
+  const { isDemoMode } = useDemoMode();
+  const [projects, setProjects] = useState<string[]>(cachedProjects && cachedForDemo === isDemoMode ? cachedProjects : []);
+  const [loading, setLoading] = useState(!(cachedProjects && cachedForDemo === isDemoMode));
+  const prevDemo = useRef(isDemoMode);
 
   useEffect(() => {
-    if (cachedProjects) return;
+    if (prevDemo.current !== isDemoMode) {
+      cachedProjects = null;
+      cachedForDemo = null;
+      prevDemo.current = isDemoMode;
+    }
+    if (cachedProjects && cachedForDemo === isDemoMode) return;
     setLoading(true);
     api.getProjects().then((data) => {
       const sorted = data.projects.slice().sort();
       cachedProjects = sorted;
+      cachedForDemo = isDemoMode;
       setProjects(sorted);
     }).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  }, [isDemoMode]);
 
   const options = [
     { label: allLabel, value: '__all__' },

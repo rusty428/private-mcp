@@ -2,6 +2,8 @@ import { S3VectorsClient, ListVectorsCommand, GetVectorsCommand } from '@aws-sdk
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { MAX_LIST_LIMIT, VALID_THOUGHT_TYPES } from '../../../types/validation';
+import { loadSettings } from './loadSettings';
+import { resolveProjectAlias } from './resolveProjectAlias';
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 const ddbClient = new DynamoDBClient({ region: process.env.REGION });
@@ -60,9 +62,14 @@ export async function browseRecent(
 
   if (!getResponse.vectors) return [];
 
+  const settings = await loadSettings();
+
   let results = getResponse.vectors.map((v: any) => ({
     key: v.key,
-    metadata: v.metadata,
+    metadata: {
+      ...v.metadata,
+      project: v.metadata?.project ? resolveProjectAlias(v.metadata.project, settings) : v.metadata?.project,
+    },
   }));
 
   // Exclude noise (treat missing quality as standard for backward compat)
@@ -79,7 +86,8 @@ export async function browseRecent(
   }
 
   if (project) {
-    results = results.filter((r: any) => r.metadata?.project === project);
+    const normalizedProject = resolveProjectAlias(project, settings);
+    results = results.filter((r: any) => r.metadata?.project === normalizedProject);
   }
 
   results.sort((a: any, b: any) =>
