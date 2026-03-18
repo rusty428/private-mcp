@@ -170,7 +170,14 @@ app.post('/search', async (req, res) => {
       return res.status(400).json({ error: `Query too long. Maximum ${MAX_QUERY_LENGTH} characters.` });
     }
     if (req.body.limit) {
-      req.body.limit = Math.min(req.body.limit, MAX_SEARCH_LIMIT);
+      const parsedLimit = Number(req.body.limit);
+      if (isNaN(parsedLimit)) return res.status(400).json({ error: 'limit must be a number' });
+      req.body.limit = Math.min(parsedLimit, MAX_SEARCH_LIMIT);
+    }
+    if (req.body.threshold) {
+      const parsedThreshold = Number(req.body.threshold);
+      if (isNaN(parsedThreshold)) return res.status(400).json({ error: 'threshold must be a number' });
+      req.body.threshold = parsedThreshold;
     }
     const results = await searchThoughts(req.body);
     res.json(results);
