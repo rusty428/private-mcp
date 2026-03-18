@@ -27,9 +27,9 @@ Capture thoughts from Slack, AI tools, or the web UI — they get embedded, clas
 
 ## How It Works
 
-1. **Capture** — Send a message in your Slack capture channel. A Lambda generates a vector embedding (Bedrock Titan v2) and extracts metadata (Bedrock Haiku) in parallel, then stores everything in S3 Vectors.
+1. **Capture** — Send a thought from Slack, any MCP-connected AI tool, or the web UI. A Lambda generates a vector embedding (Bedrock Titan v2) and extracts metadata (Bedrock Haiku) in parallel, then stores everything in S3 Vectors and DynamoDB.
 
-2. **Retrieve** — Any AI tool connected via MCP can search your thoughts semantically, browse recent entries, view stats, or capture new thoughts without switching apps.
+2. **Retrieve** — Search your thoughts by meaning, browse recent entries, view stats, or generate narrative reports — from any connected tool or the web dashboard.
 
 ## Architecture
 
