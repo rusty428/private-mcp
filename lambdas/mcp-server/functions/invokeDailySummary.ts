@@ -18,7 +18,8 @@ export async function invokeDailySummary(): Promise<DailySummaryResult> {
   const payload = JSON.parse(new TextDecoder().decode(response.Payload));
 
   if (response.FunctionError) {
-    throw new Error(`daily-summary error: ${JSON.stringify(payload)}`);
+    console.error('daily-summary error:', JSON.stringify(payload));
+    throw new Error('Failed to generate daily summary');
   }
 
   return payload;

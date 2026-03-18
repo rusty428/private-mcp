@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { invokeProcessThought } from './functions/invokeProcessThought';
+import { MAX_TEXT_LENGTH } from '../../types/validation';
 
 const FIVE_MINUTES_SEC = 5 * 60;
 
@@ -76,6 +77,11 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const messageTs: string = slackEvent.ts;
 
     if (!messageText || messageText.trim() === '') {
+      return { statusCode: 200, headers: {}, body: 'ok' };
+    }
+
+    if (messageText.length > MAX_TEXT_LENGTH) {
+      console.warn(`Slack message too long (${messageText.length} chars), skipping`);
       return { statusCode: 200, headers: {}, body: 'ok' };
     }
 

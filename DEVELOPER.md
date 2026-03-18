@@ -3,49 +3,59 @@
 ## Prerequisites
 
 - Node.js 22+
-- pnpm
-- AWS CLI v2 with SSO configured
+- npm (Node.js 22+ includes npm)
+- AWS CLI v2 with [SSO configured](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html)
 - AWS CDK CLI (`npm install -g aws-cdk`)
+- **Bedrock model access** — enable these models in the [Bedrock console](https://console.aws.amazon.com/bedrock/home#/modelaccess) for your region:
+  - Amazon Titan Text Embeddings v2
+  - Anthropic Claude 3 Haiku
 
 ## Setup
 
 ```bash
-cd ~/projects/AWSPrivateMCP/private-mcp
-pnpm install
+git clone https://github.com/rusty428/private-mcp.git
+cd private-mcp
+npm install
 ```
 
 ## Commands
 
 ```bash
-pnpm build             # TypeScript compile
-pnpm synth             # Generate CloudFormation template
-pnpm diff              # Preview infrastructure changes
-pnpm deploy            # Deploy (requires --profile and -c flags, see below)
+npm run build          # TypeScript compile
+npm run synth          # Generate CloudFormation template
+npm run diff           # Preview infrastructure changes
+npm run deploy         # Deploy (use npx cdk deploy directly to pass --profile)
 ```
 
-## AWS Account
+## Configuration
 
-| Field | Value |
-|---|---|
-| Account ID | `951921971435` |
-| Profile | `private-mcp` |
-| Region | `us-west-2` |
+Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+All deployment config lives in `.env` — your AWS account ID, region, Slack credentials, and optional settings. See `.env.example` for descriptions of each variable.
 
 Authenticate via SSO:
 
 ```bash
 aws sso login
-aws sts get-caller-identity --profile private-mcp
+aws sts get-caller-identity --profile <your-profile>
 ```
 
 ## Deploying
 
-The stack requires Slack credentials passed as CDK context:
+All configuration comes from `.env` (no CDK context flags needed). First-time deployers to a new AWS account must bootstrap CDK:
 
 ```bash
-npx cdk deploy PrivateMCPStack --profile private-mcp \
-  -c slackBotToken=xoxb-your-token \
-  -c slackCaptureChannel=C0your-channel-id
+npx cdk bootstrap --profile <your-profile>
+```
+
+Then deploy:
+
+```bash
+npx cdk deploy PrivateMCPStack --profile <your-profile>
 ```
 
 ### Deploy Outputs
@@ -58,7 +68,7 @@ After deployment, CDK outputs:
 - **ApiKeyId** — Retrieve the actual key value with:
 
 ```bash
-aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --profile private-mcp
+aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --profile <your-profile>
 ```
 
 ## Slack App Setup
@@ -88,6 +98,32 @@ aws apigateway get-api-key --api-key <API_KEY_ID> --include-value --profile priv
 In your capture channel: `/invite @YourAppName`
 
 Get the channel ID: right-click channel → View channel details → scroll to bottom.
+
+## Web UI
+
+The web dashboard runs as a Vite + React app (Cloudscape Design System).
+
+### Local development
+
+```bash
+npm run mcp-ui
+```
+
+Open `http://localhost:5173`. The UI connects to the REST API via API Gateway. Set your API Gateway URL and API key in `ui/.env.local`:
+
+```bash
+cp ui/.env.example ui/.env.local
+```
+
+### Production deployment
+
+Build the static assets and host them on S3 + CloudFront (or any static hosting):
+
+```bash
+npm run build --prefix ui
+```
+
+Output is in `ui/dist/`. If deploying behind a custom domain, add the origin to `ALLOWED_ORIGINS` in your `.env` to enable CORS, then redeploy the stack.
 
 ## Connecting AI Tools
 
@@ -268,11 +304,17 @@ private-mcp/
 ├── lambdas/
 │   ├── process-thought/              # Core: embed + classify + store
 │   ├── ingest-thought/               # Slack webhook handler
-│   └── mcp-server/                   # MCP protocol server
+│   ├── mcp-server/                   # MCP protocol server
+│   ├── daily-summary/                # Daily report (EventBridge scheduled)
+│   ├── enrich-thought/               # Async enrichment pipeline
+│   └── rest-api/                     # REST backend for web UI
+├── scripts/
+│   └── migrate-to-dynamodb.ts        # One-time migration (not needed for fresh installs)
 ├── types/
 │   ├── thought.ts                    # Domain types
 │   └── config.ts                     # Constants (bucket, index, model IDs)
-└── docs/plans/                       # Design docs
+├── ui/                               # Web dashboard (Vite + React + Cloudscape)
+└── docs/plans/                       # Historical design docs (not current instructions)
 ```
 
 ### Lambda Convention
@@ -297,10 +339,10 @@ One function per file. File name matches the exported function name.
 
 ```bash
 # List log groups
-aws logs describe-log-groups --profile private-mcp --region us-west-2
+aws logs describe-log-groups --profile <your-profile> --region us-west-2
 
 # Tail a specific Lambda's logs
-aws logs tail "/aws/lambda/<function-name>" --since 5m --profile private-mcp --region us-west-2
+aws logs tail "/aws/lambda/<function-name>" --since 5m --profile <your-profile> --region us-west-2
 ```
 
 ### S3 Vectors empty array error
@@ -322,7 +364,7 @@ claude mcp add --transport http --scope user private-mcp \
 
 The daily summary reports on the previous day's thoughts. If zero thoughts were captured, check:
 1. MCP server is registered at `--scope user` (see above)
-2. AWS SSO token hasn't expired (run `aws sso login --profile private-mcp`)
+2. AWS SSO token hasn't expired (run `aws sso login --profile <your-profile>`)
 3. The SessionEnd hook is configured and the script is executable
 
 ### Duplicate Slack replies

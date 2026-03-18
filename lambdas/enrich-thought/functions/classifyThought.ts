@@ -26,7 +26,7 @@ export async function classifyThought(
   project: string,
   options: ClassifyOptions,
 ): Promise<EnrichmentClassification> {
-  const userMessage = `Source: ${source}\nProject: ${project || 'unknown'}\nContent: ${content}`;
+  const userMessage = `Source: ${source}\nProject: ${project || 'unknown'}\n<content>\n${content}\n</content>`;
 
   const response = await bedrock.send(new InvokeModelCommand({
     modelId: options.modelId,

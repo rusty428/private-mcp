@@ -118,7 +118,7 @@ export function Capture() {
                 value={project}
                 onChange={({ detail }) => setProject(detail.value)}
                 options={projectOptions}
-                placeholder="e.g., AWSPrivateMCP"
+                placeholder="e.g., PrivateMCP"
                 disabled={submitting || isDemoMode}
                 enteredTextLabel={(value) => `Use: "${value}"`}
                 empty="No matching projects"
