@@ -7,7 +7,7 @@ import { browseRecent } from './functions/browseRecent';
 import { getStats } from './functions/getStats';
 import { captureThought } from './functions/captureThought';
 import { invokeDailySummary } from './functions/invokeDailySummary';
-import { VALID_SOURCES, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH } from '../../types/validation';
+import { SOURCE_REGEX, SOURCE_FORMAT_DESCRIPTION, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH } from '../../types/validation';
 
 const app: Express = express();
 app.use(express.json({ limit: '16kb' }));
@@ -80,7 +80,7 @@ function createServer(): McpServer {
       description: 'Save a thought to your brain. It gets embedded, classified, and stored automatically.',
       inputSchema: {
         text: z.string().describe('The thought to capture'),
-        source: z.enum(VALID_SOURCES as unknown as [string, ...string[]]).optional().default('mcp').describe('Where this thought came from'),
+        source: z.string().regex(SOURCE_REGEX).optional().default('mcp').describe(`Where this thought came from (${SOURCE_FORMAT_DESCRIPTION})`),
         project: z.string().max(MAX_PROJECT_LENGTH).optional().describe('Project name this thought relates to'),
         session_id: z.string().max(MAX_SESSION_FIELD_LENGTH).optional().describe('Claude Code session ID'),
         session_name: z.string().max(MAX_SESSION_FIELD_LENGTH).optional().describe('Claude Code session name (/rename label)'),
