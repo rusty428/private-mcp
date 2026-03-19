@@ -44,7 +44,7 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
     dates_mentioned: classification.dates_mentioned,
     project,
     related_projects: normalizedRelatedProjects,
-    source: source as ThoughtMetadata['source'],
+    source,
     source_ref,
     session_id,
     session_name,
