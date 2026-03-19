@@ -8,14 +8,7 @@ export type ThoughtType =
   | 'project_summary'
   | 'milestone';
 
-export type ThoughtSource =
-  | 'mcp'
-  | 'user-prompt'
-  | 'session-summary'
-  | 'session-hook'
-  | 'slack'
-  | 'memory-seed'
-  | 'api';
+export type ThoughtSource = string;
 
 export type ThoughtQuality = 'high' | 'standard' | 'noise';
 
