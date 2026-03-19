@@ -16,14 +16,13 @@ Replace the fixed allowlist with a format constraint.
 
 ### Format Constraint
 
-- Lowercase alphanumeric characters and hyphens only
+- Alphanumeric characters (mixed case) and hyphens only
 - 1-50 characters
 - No leading or trailing hyphens
-- No consecutive hyphens
 
-Regex: `/^[a-z0-9](?:[a-z0-9-]{0,48}[a-z0-9])?$/`
+Regex: `/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,48}[a-zA-Z0-9])?$/`
 
-This allows values like `mcp`, `openclaw`, `session-hook`, `cursor`, `windsurf`.
+Case is preserved as-is — `OpenClaw`, `mcp`, `RustyNations` are all valid. This supports human-friendly display names for a future multi-user scenario.
 
 ### Default Value
 
@@ -35,7 +34,7 @@ This allows values like `mcp`, `openclaw`, `session-hook`, `cursor`, `windsurf`.
 
 - Remove `VALID_SOURCES` array
 - Add `SOURCE_REGEX` constant with the format regex
-- Add `SOURCE_FORMAT_DESCRIPTION` string constant for human-readable error messages (shared between MCP and REST API)
+- Add `SOURCE_FORMAT_DESCRIPTION` string constant for human-readable error messages (shared between MCP and REST API): "alphanumeric and hyphens, 1-50 chars, no leading/trailing hyphens"
 - Add `isValidSource(value: string): boolean` helper function
 
 ### 2. `types/thought.ts`
@@ -53,7 +52,7 @@ This allows values like `mcp`, `openclaw`, `session-hook`, `cursor`, `windsurf`.
 ### 4. `lambdas/rest-api/server.ts`
 
 - Replace `VALID_SOURCES.includes(req.body.source)` with `isValidSource(req.body.source)`
-- Update the error message from listing valid values to describing the format (lowercase alphanumeric + hyphens, 1-50 chars)
+- Update the error message from listing valid values to describing the format (alphanumeric + hyphens, 1-50 chars)
 - Remove `VALID_SOURCES` from imports
 
 ### 5. `lambdas/process-thought/index.ts`
@@ -93,6 +92,6 @@ None required. All existing source values match the new regex:
 
 ## Risks
 
-- **Typo fragmentation**: A client sending `open-claw` vs `openclaw` would create two separate source entries in stats. Mitigation: this is a documentation/convention problem, not a validation problem. The format constraint prevents truly garbage values (spaces, special chars, empty strings).
+- **Typo and case fragmentation**: A client sending `OpenClaw` vs `openclaw` vs `open-claw` would create separate source entries in stats. Mitigation: this is a documentation/convention problem, not a validation problem. The format constraint prevents truly garbage values (spaces, special chars, empty strings). If case-insensitive grouping is needed later, normalize at the query/aggregation layer.
 - **Unbounded cardinality**: If many distinct sources appear, UI charts could get noisy. Mitigation: current UI already handles dynamic source counts. If this becomes an issue later, the UI can group low-count sources — that's a presentation concern, not a data model concern.
 - **No source-specific enrichment guidance for new sources**: `buildPrompt.ts` gives the LLM classifier hints like "mcp source: intentional capture, likely high quality." New sources like `openclaw` get no specific guidance — the classifier treats them generically. This is acceptable; the hints are best-effort and the classifier works without them.
