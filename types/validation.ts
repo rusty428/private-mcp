@@ -30,11 +30,9 @@ export const VALID_CLASSIFICATION_MODELS = [
   'anthropic.claude-3-5-sonnet-20241022-v2:0',
 ] as const;
 
-export const VALID_SOURCES = [
-  'mcp',
-  'slack',
-  'api',
-  'session-summary',
-  'session-hook',
-  'user-prompt',
-] as const;
+export const SOURCE_REGEX = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,48}[a-zA-Z0-9])?$/;
+export const SOURCE_FORMAT_DESCRIPTION = 'alphanumeric and hyphens, 1-50 chars, no leading/trailing hyphens';
+
+export function isValidSource(value: string): boolean {
+  return SOURCE_REGEX.test(value);
+}

@@ -18,7 +18,8 @@ import {
   UUID_REGEX,
   DATE_REGEX,
   VALID_THOUGHT_TYPES,
-  VALID_SOURCES,
+  isValidSource,
+  SOURCE_FORMAT_DESCRIPTION,
   MAX_PROJECT_LENGTH,
 } from '../../types/validation';
 
@@ -193,8 +194,8 @@ app.post('/capture', async (req, res) => {
     if (req.body.text.length > MAX_TEXT_LENGTH) {
       return res.status(400).json({ error: `Text too long. Maximum ${MAX_TEXT_LENGTH} characters.` });
     }
-    if (req.body.source && !VALID_SOURCES.includes(req.body.source)) {
-      return res.status(400).json({ error: `Invalid source. Must be one of: ${VALID_SOURCES.join(', ')}` });
+    if (req.body.source && !isValidSource(req.body.source)) {
+      return res.status(400).json({ error: `Invalid source. Format: ${SOURCE_FORMAT_DESCRIPTION}` });
     }
     if (req.body.project && req.body.project.length > MAX_PROJECT_LENGTH) {
       return res.status(400).json({ error: `Project name too long. Maximum ${MAX_PROJECT_LENGTH} characters.` });

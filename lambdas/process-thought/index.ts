@@ -36,7 +36,7 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
   const input: ProcessThoughtInput = event.text
     ? {
         text: event.text,
-        source: (event.source as ProcessThoughtInput['source']) || 'api',
+        source: event.source || 'api',
         sourceRef: event.sourceRef,
         project: event.project,
         session_id: event.session_id,
