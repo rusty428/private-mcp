@@ -196,17 +196,27 @@ Region: `us-west-2`
 
 ## Claude Code MCP Setup
 
-To connect Claude Code to this MCP server as a native tool provider:
+To connect Claude Code to this MCP server as a native tool provider, use `headersHelper` instead of static `--header` flags. Claude Code's OAuth detection can misidentify static headers on HTTP servers as "needs authentication." A `headersHelper` script bypasses this.
+
+**Step 1: Create a headers helper script** (e.g. `~/.claude/scripts/private-mcp-headers.sh`):
 
 ```bash
+#!/bin/bash
 # Get the API key value
 API_KEY=$(aws apigateway get-api-key --api-key <API_KEY_ID> --include-value \
   --profile <YOUR_AWS_PROFILE> --region us-west-2 --query 'value' --output text)
+echo "{\"x-api-key\": \"$API_KEY\"}"
+```
 
-# Register the MCP server (--scope user makes it available in ALL projects)
-claude mcp add --transport http --scope user private-mcp \
-  "https://<API_GATEWAY_ID>.execute-api.<REGION>.amazonaws.com/api/mcp" \
-  --header "x-api-key: $API_KEY"
+Or for a simpler static version: `echo '{"x-api-key": "<YOUR_API_KEY>"}'`
+
+Make it executable: `chmod +x ~/.claude/scripts/private-mcp-headers.sh`
+
+**Step 2: Register the MCP server** using `add-json` with `--scope user`:
+
+```bash
+claude mcp add-json --scope user private-mcp \
+  '{"type":"http","url":"https://<API_GATEWAY_ID>.execute-api.<REGION>.amazonaws.com/api/mcp","headersHelper":"~/.claude/scripts/private-mcp-headers.sh"}'
 ```
 
 **Always use `--scope user`.** The default `--scope local` only registers the MCP for the current project directory — sessions in other projects won't have access to the tools.

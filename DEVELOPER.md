@@ -102,10 +102,22 @@ Output is in `ui/dist/`. If deploying behind a custom domain, add the origin to 
 
 ### Claude Code
 
+Use `headersHelper` (not static `--header`) to avoid Claude Code's OAuth detection triggering "needs authentication" on HTTP servers.
+
+**1. Create a headers helper script** (e.g. `~/.claude/scripts/private-mcp-headers.sh`):
+
 ```bash
-claude mcp add --transport http --scope user private-mcp \
-  https://<API_GATEWAY_URL>/mcp \
-  --header "x-api-key: <YOUR_API_KEY>"
+#!/bin/bash
+echo '{"x-api-key": "<YOUR_API_KEY>"}'
+```
+
+Make it executable: `chmod +x ~/.claude/scripts/private-mcp-headers.sh`
+
+**2. Register the server:**
+
+```bash
+claude mcp add-json --scope user private-mcp \
+  '{"type":"http","url":"https://<API_GATEWAY_URL>/mcp","headersHelper":"~/.claude/scripts/private-mcp-headers.sh"}'
 ```
 
 **The `--scope user` flag is critical.** Without it, the MCP server is only registered for the current project directory. With `--scope user`, the MCP tools are available in every Claude Code session regardless of which project you're working in. Available scopes:
@@ -354,9 +366,8 @@ If MCP tools work in one project but not another, the server was registered with
 
 ```bash
 claude mcp remove private-mcp --scope local
-claude mcp add --transport http --scope user private-mcp \
-  https://<API_GATEWAY_URL>/mcp \
-  --header "x-api-key: <YOUR_API_KEY>"
+claude mcp add-json --scope user private-mcp \
+  '{"type":"http","url":"https://<API_GATEWAY_URL>/mcp","headersHelper":"~/.claude/scripts/private-mcp-headers.sh"}'
 ```
 
 ### S3 Vectors empty array error
