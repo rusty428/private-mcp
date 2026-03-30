@@ -15,7 +15,7 @@ app.use(express.json({ limit: '16kb' }));
 function createServer(): McpServer {
   const server = new McpServer({
     name: 'private-mcp',
-    version: '1.1.0',
+    version: '1.1.1',
   });
 
   server.registerTool(
