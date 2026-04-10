@@ -34,12 +34,7 @@ export async function searchThoughts(params: SearchParams) {
   }];
 
   if (project) {
-    filterConditions.push({
-      '$or': [
-        { project: { '$eq': project } },
-        { project: { '$exists': false } },
-      ],
-    });
+    filterConditions.push({ project: { '$eq': project } });
   }
 
   if (team_id) {

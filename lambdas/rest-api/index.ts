@@ -144,7 +144,8 @@ async function handleGetThought(event: APIGatewayProxyEvent): Promise<APIGateway
   if (!UUID_REGEX.test(id)) {
     return errorResponse(400, 'Invalid thought ID format. Must be a UUID.', event);
   }
-  const result = await getThought(id);
+  const userContext = getUserContext(event);
+  const result = await getThought(id, userContext.team_id);
   if (!result) return errorResponse(404, 'Thought not found', event);
   return jsonResponse(200, result, event);
 }
@@ -154,6 +155,7 @@ async function handleEditThought(event: APIGatewayProxyEvent): Promise<APIGatewa
   if (!UUID_REGEX.test(id)) {
     return errorResponse(400, 'Invalid thought ID format. Must be a UUID.', event);
   }
+  const userContext = getUserContext(event);
   const body = parseBody(event);
   if (body.type) {
     const validTypes = await getValidTypes();
@@ -161,7 +163,7 @@ async function handleEditThought(event: APIGatewayProxyEvent): Promise<APIGatewa
       return errorResponse(400, `Invalid type. Must be one of: ${validTypes.join(', ')}`, event);
     }
   }
-  const result = await editThought(id, body);
+  const result = await editThought(id, body, userContext.team_id);
   if (result.error === 'not_found') return errorResponse(404, 'Thought not found', event);
   if (result.error === 'pending') return errorResponse(409, 'Cannot edit a thought that is still being processed', event);
   return jsonResponse(200, result, event);
@@ -172,7 +174,9 @@ async function handleDeleteThought(event: APIGatewayProxyEvent): Promise<APIGate
   if (!UUID_REGEX.test(id)) {
     return errorResponse(400, 'Invalid thought ID format. Must be a UUID.', event);
   }
-  const result = await deleteThought(id);
+  const userContext = getUserContext(event);
+  const result = await deleteThought(id, userContext.team_id);
+  if (result.error === 'not_found') return errorResponse(404, 'Thought not found', event);
   return jsonResponse(200, result, event);
 }
 

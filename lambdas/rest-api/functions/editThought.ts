@@ -15,7 +15,7 @@ interface EditThoughtInput {
   action_items?: string[];
 }
 
-export async function editThought(id: string, updates: EditThoughtInput) {
+export async function editThought(id: string, updates: EditThoughtInput, team_id?: string) {
   const getResponse = await s3vectors.send(new GetVectorsCommand({
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,
@@ -30,6 +30,10 @@ export async function editThought(id: string, updates: EditThoughtInput) {
 
   const existing = getResponse.vectors[0];
   const metadata = existing.metadata as any;
+
+  if (team_id && metadata?.team_id && metadata.team_id !== team_id) {
+    return { error: 'not_found' as const };
+  }
 
   if (metadata?.type === 'pending') {
     return { error: 'pending' as const };

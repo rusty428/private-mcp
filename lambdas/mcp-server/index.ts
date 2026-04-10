@@ -135,7 +135,22 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 
   // Parse body
-  const body = event.body ? JSON.parse(event.body) : null;
+  let body: any = null;
+  if (event.body) {
+    try {
+      body = JSON.parse(event.body);
+    } catch {
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32700, message: 'Parse error: invalid JSON' },
+          id: null,
+        }),
+      };
+    }
+  }
 
   // Reject batch requests
   if (Array.isArray(body)) {
