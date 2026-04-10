@@ -1,9 +1,8 @@
+import 'dotenv/config';
 import { DynamoDBClient, ScanCommand, DescribeTableCommand } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand } from '@aws-sdk/lib-dynamodb';
 import { S3VectorsClient, GetVectorsCommand, PutVectorsCommand } from '@aws-sdk/client-s3vectors';
 import { THOUGHTS_TABLE_NAME, THOUGHTS_TABLE_V1_NAME, VECTOR_BUCKET_NAME, VECTOR_INDEX_NAME } from '../types/config';
-import { config as dotenvConfig } from 'dotenv';
-dotenvConfig();
 
 const region = process.env.AWS_REGION || 'us-west-2';
 const ddbClient = new DynamoDBClient({ region });
