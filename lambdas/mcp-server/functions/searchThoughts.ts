@@ -107,12 +107,7 @@ export async function searchThoughts(
   }
 
   if (team_id) {
-    filterConditions.push({
-      '$or': [
-        { team_id: { '$eq': team_id } },
-        { team_id: { '$exists': false } },
-      ],
-    });
+    filterConditions.push({ team_id: { '$eq': team_id } });
   }
 
   const filter = filterConditions.length === 1

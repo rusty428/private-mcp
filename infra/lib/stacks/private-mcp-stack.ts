@@ -23,6 +23,7 @@ import {
   API_KEYS_TABLE_NAME,
   CONFIG_BUCKET_NAME,
 } from '../../../types/config';
+import { VALID_CLASSIFICATION_MODELS } from '../../../types/validation';
 import { DEFAULT_ENRICHMENT_SETTINGS } from '../../../types/settings';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
@@ -253,16 +254,15 @@ export class PrivateMCPStack extends cdk.Stack {
 
     const bedrockClassifyPolicy = new iam.PolicyStatement({
       actions: ['bedrock:InvokeModel'],
-      resources: [
-        `arn:aws:bedrock:*::foundation-model/*`,
-      ],
+      resources: VALID_CLASSIFICATION_MODELS.map(
+        (modelId) => `arn:aws:bedrock:${config.region}::foundation-model/${modelId}`
+      ),
     });
 
     // --- Marketplace IAM policy (required for first-time Anthropic model access) ---
     const marketplacePolicy = new iam.PolicyStatement({
       actions: [
         'aws-marketplace:ViewSubscriptions',
-        'aws-marketplace:Subscribe',
       ],
       resources: ['*'],
     });
@@ -641,7 +641,7 @@ export class PrivateMCPStack extends cdk.Stack {
 
     seedApiKeyFn.addToRolePolicy(new iam.PolicyStatement({
       actions: ['apigateway:GET'],
-      resources: ['*'],
+      resources: [`arn:aws:apigateway:${config.region}::/apikeys`],
     }));
 
     const seedApiKeyProvider = new cr.Provider(this, 'SeedApiKeyProvider', {

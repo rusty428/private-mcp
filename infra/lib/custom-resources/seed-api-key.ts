@@ -27,6 +27,7 @@ export const handler = async (event: any): Promise<any> => {
   }
 
   let rawKey: string | undefined;
+  let migratedFromV1 = false;
 
   // On v1 upgrade, read the existing API Gateway key (still exists during CREATE phase)
   if (upgradeFromV1) {
@@ -38,6 +39,7 @@ export const handler = async (event: any): Promise<any> => {
       }));
       if (keysResponse.items && keysResponse.items.length > 0) {
         rawKey = keysResponse.items[0].value;
+        migratedFromV1 = true;
         console.log('Migrating existing API Gateway key to DynamoDB');
       }
     } catch (err) {
@@ -70,8 +72,8 @@ export const handler = async (event: any): Promise<any> => {
   return {
     PhysicalResourceId: 'seed-api-key',
     Data: {
-      ApiKey: upgradeFromV1 && rawKey ? '(preserved from v1)' : rawKey,
-      Message: upgradeFromV1 ? 'Existing key migrated from API Gateway' : 'New key generated',
+      ApiKey: migratedFromV1 ? '(preserved from v1)' : rawKey,
+      Message: migratedFromV1 ? 'Existing key migrated from API Gateway' : 'New key generated',
     },
   };
 };

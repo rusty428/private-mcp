@@ -2,7 +2,7 @@ import { S3VectorsClient, ListVectorsCommand, GetVectorsCommand } from '@aws-sdk
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 
-export async function getStats(): Promise<any> {
+export async function getStats(team_id?: string): Promise<any> {
   const listResponse = await s3vectors.send(new ListVectorsCommand({
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,
@@ -21,7 +21,12 @@ export async function getStats(): Promise<any> {
     returnMetadata: true,
   }));
 
-  const vectors = getResponse.vectors || [];
+  let vectors = getResponse.vectors || [];
+
+  if (team_id) {
+    vectors = vectors.filter((v: any) => v.metadata?.team_id === team_id);
+  }
+
   const byType: Record<string, number> = {};
   const topicCounts: Record<string, number> = {};
   let earliest = '';
@@ -51,7 +56,7 @@ export async function getStats(): Promise<any> {
     .map(([topic, count]) => ({ topic, count }));
 
   return {
-    total: keys.length,
+    total: vectors.length,
     byType,
     topTopics,
     dateRange: earliest ? { earliest, latest } : null,

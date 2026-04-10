@@ -97,7 +97,7 @@ function buildFilterExpression(params: QueryThoughtsParams): {
   }
 
   if (params.team_id) {
-    conditions.push('(attribute_not_exists(team_id) OR team_id = :filterTeam)');
+    conditions.push('team_id = :filterTeam');
     values[':filterTeam'] = params.team_id;
   }
 

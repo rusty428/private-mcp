@@ -76,9 +76,8 @@ export async function browseRecent(
   // Exclude noise (treat missing quality as standard for backward compat)
   results = results.filter((r: any) => r.metadata?.quality !== 'noise');
 
-  // Filter by team (treat missing team_id as matching for backward compat)
   if (team_id) {
-    results = results.filter((r: any) => !r.metadata?.team_id || r.metadata.team_id === team_id);
+    results = results.filter((r: any) => r.metadata?.team_id === team_id);
   }
 
   if (type) {

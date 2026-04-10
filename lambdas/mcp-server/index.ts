@@ -64,7 +64,7 @@ function createServer(userContext: AuthorizerContext): McpServer {
       description: 'Get an overview of your brain: total thoughts, breakdown by type, top topics, date range.',
     },
     async () => {
-      const stats = await getStats();
+      const stats = await getStats(userContext.team_id);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(stats, null, 2) }],
       };
@@ -105,7 +105,7 @@ function createServer(userContext: AuthorizerContext): McpServer {
       description: 'Generate and post today\'s daily summary to Slack. Returns the summary text.',
     },
     async () => {
-      const result = await invokeDailySummary();
+      const result = await invokeDailySummary(userContext.team_id);
       return {
         content: [{ type: 'text' as const, text: result.text }],
       };
@@ -226,8 +226,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       responseHeaders[key] = value;
     });
 
-    await transport.close();
-    await server.close();
+    try { await transport.close(); } catch {}
+    try { await server.close(); } catch {}
 
     return {
       statusCode: response.status,

@@ -224,6 +224,7 @@ async function handleCapture(event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
 async function handleTimeSeries(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const q = event.queryStringParameters || {};
+  const userContext = getUserContext(event);
   if (q.startDate && !DATE_REGEX.test(q.startDate)) {
     return errorResponse(400, 'Invalid startDate format. Use YYYY-MM-DD.', event);
   }
@@ -238,12 +239,14 @@ async function handleTimeSeries(event: APIGatewayProxyEvent): Promise<APIGateway
     endDate: q.endDate,
     interval: q.interval as 'day' | 'week',
     project: q.project,
+    team_id: userContext.team_id,
   });
   return jsonResponse(200, results, event);
 }
 
 async function handleGenerateReport(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
   const body = parseBody(event);
+  const userContext = getUserContext(event);
   if (!body.startDate || !body.endDate) {
     return errorResponse(400, 'startDate and endDate are required', event);
   }
@@ -253,12 +256,13 @@ async function handleGenerateReport(event: APIGatewayProxyEvent): Promise<APIGat
   if (!DATE_REGEX.test(body.endDate)) {
     return errorResponse(400, 'Invalid endDate format. Use YYYY-MM-DD.', event);
   }
-  const narrative = await generateNarrative(body);
+  const narrative = await generateNarrative({ ...body, team_id: userContext.team_id });
   return jsonResponse(200, { narrative }, event);
 }
 
 async function handleGetProjects(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
-  const projects = await getProjects();
+  const userContext = getUserContext(event);
+  const projects = await getProjects(userContext.team_id);
   return jsonResponse(200, { projects }, event);
 }
 

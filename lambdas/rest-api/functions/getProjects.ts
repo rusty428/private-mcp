@@ -6,10 +6,11 @@ import { resolveProjectAlias } from './resolveProjectAlias';
 const ddbClient = new DynamoDBClient({ region: process.env.REGION });
 const ddb = DynamoDBDocumentClient.from(ddbClient);
 
-export async function getProjects(): Promise<string[]> {
+export async function getProjects(team_id?: string): Promise<string[]> {
+  const pk = team_id ? `META#PROJECTS#${team_id}` : 'META#PROJECTS';
   const result = await ddb.send(new GetCommand({
     TableName: process.env.TABLE_NAME,
-    Key: { pk: 'META#PROJECTS', sk: 'METADATA' },
+    Key: { pk, sk: 'METADATA' },
   }));
 
   if (!result.Item || !result.Item.projects) return [];

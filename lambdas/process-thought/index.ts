@@ -109,9 +109,10 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
   await ddb.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: ddbItem }));
 
   if (metadata.project) {
+    const teamProjectsKey = `META#PROJECTS#${metadata.team_id}`;
     await ddb.send(new UpdateCommand({
       TableName: process.env.TABLE_NAME,
-      Key: { pk: 'META#PROJECTS', sk: 'METADATA' },
+      Key: { pk: teamProjectsKey, sk: 'METADATA' },
       UpdateExpression: 'ADD projects :p',
       ExpressionAttributeValues: { ':p': new Set([metadata.project]) },
     }));
