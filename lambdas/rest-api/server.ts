@@ -10,6 +10,7 @@ import { generateNarrative } from './functions/generateNarrative';
 import { getProjects } from './functions/getProjects';
 import { getEnrichmentSettings } from './functions/getEnrichmentSettings';
 import { putEnrichmentSettings } from './functions/putEnrichmentSettings';
+import { AuthorizerContext } from '../../types/identity';
 import {
   MAX_TEXT_LENGTH,
   MAX_QUERY_LENGTH,
@@ -61,6 +62,18 @@ app.use((req, res, next) => {
   next();
 });
 
+// Extract user context from API Gateway authorizer
+app.use((req: any, _res, next) => {
+  const authorizer = req.apiGateway?.event?.requestContext?.authorizer;
+  req.userContext = {
+    user_id: authorizer?.user_id || 'owner',
+    username: authorizer?.username || 'owner',
+    team_id: authorizer?.team_id || 'default',
+    role: authorizer?.role || 'admin',
+  } as AuthorizerContext;
+  next();
+});
+
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
@@ -108,6 +121,7 @@ app.get('/thoughts', async (req, res) => {
       nextToken: req.query.nextToken as string,
       maxRecords,
       includeCount: req.query.includeCount === 'true',
+      team_id: (req as any).userContext.team_id,
     });
     res.json(results);
   } catch (err: any) {
@@ -180,7 +194,7 @@ app.post('/search', async (req, res) => {
       if (isNaN(parsedThreshold)) return res.status(400).json({ error: 'threshold must be a number' });
       req.body.threshold = parsedThreshold;
     }
-    const results = await searchThoughts(req.body);
+    const results = await searchThoughts({ ...req.body, team_id: (req as any).userContext.team_id });
     res.json(results);
   } catch (err: any) {
     console.error('searchThoughts error:', { error: err.message, stack: err.stack });
@@ -200,7 +214,11 @@ app.post('/capture', async (req, res) => {
     if (req.body.project && req.body.project.length > MAX_PROJECT_LENGTH) {
       return res.status(400).json({ error: `Project name too long. Maximum ${MAX_PROJECT_LENGTH} characters.` });
     }
-    const result = await captureThought(req.body);
+    const result = await captureThought({
+      ...req.body,
+      user_id: (req as any).userContext.user_id,
+      team_id: (req as any).userContext.team_id,
+    });
     res.json(result);
   } catch (err: any) {
     console.error('captureThought error:', { error: err.message, stack: err.stack });

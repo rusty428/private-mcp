@@ -13,6 +13,7 @@ interface QueryThoughtsParams {
   startDate?: string;
   endDate?: string;
   maxRecords?: number;
+  team_id?: string;
 }
 
 export interface QueryThoughtsResult {
@@ -93,6 +94,11 @@ function buildFilterExpression(params: QueryThoughtsParams): {
     conditions.push('#src = :filterSource');
     values[':filterSource'] = params.source;
     names['#src'] = 'source';
+  }
+
+  if (params.team_id) {
+    conditions.push('(attribute_not_exists(team_id) OR team_id = :filterTeam)');
+    values[':filterTeam'] = params.team_id;
   }
 
   // Date filtering uses thought_date only (not created_at, which is the GSI sort key

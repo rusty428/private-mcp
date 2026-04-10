@@ -8,11 +8,24 @@ import { getStats } from './functions/getStats';
 import { captureThought } from './functions/captureThought';
 import { invokeDailySummary } from './functions/invokeDailySummary';
 import { SOURCE_REGEX, SOURCE_FORMAT_DESCRIPTION, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH } from '../../types/validation';
+import { AuthorizerContext } from '../../types/identity';
 
 const app: Express = express();
 app.use(express.json({ limit: '16kb' }));
 
-function createServer(): McpServer {
+// Extract user context from API Gateway authorizer
+app.use((req: any, _res, next) => {
+  const authorizer = req.apiGateway?.event?.requestContext?.authorizer;
+  req.userContext = {
+    user_id: authorizer?.user_id || 'owner',
+    username: authorizer?.username || 'owner',
+    team_id: authorizer?.team_id || 'default',
+    role: authorizer?.role || 'admin',
+  } as AuthorizerContext;
+  next();
+});
+
+function createServer(userContext: AuthorizerContext): McpServer {
   const server = new McpServer({
     name: 'private-mcp',
     version: '1.1.1',
@@ -32,7 +45,7 @@ function createServer(): McpServer {
       },
     },
     async ({ query, limit, threshold, project, since }) => {
-      const results = await searchThoughts(query, limit, threshold, project, since);
+      const results = await searchThoughts(query, limit, threshold, project, since, userContext.team_id);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }],
       };
@@ -52,7 +65,7 @@ function createServer(): McpServer {
       },
     },
     async ({ limit, type, topic, project }) => {
-      const results = await browseRecent(limit, type, topic, project);
+      const results = await browseRecent(limit, type, topic, project, userContext.team_id);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(results, null, 2) }],
       };
@@ -87,7 +100,7 @@ function createServer(): McpServer {
       },
     },
     async ({ text, source, project, session_id, session_name }) => {
-      const result = await captureThought(text, source, project, session_id, session_name);
+      const result = await captureThought(text, source, project, session_id, session_name, userContext.user_id, userContext.team_id);
       let confirmation = `Captured (${result.quality})`;
       if (result.quality === 'noise') {
         confirmation += ' — stored but won\'t appear in search';
@@ -149,7 +162,8 @@ app.post('/mcp', async (req, res) => {
   // stateless mode they're no-ops. All three HTTP methods route to this Lambda
   // because API Gateway doesn't know which the client will use.
   try {
-    const server = createServer();
+    const userContext: AuthorizerContext = (req as any).userContext;
+    const server = createServer(userContext);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true,

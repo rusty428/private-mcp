@@ -31,6 +31,8 @@ export interface ThoughtMetadata {
   source_ref: string;
   session_id: string;
   session_name: string;
+  user_id: string;
+  team_id: string;
   quality: ThoughtQuality;
   thought_date: string;
   created_at: string;
@@ -43,6 +45,8 @@ export interface ProcessThoughtInput {
   project?: string;
   session_id?: string;
   session_name?: string;
+  user_id?: string;
+  team_id?: string;
 }
 
 export interface ProcessThoughtResult {
@@ -62,6 +66,8 @@ export interface EnrichThoughtInput {
   source_ref: string;
   thought_date: string;
   created_at: string;
+  user_id: string;
+  team_id: string;
 }
 
 export interface ThoughtSearchResult {

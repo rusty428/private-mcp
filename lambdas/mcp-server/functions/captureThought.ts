@@ -10,6 +10,8 @@ export async function captureThought(
   project?: string,
   session_id?: string,
   session_name?: string,
+  user_id?: string,
+  team_id?: string,
 ): Promise<ProcessThoughtResult> {
   if (text.length > MAX_TEXT_LENGTH) {
     throw new Error(`Text too long. Maximum ${MAX_TEXT_LENGTH} characters, got ${text.length}.`);
@@ -18,7 +20,7 @@ export async function captureThought(
   const response = await lambda.send(new InvokeCommand({
     FunctionName: process.env.PROCESS_THOUGHT_FN_NAME,
     InvocationType: 'RequestResponse',
-    Payload: Buffer.from(JSON.stringify({ text, source, project, session_id, session_name })),
+    Payload: Buffer.from(JSON.stringify({ text, source, project, session_id, session_name, user_id, team_id })),
   }));
 
   const payload = JSON.parse(new TextDecoder().decode(response.Payload));

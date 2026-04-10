@@ -35,6 +35,8 @@ export async function storeThought(
     source_ref: metadata.source_ref,
     session_id: metadata.session_id,
     session_name: metadata.session_name,
+    user_id: metadata.user_id,
+    team_id: metadata.team_id,
     quality: metadata.quality,
     thought_date: metadata.thought_date,
     created_at: metadata.created_at,

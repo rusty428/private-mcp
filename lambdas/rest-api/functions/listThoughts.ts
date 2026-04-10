@@ -14,6 +14,7 @@ interface ListThoughtsParams {
   nextToken?: string;
   maxRecords?: number;
   includeCount?: boolean;
+  team_id?: string;
 }
 
 export async function listThoughts(params: ListThoughtsParams) {
@@ -27,6 +28,7 @@ export async function listThoughts(params: ListThoughtsParams) {
       startDate: params.startDate,
       endDate: params.endDate,
       maxRecords: params.maxRecords,
+      team_id: params.team_id,
     }),
     params.includeCount ? getApproximateCount() : undefined,
   ]);
