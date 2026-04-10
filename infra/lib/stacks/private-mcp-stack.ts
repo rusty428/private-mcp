@@ -626,6 +626,7 @@ export class PrivateMCPStack extends cdk.Stack {
       memorySize: 128,
       environment: {
         API_KEYS_TABLE_NAME: API_KEYS_TABLE_NAME,
+        EXISTING_API_KEY: process.env.EXISTING_API_KEY || '',
       },
       bundling: {
         minify: true,
@@ -638,10 +639,7 @@ export class PrivateMCPStack extends cdk.Stack {
       resources: [apiKeysTable.tableArn],
     }));
 
-    seedApiKeyFn.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['apigateway:GET'],
-      resources: ['*'],
-    }));
+    // No API Gateway permissions needed — existing key passed via env var
 
     const seedApiKeyProvider = new cr.Provider(this, 'SeedApiKeyProvider', {
       onEventHandler: seedApiKeyFn,
