@@ -17,6 +17,7 @@ import {
   VECTOR_DIMENSIONS,
   EMBEDDING_MODEL_ID,
   THOUGHTS_TABLE_NAME,
+  THOUGHTS_TABLE_V1_NAME,
   SETTINGS_TABLE_NAME,
   TEAMS_TABLE_NAME,
   USERS_TABLE_NAME,
@@ -653,6 +654,46 @@ export class PrivateMCPStack extends cdk.Stack {
       value: seedApiKeyResource.getAttString('ApiKey'),
       description: 'Default owner API key — save this, it cannot be retrieved later. Empty if key already existed.',
     });
+
+    // --- Migrate identity data (v1 → v2, runs once on Create) ---
+    const migrateIdentityFn = new nodejs.NodejsFunction(this, 'MigrateIdentityFn', {
+      entry: 'infra/lib/custom-resources/migrate-identity.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 512,
+      environment: {
+        REGION: config.region,
+        V1_TABLE_NAME: THOUGHTS_TABLE_V1_NAME,
+        V2_TABLE_NAME: THOUGHTS_TABLE_NAME,
+        VECTOR_BUCKET_NAME: VECTOR_BUCKET_NAME,
+        VECTOR_INDEX_NAME: VECTOR_INDEX_NAME,
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+
+    migrateIdentityFn.addToRolePolicy(s3VectorsPolicy);
+    migrateIdentityFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:Scan', 'dynamodb:DescribeTable'],
+      resources: [`arn:aws:dynamodb:${config.region}:${config.accountId}:table/${THOUGHTS_TABLE_V1_NAME}`],
+    }));
+    migrateIdentityFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:PutItem'],
+      resources: [thoughtsTable.tableArn],
+    }));
+
+    const migrateIdentityProvider = new cr.Provider(this, 'MigrateIdentityProvider', {
+      onEventHandler: migrateIdentityFn,
+    });
+
+    const migrateIdentityResource = new cdk.CustomResource(this, 'MigrateIdentity', {
+      serviceToken: migrateIdentityProvider.serviceToken,
+    });
+    migrateIdentityResource.node.addDependency(thoughtsTable);
+    migrateIdentityResource.node.addDependency(seedApiKeyResource);
 
     // --- S3 Config Bucket (for cross-stack integration) ---
     const configBucket = new cdk.aws_s3.Bucket(this, 'ConfigBucket', {
