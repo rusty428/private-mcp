@@ -1,3 +1,4 @@
+import { APIGatewayClient, GetApiKeysCommand } from '@aws-sdk/client-api-gateway';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 import { createHash, randomBytes } from 'crypto';
@@ -8,13 +9,12 @@ const ddb = DynamoDBDocumentClient.from(ddbClient);
 export const handler = async (event: any): Promise<any> => {
   const requestType = event.RequestType;
 
-  // Only run on Create
   if (requestType !== 'Create') {
     return { PhysicalResourceId: 'seed-api-key', Data: {} };
   }
 
   const apiKeysTableName = process.env.API_KEYS_TABLE_NAME!;
-  const existingApiKey = process.env.EXISTING_API_KEY || '';
+  const upgradeFromV1 = process.env.UPGRADE_FROM_V1 === 'true';
 
   // Check if a key already exists in the api-keys table
   const existingRecord = await ddb.send(new GetCommand({
@@ -26,8 +26,31 @@ export const handler = async (event: any): Promise<any> => {
     return { PhysicalResourceId: 'seed-api-key', Data: { Message: 'Key already exists' } };
   }
 
-  // Use existing key if provided (v1 → v2 upgrade), otherwise generate new
-  const rawKey = existingApiKey || `pmcp_${randomBytes(32).toString('hex')}`;
+  let rawKey: string | undefined;
+
+  // On v1 upgrade, read the existing API Gateway key (still exists during CREATE phase)
+  if (upgradeFromV1) {
+    try {
+      const apigw = new APIGatewayClient({});
+      const keysResponse = await apigw.send(new GetApiKeysCommand({
+        nameQuery: 'private-mcp-key',
+        includeValues: true,
+      }));
+      if (keysResponse.items && keysResponse.items.length > 0) {
+        rawKey = keysResponse.items[0].value;
+        console.log('Migrating existing API Gateway key to DynamoDB');
+      }
+    } catch (err) {
+      console.error('Could not read existing API Gateway key:', err);
+    }
+  }
+
+  // Generate new key if not upgrading or lookup failed
+  if (!rawKey) {
+    rawKey = `pmcp_${randomBytes(32).toString('hex')}`;
+    console.log('Generating new API key');
+  }
+
   const keyHash = createHash('sha256').update(rawKey).digest('hex');
 
   await ddb.send(new PutCommand({
@@ -47,8 +70,8 @@ export const handler = async (event: any): Promise<any> => {
   return {
     PhysicalResourceId: 'seed-api-key',
     Data: {
-      ApiKey: existingApiKey ? '(preserved from v1)' : rawKey,
-      Message: existingApiKey ? 'Existing key migrated' : 'New key generated',
+      ApiKey: upgradeFromV1 && rawKey ? '(preserved from v1)' : rawKey,
+      Message: upgradeFromV1 ? 'Existing key migrated from API Gateway' : 'New key generated',
     },
   };
 };

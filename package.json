@@ -11,7 +11,8 @@
     "lint": "eslint . --ext .ts --fix",
     "test": "jest",
     "mcp-ui": "npm run dev --prefix ui",
-    "migrate:ddb": "npx ts-node --project tsconfig.json scripts/migrate-to-dynamodb.ts"
+    "migrate:ddb": "npx ts-node --project tsconfig.json scripts/migrate-to-dynamodb.ts",
+    "migrate": "npx ts-node scripts/migrate-identity.ts"
   },
   "dependencies": {
     "@aws-sdk/client-api-gateway": "^3.1028.0",
