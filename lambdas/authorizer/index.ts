@@ -44,6 +44,9 @@ export const handler = async (
     const apiGatewayArnParts = arnParts[5].split('/');
     const wildcardArn = `${arnParts.slice(0, 5).join(':')}:${apiGatewayArnParts[0]}/${apiGatewayArnParts[1]}/*`;
 
+    // TODO: Role is hardcoded to 'admin' — the authorizer only queries the
+    // api-keys table, not the users table. To enforce RBAC, either look up
+    // the user record here or denormalize role into the api-keys table.
     return generatePolicy(keyRecord.username, 'Allow', wildcardArn, {
       user_id: keyRecord.username,
       username: keyRecord.username,
