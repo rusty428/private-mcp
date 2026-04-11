@@ -18,7 +18,12 @@ import {
   EMBEDDING_MODEL_ID,
   THOUGHTS_TABLE_NAME,
   SETTINGS_TABLE_NAME,
+  TEAMS_TABLE_NAME,
+  USERS_TABLE_NAME,
+  API_KEYS_TABLE_NAME,
+  CONFIG_BUCKET_NAME,
 } from '../../../types/config';
+import { VALID_CLASSIFICATION_MODELS } from '../../../types/validation';
 import { DEFAULT_ENRICHMENT_SETTINGS } from '../../../types/settings';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
@@ -47,8 +52,8 @@ export class PrivateMCPStack extends cdk.Stack {
     vectorIndex.addDependency(vectorBucket);
     vectorIndex.applyRemovalPolicy(cdk.RemovalPolicy.RETAIN);
 
-    // --- DynamoDB ---
-    const thoughtsTable = new dynamodb.Table(this, 'ThoughtsTable', {
+    // --- DynamoDB (v2 — new table with full schema including identity GSIs) ---
+    const thoughtsTable = new dynamodb.Table(this, 'ThoughtsTableV2', {
       tableName: THOUGHTS_TABLE_NAME,
       partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
@@ -67,6 +72,20 @@ export class PrivateMCPStack extends cdk.Stack {
     thoughtsTable.addGlobalSecondaryIndex({
       indexName: 'gsi-by-project',
       partitionKey: { name: 'project', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    thoughtsTable.addGlobalSecondaryIndex({
+      indexName: 'gsi-by-user',
+      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    thoughtsTable.addGlobalSecondaryIndex({
+      indexName: 'gsi-by-team',
+      partitionKey: { name: 'team_id', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'created_at', type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
@@ -111,6 +130,59 @@ export class PrivateMCPStack extends cdk.Stack {
           resources: [settingsTable.tableArn],
         }),
       ]),
+    });
+
+    // --- Teams DynamoDB Table ---
+    const teamsTable = new dynamodb.Table(this, 'TeamsTable', {
+      tableName: TEAMS_TABLE_NAME,
+      partitionKey: { name: 'team_id', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    // --- Users DynamoDB Table ---
+    const usersTable = new dynamodb.Table(this, 'UsersTable', {
+      tableName: USERS_TABLE_NAME,
+      partitionKey: { name: 'username', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    usersTable.addGlobalSecondaryIndex({
+      indexName: 'email-index',
+      partitionKey: { name: 'email', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // --- API Keys DynamoDB Table ---
+    const apiKeysTable = new dynamodb.Table(this, 'ApiKeysTable', {
+      tableName: API_KEYS_TABLE_NAME,
+      partitionKey: { name: 'keyId', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    apiKeysTable.addGlobalSecondaryIndex({
+      indexName: 'keyHash-index',
+      partitionKey: { name: 'keyHash', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    apiKeysTable.addGlobalSecondaryIndex({
+      indexName: 'username-index',
+      partitionKey: { name: 'username', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    apiKeysTable.addGlobalSecondaryIndex({
+      indexName: 'team-index',
+      partitionKey: { name: 'team_id', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
     });
 
     // --- Common Lambda environment ---
@@ -182,16 +254,15 @@ export class PrivateMCPStack extends cdk.Stack {
 
     const bedrockClassifyPolicy = new iam.PolicyStatement({
       actions: ['bedrock:InvokeModel'],
-      resources: [
-        `arn:aws:bedrock:*::foundation-model/*`,
-      ],
+      resources: VALID_CLASSIFICATION_MODELS.map(
+        (modelId) => `arn:aws:bedrock:${config.region}::foundation-model/${modelId}`
+      ),
     });
 
     // --- Marketplace IAM policy (required for first-time Anthropic model access) ---
     const marketplacePolicy = new iam.PolicyStatement({
       actions: [
         'aws-marketplace:ViewSubscriptions',
-        'aws-marketplace:Subscribe',
       ],
       resources: ['*'],
     });
@@ -346,6 +417,31 @@ export class PrivateMCPStack extends cdk.Stack {
     restApiFn.addToRolePolicy(settingsReadWritePolicy);
     restApiFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
 
+    // --- Authorizer Lambda ---
+    const authorizerFn = new nodejs.NodejsFunction(this, 'AuthorizerFn', {
+      entry: 'lambdas/authorizer/index.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(10),
+      memorySize: 128,
+      environment: {
+        REGION: config.region,
+        API_KEYS_TABLE_NAME: API_KEYS_TABLE_NAME,
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+
+    authorizerFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:Query', 'dynamodb:UpdateItem'],
+      resources: [
+        apiKeysTable.tableArn,
+        `${apiKeysTable.tableArn}/index/*`,
+      ],
+    }));
+
     // --- API Gateway Access Logs ---
     const apiLogGroup = new logs.LogGroup(this, 'ApiAccessLogs', {
       logGroupName: '/aws/apigateway/PrivateMCP',
@@ -384,67 +480,226 @@ export class PrivateMCPStack extends cdk.Stack {
     const slackResource = api.root.addResource('slack').addResource('events');
     slackResource.addMethod('POST', new apigateway.LambdaIntegration(ingestThoughtFn));
 
-    // MCP endpoint (API key secured)
+    // MCP endpoint (custom authorizer secured)
     const mcpResource = api.root.addResource('mcp');
 
-    // API Key + Usage Plan
-    const apiKey = api.addApiKey('MCPApiKey', {
-      apiKeyName: 'private-mcp-key',
+    // Custom Lambda authorizer — resolves API key → user + team
+    const apiAuthorizer = new apigateway.TokenAuthorizer(this, 'ApiKeyAuthorizer', {
+      handler: authorizerFn,
+      identitySource: 'method.request.header.x-api-key',
+      resultsCacheTtl: cdk.Duration.seconds(300),
     });
 
-    const usagePlan = api.addUsagePlan('MCPUsagePlan', {
-      name: 'mcp-usage-plan',
-      throttle: {
-        rateLimit: 10,
-        burstLimit: 20,
-      },
-    });
+    const authMethodOptions = {
+      authorizer: apiAuthorizer,
+      authorizationType: apigateway.AuthorizationType.CUSTOM,
+    };
 
-    usagePlan.addApiKey(apiKey);
-    usagePlan.addApiStage({ stage: api.deploymentStage });
+    mcpResource.addMethod('POST', new apigateway.LambdaIntegration(mcpServerFn), authMethodOptions);
+    mcpResource.addMethod('GET', new apigateway.LambdaIntegration(mcpServerFn), authMethodOptions);
+    mcpResource.addMethod('DELETE', new apigateway.LambdaIntegration(mcpServerFn), authMethodOptions);
 
-    mcpResource.addMethod('POST', new apigateway.LambdaIntegration(mcpServerFn), {
-      apiKeyRequired: true,
-    });
-    mcpResource.addMethod('GET', new apigateway.LambdaIntegration(mcpServerFn), {
-      apiKeyRequired: true,
-    });
-    mcpResource.addMethod('DELETE', new apigateway.LambdaIntegration(mcpServerFn), {
-      apiKeyRequired: true,
-    });
-
-    // REST API endpoints for UI (API key secured)
+    // REST API endpoints for UI (custom authorizer secured)
     const restApiIntegration = new apigateway.LambdaIntegration(restApiFn);
 
     const thoughtsResource = api.root.addResource('thoughts');
-    thoughtsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+    thoughtsResource.addMethod('GET', restApiIntegration, authMethodOptions);
 
     const thoughtByIdResource = thoughtsResource.addResource('{id}');
-    thoughtByIdResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
-    thoughtByIdResource.addMethod('PUT', restApiIntegration, { apiKeyRequired: true });
-    thoughtByIdResource.addMethod('DELETE', restApiIntegration, { apiKeyRequired: true });
+    thoughtByIdResource.addMethod('GET', restApiIntegration, authMethodOptions);
+    thoughtByIdResource.addMethod('PUT', restApiIntegration, authMethodOptions);
+    thoughtByIdResource.addMethod('DELETE', restApiIntegration, authMethodOptions);
 
     const searchResource = api.root.addResource('search');
-    searchResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
+    searchResource.addMethod('POST', restApiIntegration, authMethodOptions);
 
     const captureResource = api.root.addResource('capture');
-    captureResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
+    captureResource.addMethod('POST', restApiIntegration, authMethodOptions);
 
     const statsResource = api.root.addResource('stats');
     const timeseriesResource = statsResource.addResource('timeseries');
-    timeseriesResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+    timeseriesResource.addMethod('GET', restApiIntegration, authMethodOptions);
 
     const reportsResource = api.root.addResource('reports');
     const generateResource = reportsResource.addResource('generate');
-    generateResource.addMethod('POST', restApiIntegration, { apiKeyRequired: true });
+    generateResource.addMethod('POST', restApiIntegration, authMethodOptions);
 
     const projectsResource = api.root.addResource('projects');
-    projectsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
+    projectsResource.addMethod('GET', restApiIntegration, authMethodOptions);
 
     const settingsResource = api.root.addResource('settings');
     const enrichmentSettingsResource = settingsResource.addResource('enrichment');
-    enrichmentSettingsResource.addMethod('GET', restApiIntegration, { apiKeyRequired: true });
-    enrichmentSettingsResource.addMethod('PUT', restApiIntegration, { apiKeyRequired: true });
+    enrichmentSettingsResource.addMethod('GET', restApiIntegration, authMethodOptions);
+    enrichmentSettingsResource.addMethod('PUT', restApiIntegration, authMethodOptions);
+
+    // --- Seed default team ---
+    const seedTeam = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: TEAMS_TABLE_NAME,
+        Item: {
+          team_id: { S: 'default' },
+          team_name: { S: 'Default' },
+          onboarding_mode: { S: 'invite' },
+          created_at: { S: new Date().toISOString() },
+          updated_at: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(team_id)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-default-team'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedDefaultTeam', {
+      onCreate: seedTeam,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [teamsTable.tableArn],
+        }),
+      ]),
+    });
+
+    // --- Seed default user ---
+    const seedUser = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: USERS_TABLE_NAME,
+        Item: {
+          username: { S: 'owner' },
+          ...(process.env.ALERT_EMAIL ? { email: { S: process.env.ALERT_EMAIL } } : {}),
+          display_name: { S: 'Owner' },
+          role: { S: 'admin' },
+          status: { S: 'active' },
+          created_at: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(username)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-default-user'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedDefaultUser', {
+      onCreate: seedUser,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [usersTable.tableArn],
+        }),
+      ]),
+    });
+
+    // --- Seed default team config in settings table ---
+    const seedTeamConfig = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: SETTINGS_TABLE_NAME,
+        Item: {
+          pk: { S: 'team' },
+          sk: { S: 'config' },
+          team_name: { S: 'Default' },
+          onboarding_mode: { S: 'invite' },
+          updatedAt: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(pk)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-team-config'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedTeamConfig', {
+      onCreate: seedTeamConfig,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [settingsTable.tableArn],
+        }),
+      ]),
+    });
+
+    // --- S3 Config Bucket (for cross-stack integration) ---
+    const configBucket = new cdk.aws_s3.Bucket(this, 'ConfigBucket', {
+      bucketName: CONFIG_BUCKET_NAME,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+    });
+
+    // --- Seed default API key (migrates existing API Gateway key if UPGRADE_FROM_V1=true) ---
+    const seedApiKeyFn = new nodejs.NodejsFunction(this, 'SeedApiKeyFn', {
+      entry: 'infra/lib/custom-resources/seed-api-key.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 128,
+      environment: {
+        API_KEYS_TABLE_NAME: API_KEYS_TABLE_NAME,
+        CONFIG_BUCKET_NAME: CONFIG_BUCKET_NAME,
+        UPGRADE_FROM_V1: process.env.UPGRADE_FROM_V1 || '',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+
+    seedApiKeyFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:PutItem', 'dynamodb:GetItem'],
+      resources: [apiKeysTable.tableArn],
+    }));
+
+    seedApiKeyFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['apigateway:GET'],
+      resources: [`arn:aws:apigateway:${config.region}::/apikeys`],
+    }));
+
+    seedApiKeyFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['s3:PutObject'],
+      resources: [`${configBucket.bucketArn}/*`],
+    }));
+
+    const seedApiKeyProvider = new cr.Provider(this, 'SeedApiKeyProvider', {
+      onEventHandler: seedApiKeyFn,
+    });
+
+    new cdk.CustomResource(this, 'SeedApiKey', {
+      serviceToken: seedApiKeyProvider.serviceToken,
+    });
+
+    // Write stack outputs to S3 for private-mcp-teams to consume
+    const stackOutputs = {
+      service: 'S3',
+      action: 'putObject',
+      parameters: {
+        Bucket: CONFIG_BUCKET_NAME,
+        Key: 'stack-outputs.json',
+        Body: JSON.stringify({
+          apiGatewayUrl: api.url,
+          teamsTableArn: teamsTable.tableArn,
+          teamsTableName: TEAMS_TABLE_NAME,
+          usersTableArn: usersTable.tableArn,
+          usersTableName: USERS_TABLE_NAME,
+          apiKeysTableArn: apiKeysTable.tableArn,
+          apiKeysTableName: API_KEYS_TABLE_NAME,
+          settingsTableArn: settingsTable.tableArn,
+          settingsTableName: SETTINGS_TABLE_NAME,
+          thoughtsTableArn: thoughtsTable.tableArn,
+          thoughtsTableName: THOUGHTS_TABLE_NAME,
+        }),
+        ContentType: 'application/json',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('write-stack-outputs'),
+    };
+
+    new cr.AwsCustomResource(this, 'WriteStackOutputs', {
+      onCreate: stackOutputs,
+      onUpdate: stackOutputs,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['s3:PutObject'],
+          resources: [`${configBucket.bucketArn}/*`],
+        }),
+      ]),
+    });
 
     // --- Optional: API alarms (only if ALERT_EMAIL is configured) ---
     if (process.env.ALERT_EMAIL) {
@@ -490,9 +745,19 @@ export class PrivateMCPStack extends cdk.Stack {
       description: 'DynamoDB thoughts table name',
     });
 
-    new cdk.CfnOutput(this, 'ApiKeyId', {
-      value: apiKey.keyId,
-      description: 'API Key ID — retrieve value with: aws apigateway get-api-key --api-key <id> --include-value',
+    new cdk.CfnOutput(this, 'TeamsTableName', {
+      value: teamsTable.tableName,
+      description: 'DynamoDB teams table name',
+    });
+
+    new cdk.CfnOutput(this, 'UsersTableName', {
+      value: usersTable.tableName,
+      description: 'DynamoDB users table name',
+    });
+
+    new cdk.CfnOutput(this, 'ApiKeysTableName', {
+      value: apiKeysTable.tableName,
+      description: 'DynamoDB API keys table name',
     });
   }
 }

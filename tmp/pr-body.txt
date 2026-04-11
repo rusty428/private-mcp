@@ -1,0 +1,55 @@
+## Summary
+
+Adds a complete identity model to private-mcp: teams, users, team-scoped API keys, and a Lambda authorizer. Every request now carries user and team context, and all data paths filter by team_id. This makes the infra 100% multi-team ready — the teams extension (frontend only) builds on top without touching any of this.
+
+Fixes rusty428/PrivateMCP-project#16
+
+## What changed
+
+### Identity model (new tables + authorizer)
+- **Teams table** (`private-mcp-teams`) — partition key: team_id
+- **Users table** (`private-mcp-users`) — partition key: username, GSI on email
+- **API keys table** (`private-mcp-api-keys`) — partition key: keyId, GSIs on keyHash, username, team_id
+- **Lambda authorizer** — resolves API key → user + team via SHA-256 hash lookup, injects identity into request context
+- **Seed resources** — default team, user, and API key created on first deploy (zero-config single-user experience)
+
+### Team-scoped data access
+- `user_id` and `team_id` attached to all captured thoughts (DynamoDB + S3 Vectors)
+- All query endpoints filter by `team_id`: search, browse, list, stats, projects, timeseries, reports
+- Single-thought CRUD (GET/PUT/DELETE) verifies team ownership before allowing access
+- `META#PROJECTS` is now team-scoped (`META#PROJECTS#<team_id>`)
+- Daily summary and enrichment pipeline carry team context through
+
+### Architecture changes
+- Replaced Express with raw Lambda handlers + Web Standard MCP transport (mcp-server and rest-api)
+- Deleted `server.ts` from both Lambda directories — all logic in `index.ts`
+
+### v1 → v2 migration
+- `UPGRADE_FROM_V1` flag preserves existing API Gateway key during upgrade
+- Migration script (`npm run migrate`) backfills `user_id`/`team_id` on existing thoughts
+- Custom resource auto-migrates DynamoDB records during deploy
+- S3 config bucket (`stack-outputs.json`) for cross-stack integration
+
+### IAM hardening
+- Bedrock InvokeModel scoped to specific classification models only
+- apigateway:GET scoped to `/apikeys` resource
+- Marketplace Subscribe removed (ViewSubscriptions retained)
+
+## Testing
+
+Deployed and validated on the feature stack:
+- Capture → process → enrich pipeline works with identity fields
+- MCP tools (search, browse, stats, capture, daily_summary) all filter by team_id
+- REST API CRUD verifies team ownership
+- Malformed JSON returns proper JSON-RPC -32700 error (not 500)
+- Project filter returns only matching projects (no $exists:false leakage)
+- IAM policy changes deployed without issues
+
+## Adversarial review
+
+Full scored review was conducted before PR:
+- 69 issues raised by 6 parallel finder agents (4 logic + 1 cross-cutting + 1 security)
+- 11 false positives disproved by adversary agent
+- 29 confirmed by referee
+- All 3 CRITICALs and 12 MEDIUMs fixed in this PR
+- Remaining LOWs are cosmetic or pre-existing patterns

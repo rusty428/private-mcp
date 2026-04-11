@@ -1,0 +1,20 @@
+feat: thread team_id through all endpoints and tighten IAM
+
+Team scoping:
+- Stats, daily summary, browse, projects, timeseries, and reports
+  now receive and filter by team_id from the authorizer
+- META#PROJECTS is now team-scoped (META#PROJECTS#<team_id>)
+- Remove backward-compat $exists:false OR-logic for team_id — all
+  records have team_id after v1 migration
+- queryByProject now filters by team_id
+
+IAM least-privilege:
+- Bedrock InvokeModel scoped to VALID_CLASSIFICATION_MODELS only
+- apigateway:GET scoped to /apikeys resource only
+- Marketplace Subscribe removed, ViewSubscriptions retained
+
+Bug fixes:
+- transport.close()/server.close() wrapped in try/catch to prevent
+  turning a successful MCP response into a 500
+- Seed API key output now correctly tracks whether v1 migration
+  succeeded vs fell back to new key generation

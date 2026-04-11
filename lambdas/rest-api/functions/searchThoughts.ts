@@ -10,10 +10,11 @@ interface SearchParams {
   limit?: number;
   threshold?: number;
   project?: string;
+  team_id?: string;
 }
 
 export async function searchThoughts(params: SearchParams) {
-  const { query, limit = 20, threshold = 0.7, project } = params;
+  const { query, limit = 20, threshold = 0.7, project, team_id } = params;
 
   const embedResponse = await bedrock.send(new InvokeModelCommand({
     modelId: EMBEDDING_MODEL_ID,
@@ -33,12 +34,11 @@ export async function searchThoughts(params: SearchParams) {
   }];
 
   if (project) {
-    filterConditions.push({
-      '$or': [
-        { project: { '$eq': project } },
-        { project: { '$exists': false } },
-      ],
-    });
+    filterConditions.push({ project: { '$eq': project } });
+  }
+
+  if (team_id) {
+    filterConditions.push({ team_id: { '$eq': team_id } });
   }
 
   const filter = filterConditions.length === 1 ? filterConditions[0] : { '$and': filterConditions };

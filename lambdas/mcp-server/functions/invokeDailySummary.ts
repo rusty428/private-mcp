@@ -8,11 +8,11 @@ interface DailySummaryResult {
   dateStr: string;
 }
 
-export async function invokeDailySummary(): Promise<DailySummaryResult> {
+export async function invokeDailySummary(team_id?: string): Promise<DailySummaryResult> {
   const response = await lambda.send(new InvokeCommand({
     FunctionName: process.env.DAILY_SUMMARY_FN_NAME,
     InvocationType: 'RequestResponse',
-    Payload: Buffer.from(JSON.stringify({})),
+    Payload: Buffer.from(JSON.stringify({ team_id })),
   }));
 
   const payload = JSON.parse(new TextDecoder().decode(response.Payload));

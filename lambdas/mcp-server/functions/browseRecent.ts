@@ -35,6 +35,7 @@ export async function browseRecent(
   type?: string,
   topic?: string,
   project?: string,
+  team_id?: string,
 ): Promise<any[]> {
   limit = Math.min(limit, MAX_LIST_LIMIT);
   if (type) {
@@ -51,20 +52,26 @@ export async function browseRecent(
 
   if (!listResponse.vectors || listResponse.vectors.length === 0) return [];
 
-  const keys = listResponse.vectors.map((v: any) => v.key).slice(0, 100);
+  const allKeys = listResponse.vectors.map((v: any) => v.key);
 
-  const getResponse = await s3vectors.send(new GetVectorsCommand({
-    vectorBucketName: process.env.VECTOR_BUCKET_NAME,
-    indexName: process.env.VECTOR_INDEX_NAME,
-    keys,
-    returnMetadata: true,
-  }));
+  // Fetch metadata in batches of 100 (GetVectors limit)
+  const allVectors: any[] = [];
+  for (let i = 0; i < allKeys.length; i += 100) {
+    const batch = allKeys.slice(i, i + 100);
+    const getResponse = await s3vectors.send(new GetVectorsCommand({
+      vectorBucketName: process.env.VECTOR_BUCKET_NAME,
+      indexName: process.env.VECTOR_INDEX_NAME,
+      keys: batch,
+      returnMetadata: true,
+    }));
+    if (getResponse.vectors) allVectors.push(...getResponse.vectors);
+  }
 
-  if (!getResponse.vectors) return [];
+  if (allVectors.length === 0) return [];
 
   const settings = await loadSettings();
 
-  let results = getResponse.vectors.map((v: any) => ({
+  let results = allVectors.map((v: any) => ({
     key: v.key,
     metadata: {
       ...v.metadata,
@@ -74,6 +81,10 @@ export async function browseRecent(
 
   // Exclude noise (treat missing quality as standard for backward compat)
   results = results.filter((r: any) => r.metadata?.quality !== 'noise');
+
+  if (team_id) {
+    results = results.filter((r: any) => r.metadata?.team_id === team_id);
+  }
 
   if (type) {
     results = results.filter((r: any) => r.metadata?.type === type);

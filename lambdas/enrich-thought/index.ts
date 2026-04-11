@@ -13,7 +13,7 @@ const ddbClient = new DynamoDBClient({ region: process.env.REGION });
 const ddb = DynamoDBDocumentClient.from(ddbClient);
 
 export const handler = async (event: EnrichThoughtInput): Promise<void> => {
-  const { id, content, source, session_id, session_name, source_ref, thought_date, created_at } = event;
+  const { id, content, source, session_id, session_name, source_ref, thought_date, created_at, user_id, team_id } = event;
 
   const settings = await loadSettings();
   const project = resolveProjectAlias(event.project, settings);
@@ -48,6 +48,8 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
     source_ref,
     session_id,
     session_name,
+    user_id,
+    team_id,
     quality: classification.quality,
     thought_date,
     created_at,

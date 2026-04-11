@@ -11,20 +11,22 @@ interface NarrativeParams {
   startDate: string;
   endDate: string;
   project?: string;
+  team_id?: string;
 }
 
 export async function generateNarrative(params: NarrativeParams): Promise<string> {
-  const { startDate, endDate, project } = params;
+  const { startDate, endDate, project, team_id } = params;
 
   let items: Array<{ key: string; metadata: Record<string, any> }>;
   if (project) {
-    items = await queryByProject({ project, startDate, endDate });
+    items = await queryByProject({ project, startDate, endDate, team_id });
   } else {
     const result = await queryThoughts({
       startDate,
       endDate,
       maxRecords: 5000,
       pageSize: 5000,
+      team_id,
     });
     items = result.items;
   }

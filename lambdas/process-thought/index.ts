@@ -29,6 +29,8 @@ interface LambdaEvent {
   project?: string;
   session_id?: string;
   session_name?: string;
+  user_id?: string;
+  team_id?: string;
   slackReply?: SlackReplyContext;
 }
 
@@ -41,6 +43,8 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
         project: event.project,
         session_id: event.session_id,
         session_name: event.session_name,
+        user_id: event.user_id,
+        team_id: event.team_id,
       }
     : JSON.parse(event.body || '{}');
 
@@ -77,6 +81,8 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
     source_ref: input.sourceRef || '',
     session_id: input.session_id || '',
     session_name: input.session_name || '',
+    user_id: input.user_id || 'owner',
+    team_id: input.team_id || 'default',
     quality,
     thought_date: thoughtDate,
     created_at: createdAt,
@@ -103,9 +109,10 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
   await ddb.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: ddbItem }));
 
   if (metadata.project) {
+    const teamProjectsKey = `META#PROJECTS#${metadata.team_id}`;
     await ddb.send(new UpdateCommand({
       TableName: process.env.TABLE_NAME,
-      Key: { pk: 'META#PROJECTS', sk: 'METADATA' },
+      Key: { pk: teamProjectsKey, sk: 'METADATA' },
       UpdateExpression: 'ADD projects :p',
       ExpressionAttributeValues: { ':p': new Set([metadata.project]) },
     }));
@@ -136,6 +143,8 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
       source_ref: input.sourceRef || '',
       thought_date: thoughtDate,
       created_at: createdAt,
+      user_id: input.user_id || 'owner',
+      team_id: input.team_id || 'default',
     };
 
     await lambda.send(new InvokeCommand({

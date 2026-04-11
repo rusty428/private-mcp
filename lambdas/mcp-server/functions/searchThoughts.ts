@@ -71,6 +71,7 @@ export async function searchThoughts(
   threshold: number = 0.5,
   project?: string,
   since?: string,
+  team_id?: string,
 ): Promise<ThoughtSearchResult[]> {
   if (query.length > MAX_QUERY_LENGTH) {
     throw new Error(`Query too long. Maximum ${MAX_QUERY_LENGTH} characters, got ${query.length}.`);
@@ -102,12 +103,11 @@ export async function searchThoughts(
   const filterConditions: any[] = [noiseFilter];
 
   if (project) {
-    filterConditions.push({
-      '$or': [
-        { project: { '$eq': project } },
-        { project: { '$exists': false } },
-      ],
-    });
+    filterConditions.push({ project: { '$eq': project } });
+  }
+
+  if (team_id) {
+    filterConditions.push({ team_id: { '$eq': team_id } });
   }
 
   const filter = filterConditions.length === 1

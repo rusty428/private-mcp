@@ -8,6 +8,7 @@ interface TimeSeriesParams {
   endDate?: string;
   interval?: 'day' | 'week';
   project?: string;
+  team_id?: string;
 }
 
 function getWeekStart(dateStr: string): string {
@@ -19,12 +20,12 @@ function getWeekStart(dateStr: string): string {
 }
 
 export async function getTimeSeries(params: TimeSeriesParams) {
-  const { startDate, endDate, interval = 'day', project } = params;
+  const { startDate, endDate, interval = 'day', project, team_id } = params;
 
   // Fetch records — use project GSI if project specified, otherwise month GSI
   let allItems: Array<{ key: string; metadata: Record<string, any> }>;
   if (project) {
-    allItems = await queryByProject({ project, startDate, endDate });
+    allItems = await queryByProject({ project, startDate, endDate, team_id });
   } else {
     // Fetch up to maxRecords using the month GSI
     const result = await queryThoughts({
@@ -32,6 +33,7 @@ export async function getTimeSeries(params: TimeSeriesParams) {
       endDate,
       maxRecords: 5000,
       pageSize: 5000,
+      team_id,
     });
     allItems = result.items;
   }

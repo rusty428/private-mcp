@@ -8,6 +8,10 @@ interface SlackReplyContext {
   botToken: string;
 }
 
+// TODO: Slack ingest defaults to user_id='owner', team_id='default' because
+// the /slack/events endpoint uses Slack HMAC verification (not the custom
+// authorizer), so there's no identity context available. To support multi-team
+// Slack capture, add a settings-table mapping from Slack workspace/channel to team.
 export async function invokeProcessThought(
   text: string,
   source: string,
