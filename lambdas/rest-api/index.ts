@@ -70,7 +70,11 @@ function getUserContext(event: APIGatewayProxyEvent): AuthorizerContext {
 
 function parseBody(event: APIGatewayProxyEvent): any {
   if (!event.body) return {};
-  return JSON.parse(event.body);
+  try {
+    return JSON.parse(event.body);
+  } catch {
+    throw Object.assign(new Error('Malformed JSON in request body'), { statusCode: 400 });
+  }
 }
 
 // --- Type cache ---
@@ -327,6 +331,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     return errorResponse(404, 'Not found', event);
   } catch (err: any) {
+    if (err.statusCode === 400) {
+      return errorResponse(400, err.message, event);
+    }
     console.error('Request error:', { method, path, error: err.message, stack: err.stack });
     return errorResponse(500, 'Internal server error', event);
   }
