@@ -617,6 +617,13 @@ export class PrivateMCPStack extends cdk.Stack {
       ]),
     });
 
+    // --- S3 Config Bucket (for cross-stack integration) ---
+    const configBucket = new cdk.aws_s3.Bucket(this, 'ConfigBucket', {
+      bucketName: CONFIG_BUCKET_NAME,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
+    });
+
     // --- Seed default API key (migrates existing API Gateway key if UPGRADE_FROM_V1=true) ---
     const seedApiKeyFn = new nodejs.NodejsFunction(this, 'SeedApiKeyFn', {
       entry: 'infra/lib/custom-resources/seed-api-key.ts',
@@ -626,6 +633,7 @@ export class PrivateMCPStack extends cdk.Stack {
       memorySize: 128,
       environment: {
         API_KEYS_TABLE_NAME: API_KEYS_TABLE_NAME,
+        CONFIG_BUCKET_NAME: CONFIG_BUCKET_NAME,
         UPGRADE_FROM_V1: process.env.UPGRADE_FROM_V1 || '',
       },
       bundling: {
@@ -644,24 +652,17 @@ export class PrivateMCPStack extends cdk.Stack {
       resources: [`arn:aws:apigateway:${config.region}::/apikeys`],
     }));
 
+    seedApiKeyFn.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['s3:PutObject'],
+      resources: [`${configBucket.bucketArn}/*`],
+    }));
+
     const seedApiKeyProvider = new cr.Provider(this, 'SeedApiKeyProvider', {
       onEventHandler: seedApiKeyFn,
     });
 
-    const seedApiKeyResource = new cdk.CustomResource(this, 'SeedApiKey', {
+    new cdk.CustomResource(this, 'SeedApiKey', {
       serviceToken: seedApiKeyProvider.serviceToken,
-    });
-
-    new cdk.CfnOutput(this, 'DefaultApiKey', {
-      value: seedApiKeyResource.getAttString('ApiKey'),
-      description: 'Default owner API key — save this, it cannot be retrieved later. Empty if key already existed.',
-    });
-
-    // --- S3 Config Bucket (for cross-stack integration) ---
-    const configBucket = new cdk.aws_s3.Bucket(this, 'ConfigBucket', {
-      bucketName: CONFIG_BUCKET_NAME,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      blockPublicAccess: cdk.aws_s3.BlockPublicAccess.BLOCK_ALL,
     });
 
     // Write stack outputs to S3 for private-mcp-teams to consume
