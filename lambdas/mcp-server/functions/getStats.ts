@@ -12,16 +12,22 @@ export async function getStats(team_id?: string): Promise<any> {
     return { total: 0, byType: {}, topTopics: [], dateRange: null };
   }
 
-  const keys = listResponse.vectors.map((v: any) => v.key);
+  const allKeys = listResponse.vectors.map((v: any) => v.key);
 
-  const getResponse = await s3vectors.send(new GetVectorsCommand({
-    vectorBucketName: process.env.VECTOR_BUCKET_NAME,
-    indexName: process.env.VECTOR_INDEX_NAME,
-    keys: keys.slice(0, 100),
-    returnMetadata: true,
-  }));
+  // Fetch metadata in batches of 100 (GetVectors limit)
+  const allVectors: any[] = [];
+  for (let i = 0; i < allKeys.length; i += 100) {
+    const batch = allKeys.slice(i, i + 100);
+    const getResponse = await s3vectors.send(new GetVectorsCommand({
+      vectorBucketName: process.env.VECTOR_BUCKET_NAME,
+      indexName: process.env.VECTOR_INDEX_NAME,
+      keys: batch,
+      returnMetadata: true,
+    }));
+    if (getResponse.vectors) allVectors.push(...getResponse.vectors);
+  }
 
-  let vectors = getResponse.vectors || [];
+  let vectors = allVectors;
 
   if (team_id) {
     vectors = vectors.filter((v: any) => v.metadata?.team_id === team_id);
