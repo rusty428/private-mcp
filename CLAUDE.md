@@ -27,10 +27,10 @@ Config is loaded from `.env` automatically (see `.env.example` for required vars
 ## Architecture
 
 ```
-AI Tools ──MCP──▶ API Gateway ──▶ mcp-server Lambda
-                  (x-api-key)           │
-                                        ▼
-                                  process-thought Lambda
+AI Tools ──MCP──▶ API Gateway ──▶ Lambda Authorizer ──▶ mcp-server Lambda
+                  (x-api-key)   (API key → user+team)         │
+                                                               ▼
+                                                         process-thought Lambda
                                     │           │
                                     ▼           ▼
                               Bedrock       Bedrock
@@ -58,6 +58,11 @@ private-mcp/
 │       └── stacks/
 │           └── private-mcp-stack.ts      # Single stack: all resources
 ├── lambdas/
+│   ├── authorizer/                   # Custom Lambda authorizer
+│   │   ├── index.ts                  # API key → user + team resolution
+│   │   └── functions/
+│   │       ├── hashApiKey.ts         # SHA-256 hash of raw key
+│   │       └── lookupApiKey.ts       # DynamoDB lookup by keyHash GSI
 │   ├── process-thought/              # Core: embed + classify + store
 │   │   ├── index.ts                  # Handler (parallel Bedrock calls → S3 Vectors → optional Slack reply)
 │   │   ├── functions/
@@ -69,8 +74,7 @@ private-mcp/
 │   │   └── utils/
 │   │       └── createResponse.ts
 │   ├── mcp-server/                   # MCP protocol server
-│   │   ├── index.ts                  # Lambda entry (serverless-express)
-│   │   ├── server.ts                 # Express app + MCP tool registration
+│   │   ├── index.ts                  # Lambda handler + Web Standard MCP transport
 │   │   └── functions/
 │   │       ├── searchThoughts.ts     # Semantic search via S3 Vectors
 │   │       ├── browseRecent.ts       # List + filter recent thoughts
@@ -84,8 +88,7 @@ private-mcp/
 │   │       ├── formatReport.ts       # Build two-section Slack message
 │   │       └── postToSlack.ts        # Post to Slack channel
 │   └── rest-api/                     # REST API backend for the web UI
-│       ├── index.ts                  # Lambda entry (serverless-express)
-│       ├── server.ts                 # Express app + route definitions
+│       ├── index.ts                  # Lambda handler + route dispatch
 │       └── functions/
 │           ├── listThoughts.ts       # Paginated list with filters
 │           ├── getThought.ts         # Get single thought by ID
@@ -123,8 +126,9 @@ private-mcp/
 **Each Lambda is self-contained.** No shared code directories across Lambdas. Each Lambda has its own `functions/` and `utils/` subdirectories.
 
 - **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. All capture sources invoke this Lambda.
-- **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` in stateless mode. Express + `@codegenie/serverless-express`. Five tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`.
-- **rest-api** — REST backend for the web UI. Express + `@codegenie/serverless-express`. CRUD for thoughts, semantic search, timeseries stats, AI narrative reports, enrichment settings. Data stored in DynamoDB (`private-mcp-thoughts` table) with GSIs for type, source, project, and date queries.
+- **authorizer** — Custom Lambda authorizer. Resolves API key → user + team via SHA-256 hash lookup in the api-keys DynamoDB table. Injects user_id, username, team_id, and role into the request context.
+- **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` with Web Standard MCP transport. Raw Lambda handler (no Express). Five tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`.
+- **rest-api** — REST backend for the web UI. Raw Lambda handler with route dispatch (no Express). CRUD for thoughts, semantic search, timeseries stats, AI narrative reports, enrichment settings. Data stored in DynamoDB (`private-mcp-thoughts-v2` table) with GSIs for type, source, project, and date queries.
 - **daily-summary** — Generates a two-section report (performance metrics + content highlights). Triggered daily by EventBridge cron or on-demand via `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
 - **enrich-thought** — Async enrichment pipeline. Performs deeper metadata extraction (related projects, refined summaries) after initial capture. Invoked asynchronously so it doesn't block the capture response.
 - **ingest-thought** — Optional Slack webhook handler. Filters messages, invokes process-thought asynchronously, returns 200 immediately to avoid Slack's 3-second retry.
@@ -137,7 +141,7 @@ private-mcp/
 - **Embeddings**: Amazon Titan Text Embeddings v2 (Bedrock)
 - **Classification**: Claude 3 Haiku (Bedrock)
 - **API**: API Gateway REST API, stage `api`
-- **MCP Auth**: API Gateway API keys + usage plan
+- **Auth**: Custom Lambda authorizer (API key → user + team via SHA-256 hash lookup)
 - **MCP SDK**: `@modelcontextprotocol/sdk` — imports from `sdk/server/mcp.js` and `sdk/server/streamableHttp.js`
 - **Scheduling**: EventBridge cron rule for daily summary
 - **Config**: dotenv for secrets and schedule config (`.env`, gitignored)
@@ -146,20 +150,20 @@ private-mcp/
 
 | Method | Path | Lambda | Auth |
 |---|---|---|---|
-| POST | `/mcp` | mcp-server | API key required |
-| GET | `/mcp` | mcp-server | API key required |
-| DELETE | `/mcp` | mcp-server | API key required |
-| GET | `/api/thoughts` | rest-api | API key required |
-| GET | `/api/thoughts/:id` | rest-api | API key required |
-| PUT | `/api/thoughts/:id` | rest-api | API key required |
-| DELETE | `/api/thoughts/:id` | rest-api | API key required |
-| POST | `/api/search` | rest-api | API key required |
-| POST | `/api/capture` | rest-api | API key required |
-| GET | `/api/stats/timeseries` | rest-api | API key required |
-| GET | `/api/projects` | rest-api | API key required |
-| POST | `/api/reports/generate` | rest-api | API key required |
-| GET | `/api/settings/enrichment` | rest-api | API key required |
-| PUT | `/api/settings/enrichment` | rest-api | API key required |
+| POST | `/mcp` | mcp-server | Custom authorizer |
+| GET | `/mcp` | mcp-server | Custom authorizer |
+| DELETE | `/mcp` | mcp-server | Custom authorizer |
+| GET | `/api/thoughts` | rest-api | Custom authorizer |
+| GET | `/api/thoughts/:id` | rest-api | Custom authorizer |
+| PUT | `/api/thoughts/:id` | rest-api | Custom authorizer |
+| DELETE | `/api/thoughts/:id` | rest-api | Custom authorizer |
+| POST | `/api/search` | rest-api | Custom authorizer |
+| POST | `/api/capture` | rest-api | Custom authorizer |
+| GET | `/api/stats/timeseries` | rest-api | Custom authorizer |
+| GET | `/api/projects` | rest-api | Custom authorizer |
+| POST | `/api/reports/generate` | rest-api | Custom authorizer |
+| GET | `/api/settings/enrichment` | rest-api | Custom authorizer |
+| PUT | `/api/settings/enrichment` | rest-api | Custom authorizer |
 | POST | `/slack/events` | ingest-thought | Public (optional Slack webhook) |
 
 ## MCP Tools
