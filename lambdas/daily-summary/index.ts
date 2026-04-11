@@ -9,14 +9,19 @@ interface DailySummaryResult {
   dateStr: string;
 }
 
-export const handler = async (): Promise<DailySummaryResult> => {
+interface DailySummaryEvent {
+  team_id?: string;
+}
+
+export const handler = async (event?: DailySummaryEvent): Promise<DailySummaryResult> => {
+  const team_id = event?.team_id || 'default';
   const timezone = process.env.DAILY_SUMMARY_TIMEZONE || 'America/Los_Angeles';
   const now = new Date();
   // Scheduled run = morning summary of previous day
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   const todayDateStr = yesterday.toLocaleDateString('en-CA', { timeZone: timezone });
 
-  const thoughts = await getTodaysThoughts(todayDateStr);
+  const thoughts = await getTodaysThoughts(todayDateStr, team_id);
   const settings = await loadSettings();
   const report = formatReport(todayDateStr, thoughts, settings);
 

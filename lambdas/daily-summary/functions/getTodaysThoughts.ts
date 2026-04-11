@@ -8,7 +8,7 @@ interface ThoughtWithKey {
   metadata: ThoughtMetadata;
 }
 
-export async function getTodaysThoughts(todayDateStr: string): Promise<ThoughtWithKey[]> {
+export async function getTodaysThoughts(todayDateStr: string, team_id: string): Promise<ThoughtWithKey[]> {
   const listResponse = await s3vectors.send(new ListVectorsCommand({
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,
@@ -33,7 +33,8 @@ export async function getTodaysThoughts(todayDateStr: string): Promise<ThoughtWi
         const meta = v.metadata as unknown as ThoughtMetadata;
         const dateStr = meta?.thought_date || meta?.created_at?.slice(0, 10) || '';
         const isNoise = meta?.quality === 'noise';
-        if (dateStr === todayDateStr && !isNoise) {
+        const matchesTeam = !team_id || (meta as any).team_id === team_id;
+        if (dateStr === todayDateStr && !isNoise && matchesTeam) {
           allThoughts.push({ key: v.key!, metadata: meta });
         }
       }
