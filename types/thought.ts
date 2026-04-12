@@ -23,6 +23,7 @@ export interface ThoughtMetadata {
   type: ThoughtType | 'pending';
   topics: string[];
   people: string[];
+  people_lower?: string[];
   action_items: string[];
   dates_mentioned: string[];
   project: string;

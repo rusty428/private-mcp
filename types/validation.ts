@@ -4,6 +4,7 @@ export const MAX_TEXT_LENGTH = 10000;
 export const MAX_QUERY_LENGTH = 1000;
 export const MAX_LIST_LIMIT = 2000;
 export const MAX_SEARCH_LIMIT = 100;
+export const EXPLORE_TOP_K = 100;
 export const MAX_PROJECT_LENGTH = 200;
 export const MAX_SESSION_FIELD_LENGTH = 256;
 export const MAX_ENTITY_NAME_LENGTH = 200;
