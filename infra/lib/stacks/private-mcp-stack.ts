@@ -277,6 +277,28 @@ export class PrivateMCPStack extends cdk.Stack {
       ),
     });
 
+    // --- Knowledge Graph DynamoDB IAM policies ---
+    const graphReadPolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:GetItem', 'dynamodb:Query'],
+      resources: [
+        graphTable.tableArn,
+        `${graphTable.tableArn}/index/*`,
+      ],
+    });
+
+    const graphReadWritePolicy = new iam.PolicyStatement({
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:Query',
+      ],
+      resources: [
+        graphTable.tableArn,
+        `${graphTable.tableArn}/index/*`,
+      ],
+    });
+
     // --- Marketplace IAM policy (required for first-time Anthropic model access) ---
     const marketplacePolicy = new iam.PolicyStatement({
       actions: [
@@ -323,6 +345,8 @@ export class PrivateMCPStack extends cdk.Stack {
     enrichThoughtFn.addToRolePolicy(ddbWritePolicy);
     enrichThoughtFn.addToRolePolicy(settingsReadPolicy);
     enrichThoughtFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
+    enrichThoughtFn.addToRolePolicy(graphReadPolicy);
+    enrichThoughtFn.addEnvironment('GRAPH_TABLE_NAME', GRAPH_TABLE_NAME);
 
     // process-thought invokes enrich-thought async
     enrichThoughtFn.grantInvoke(processThoughtFn);
@@ -370,6 +394,8 @@ export class PrivateMCPStack extends cdk.Stack {
     mcpServerFn.addToRolePolicy(bedrockEmbedPolicy);
     mcpServerFn.addToRolePolicy(settingsReadPolicy);
     mcpServerFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
+    mcpServerFn.addToRolePolicy(graphReadWritePolicy);
+    mcpServerFn.addEnvironment('GRAPH_TABLE_NAME', GRAPH_TABLE_NAME);
 
     // --- daily-summary Lambda ---
     const dailySummaryFn = new nodejs.NodejsFunction(this, 'DailySummaryFn', {
