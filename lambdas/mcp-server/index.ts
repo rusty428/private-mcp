@@ -18,7 +18,7 @@ import { AuthorizerContext } from '../../types/identity';
 function createServer(userContext: AuthorizerContext): McpServer {
   const server = new McpServer({
     name: 'private-mcp',
-    version: '2.0.0',
+    version: '2.1.0',
   });
 
   server.registerTool(
