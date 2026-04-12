@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
+import { RawTriple, VALID_ENTITY_TYPES } from '../../../types/graph';
 
 const bedrock = new BedrockRuntimeClient({ region: process.env.REGION });
 
@@ -11,6 +12,7 @@ export interface EnrichmentClassification {
   related_projects: string[];
   summary: string;
   quality: 'high' | 'standard' | 'noise';
+  raw_triples: RawTriple[];
 }
 
 export interface ClassifyOptions {
@@ -18,6 +20,7 @@ export interface ClassifyOptions {
   modelId: string;
   validTypes: string[];
   defaultType: string;
+  validPredicates?: string[];
 }
 
 export async function classifyThought(
@@ -58,6 +61,30 @@ export async function classifyThought(
     if (!['high', 'standard', 'noise'].includes(parsed.quality)) {
       parsed.quality = 'standard';
     }
+
+    const rawTriples: RawTriple[] = [];
+    if (Array.isArray(parsed.raw_triples) && options.validPredicates) {
+      for (const t of parsed.raw_triples) {
+        if (
+          typeof t.subject === 'string' && t.subject.trim() &&
+          typeof t.predicate === 'string' && options.validPredicates.includes(t.predicate) &&
+          typeof t.object === 'string' && t.object.trim() &&
+          VALID_ENTITY_TYPES.includes(t.subject_type) &&
+          VALID_ENTITY_TYPES.includes(t.object_type) &&
+          typeof t.confidence === 'number' && t.confidence >= 0 && t.confidence <= 1
+        ) {
+          rawTriples.push({
+            subject: t.subject.trim().toLowerCase(),
+            predicate: t.predicate,
+            object: t.object.trim().toLowerCase(),
+            subject_type: t.subject_type,
+            object_type: t.object_type,
+            confidence: t.confidence,
+          });
+        }
+      }
+    }
+
     return {
       type: parsed.type,
       topics: parsed.topics || [],
@@ -67,6 +94,7 @@ export async function classifyThought(
       related_projects: parsed.related_projects || [],
       summary: parsed.summary,
       quality: parsed.quality,
+      raw_triples: rawTriples,
     };
   } catch {
     return {
@@ -78,6 +106,7 @@ export async function classifyThought(
       related_projects: [],
       summary: content.slice(0, 200),
       quality: 'standard',
+      raw_triples: [],
     };
   }
 }
