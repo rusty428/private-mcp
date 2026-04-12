@@ -12,7 +12,7 @@ import { kgAdd } from './functions/kgAdd';
 import { kgInvalidate } from './functions/kgInvalidate';
 import { kgTimeline } from './functions/kgTimeline';
 import { kgPredicates } from './functions/kgPredicates';
-import { SOURCE_REGEX, SOURCE_FORMAT_DESCRIPTION, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH } from '../../types/validation';
+import { SOURCE_REGEX, SOURCE_FORMAT_DESCRIPTION, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH, DATE_REGEX, MAX_ENTITY_NAME_LENGTH, MAX_PREDICATE_LENGTH } from '../../types/validation';
 import { AuthorizerContext } from '../../types/identity';
 
 function createServer(userContext: AuthorizerContext): McpServer {
@@ -123,9 +123,9 @@ function createServer(userContext: AuthorizerContext): McpServer {
       title: 'Knowledge Graph Query',
       description: 'Get all relationships for an entity. Returns outgoing and incoming edges with temporal validity.',
       inputSchema: {
-        entity: z.string().describe('Entity name (e.g., "Kai", "auth-migration")'),
-        as_of: z.string().optional().describe('Date (YYYY-MM-DD) — only return facts valid at this time'),
-        predicate: z.string().optional().describe('Filter to a specific relationship type (e.g., "works_on")'),
+        entity: z.string().max(MAX_ENTITY_NAME_LENGTH).describe('Entity name (e.g., "Kai", "auth-migration")'),
+        as_of: z.string().regex(DATE_REGEX).optional().describe('Date (YYYY-MM-DD) — only return facts valid at this time'),
+        predicate: z.string().max(MAX_PREDICATE_LENGTH).optional().describe('Filter to a specific relationship type (e.g., "works_on")'),
         direction: z.enum(['outgoing', 'incoming', 'both']).optional().default('both').describe('Edge direction to query'),
       },
     },
@@ -143,9 +143,9 @@ function createServer(userContext: AuthorizerContext): McpServer {
       title: 'Knowledge Graph Add',
       description: 'Add a relationship fact. Auto-creates entities if they don\'t exist. Validates predicate against active vocabulary.',
       inputSchema: {
-        subject: z.string().describe('Subject entity name'),
-        predicate: z.string().describe('Relationship type (e.g., "works_on", "owns")'),
-        object: z.string().describe('Object entity name'),
+        subject: z.string().max(MAX_ENTITY_NAME_LENGTH).describe('Subject entity name'),
+        predicate: z.string().max(MAX_PREDICATE_LENGTH).describe('Relationship type (e.g., "works_on", "owns")'),
+        object: z.string().max(MAX_ENTITY_NAME_LENGTH).describe('Object entity name'),
         subject_type: z.enum(['person', 'project', 'topic']).optional().describe('Entity type for subject'),
         object_type: z.enum(['person', 'project', 'topic']).optional().describe('Entity type for object'),
       },
@@ -164,10 +164,10 @@ function createServer(userContext: AuthorizerContext): McpServer {
       title: 'Knowledge Graph Invalidate',
       description: 'Mark a relationship as no longer true. Sets the end date without deleting — history is preserved.',
       inputSchema: {
-        subject: z.string().describe('Subject entity name'),
-        predicate: z.string().describe('Relationship type'),
-        object: z.string().describe('Object entity name'),
-        ended: z.string().optional().describe('When this stopped being true (YYYY-MM-DD). Defaults to today.'),
+        subject: z.string().max(MAX_ENTITY_NAME_LENGTH).describe('Subject entity name'),
+        predicate: z.string().max(MAX_PREDICATE_LENGTH).describe('Relationship type'),
+        object: z.string().max(MAX_ENTITY_NAME_LENGTH).describe('Object entity name'),
+        ended: z.string().regex(DATE_REGEX).optional().describe('When this stopped being true (YYYY-MM-DD). Defaults to today.'),
       },
     },
     async ({ subject, predicate, object, ended }) => {
@@ -184,7 +184,7 @@ function createServer(userContext: AuthorizerContext): McpServer {
       title: 'Knowledge Graph Timeline',
       description: 'Chronological story of an entity — all facts involving it, ordered by time.',
       inputSchema: {
-        entity: z.string().describe('Entity name'),
+        entity: z.string().max(MAX_ENTITY_NAME_LENGTH).describe('Entity name'),
         limit: z.number().optional().default(50).describe('Max results'),
       },
     },
@@ -203,7 +203,7 @@ function createServer(userContext: AuthorizerContext): McpServer {
       description: 'View and manage the relationship vocabulary. List active predicates, add new ones, or remove existing ones.',
       inputSchema: {
         action: z.enum(['list', 'add', 'remove']).describe('Action to perform'),
-        predicate: z.string().optional().describe('Predicate name (required for add/remove)'),
+        predicate: z.string().max(MAX_PREDICATE_LENGTH).optional().describe('Predicate name (required for add/remove)'),
       },
     },
     async ({ action, predicate }) => {
@@ -281,13 +281,24 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 
   try {
-    // Extract user context from API Gateway authorizer
+    // Extract user context from API Gateway authorizer — fail closed if missing
     const authorizer = event.requestContext.authorizer || {};
+    if (!authorizer.user_id || !authorizer.team_id) {
+      return {
+        statusCode: 403,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32600, message: 'Missing authorization context' },
+          id: body?.id ?? null,
+        }),
+      };
+    }
     const userContext: AuthorizerContext = {
-      user_id: authorizer.user_id || 'owner',
-      username: authorizer.username || 'owner',
-      team_id: authorizer.team_id || 'default',
-      role: authorizer.role || 'admin',
+      user_id: authorizer.user_id,
+      username: authorizer.username || authorizer.user_id,
+      team_id: authorizer.team_id,
+      role: authorizer.role || 'member',
     };
 
     const server = createServer(userContext);

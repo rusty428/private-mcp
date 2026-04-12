@@ -1,6 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
-import { EntityType, VALID_ENTITY_TYPES } from '../../../types/graph';
+import { EntityType, VALID_ENTITY_TYPES, DEFAULT_PREDICATES } from '../../../types/graph';
 
 const ddbClient = new DynamoDBClient({ region: process.env.REGION });
 const ddb = DynamoDBDocumentClient.from(ddbClient);
@@ -15,7 +15,7 @@ async function loadPredicates(teamId: string): Promise<string[]> {
     TableName: tableName,
     Key: { pk: `CONFIG#${teamId}`, sk: 'PREDICATES' },
   }));
-  return (result.Item?.predicates as string[]) || [];
+  return (result.Item?.predicates as string[]) || [...DEFAULT_PREDICATES];
 }
 
 async function upsertEntity(

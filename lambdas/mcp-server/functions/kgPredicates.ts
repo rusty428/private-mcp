@@ -27,7 +27,7 @@ export async function kgPredicates(
     return { success: false, message: 'Predicate is required for add/remove' };
   }
 
-  const normalized = predicate.trim().toLowerCase().replace(/\s+/g, '_');
+  const normalized = predicate.trim().toLowerCase().replace(/[#]/g, '').replace(/\s+/g, '_');
 
   if (action === 'add') {
     if (current.includes(normalized)) {
