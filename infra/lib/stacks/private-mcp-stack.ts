@@ -21,6 +21,7 @@ import {
   TEAMS_TABLE_NAME,
   USERS_TABLE_NAME,
   API_KEYS_TABLE_NAME,
+  GRAPH_TABLE_NAME,
   CONFIG_BUCKET_NAME,
 } from '../../../types/config';
 import { VALID_CLASSIFICATION_MODELS } from '../../../types/validation';
@@ -182,6 +183,23 @@ export class PrivateMCPStack extends cdk.Stack {
       indexName: 'team-index',
       partitionKey: { name: 'team_id', type: dynamodb.AttributeType.STRING },
       sortKey: { name: 'createdAt', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // --- Knowledge Graph DynamoDB Table ---
+    const graphTable = new dynamodb.Table(this, 'GraphTable', {
+      tableName: GRAPH_TABLE_NAME,
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    graphTable.addGlobalSecondaryIndex({
+      indexName: 'gsi-graph-inverse',
+      partitionKey: { name: 'inversePk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'inverseSk', type: dynamodb.AttributeType.STRING },
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
