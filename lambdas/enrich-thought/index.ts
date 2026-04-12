@@ -6,6 +6,7 @@ import { storeThought } from './functions/storeThought';
 import { loadSettings } from './functions/loadSettings';
 import { buildPrompt } from './functions/buildPrompt';
 import { resolveProjectAlias } from './functions/resolveProjectAlias';
+import { loadPredicates } from './functions/loadPredicates';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
@@ -16,16 +17,18 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
   const { id, content, source, session_id, session_name, source_ref, thought_date, created_at, user_id, team_id } = event;
 
   const settings = await loadSettings();
+  const predicates = await loadPredicates(team_id);
   const project = resolveProjectAlias(event.project, settings);
 
   const strippedContent = stripFraming(content, source);
-  const systemPrompt = buildPrompt(settings);
+  const systemPrompt = buildPrompt(settings, predicates);
 
   const classification = await classifyThought(strippedContent, source, project, {
     systemPrompt,
     modelId: settings.classificationModel,
     validTypes: settings.types,
     defaultType: settings.defaultType,
+    validPredicates: predicates,
   });
 
   const normalizedRelatedProjects = classification.related_projects.map(
@@ -98,6 +101,10 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
   if (normalizedRelatedProjects.length > 0) {
     updateExprParts.push('related_projects = :related_projects');
     exprValues[':related_projects'] = normalizedRelatedProjects;
+  }
+  if (classification.raw_triples.length > 0) {
+    updateExprParts.push('raw_triples = :raw_triples');
+    exprValues[':raw_triples'] = classification.raw_triples;
   }
 
   await ddb.send(new UpdateCommand({
