@@ -12,6 +12,9 @@ import { kgAdd } from './functions/kgAdd';
 import { kgInvalidate } from './functions/kgInvalidate';
 import { kgTimeline } from './functions/kgTimeline';
 import { kgPredicates } from './functions/kgPredicates';
+import { findConnections } from './functions/findConnections';
+import { exploreTopic } from './functions/exploreTopic';
+import { explorePerson } from './functions/explorePerson';
 import { SOURCE_REGEX, SOURCE_FORMAT_DESCRIPTION, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH, DATE_REGEX, MAX_ENTITY_NAME_LENGTH, MAX_PREDICATE_LENGTH } from '../../types/validation';
 import { AuthorizerContext } from '../../types/identity';
 
@@ -208,6 +211,61 @@ function createServer(userContext: AuthorizerContext): McpServer {
     },
     async ({ action, predicate }) => {
       const result = await kgPredicates(action, userContext.team_id, predicate);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'find_connections',
+    {
+      title: 'Find Connections',
+      description: 'Find what connects two projects — shared topics, shared people, and co-occurrence patterns.',
+      inputSchema: {
+        project_a: z.string().max(MAX_PROJECT_LENGTH).describe('First project name'),
+        project_b: z.string().max(MAX_PROJECT_LENGTH).describe('Second project name'),
+        min_occurrences: z.number().optional().default(1).describe('Minimum times a topic/person must appear to count'),
+      },
+    },
+    async ({ project_a, project_b, min_occurrences }) => {
+      const result = await findConnections(project_a, project_b, userContext.team_id, min_occurrences);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'explore_topic',
+    {
+      title: 'Explore Topic',
+      description: 'Explore a topic across the thought archive — which projects mention it, which people are connected to it, and recent activity.',
+      inputSchema: {
+        topic: z.string().describe("Topic tag to explore (e.g., 'auth', 'cdk', 'deploy')"),
+        since: z.string().optional().describe('Optional date filter (YYYY-MM-DD)'),
+      },
+    },
+    async ({ topic, since }) => {
+      const result = await exploreTopic(topic, userContext.team_id, since);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'explore_person',
+    {
+      title: 'Explore Person',
+      description: 'Explore a person across the thought archive — which projects they appear in, what topics they\'re connected to, and recent mentions.',
+      inputSchema: {
+        person: z.string().describe("Person name (e.g., 'Kai', 'Maya')"),
+        since: z.string().optional().describe('Optional date filter (YYYY-MM-DD)'),
+      },
+    },
+    async ({ person, since }) => {
+      const result = await explorePerson(person, userContext.team_id, since);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
       };

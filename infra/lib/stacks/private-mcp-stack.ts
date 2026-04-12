@@ -400,6 +400,13 @@ export class PrivateMCPStack extends cdk.Stack {
     mcpServerFn.addToRolePolicy(graphReadWritePolicy);
     mcpServerFn.addEnvironment('GRAPH_TABLE_NAME', GRAPH_TABLE_NAME);
 
+    // Connection discovery tools need DDB Query on thoughts table gsi-by-project
+    const ddbReadPolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:Query'],
+      resources: [`${thoughtsTable.tableArn}/index/gsi-by-project`],
+    });
+    mcpServerFn.addToRolePolicy(ddbReadPolicy);
+
     // --- daily-summary Lambda ---
     const dailySummaryFn = new nodejs.NodejsFunction(this, 'DailySummaryFn', {
       entry: 'lambdas/daily-summary/index.ts',
