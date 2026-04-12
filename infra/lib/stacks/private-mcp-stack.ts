@@ -27,6 +27,7 @@ import {
 } from '../../../types/config';
 import { VALID_CLASSIFICATION_MODELS } from '../../../types/validation';
 import { DEFAULT_ENRICHMENT_SETTINGS } from '../../../types/settings';
+import { DEFAULT_PREDICATES } from '../../../types/graph';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
   config: PrivateMCPConfig;
@@ -697,6 +698,33 @@ export class PrivateMCPStack extends cdk.Stack {
       ]),
     });
 
+    // --- Seed default KG predicate vocabulary ---
+    const seedPredicates = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: GRAPH_TABLE_NAME,
+        Item: {
+          pk: { S: 'CONFIG#default' },
+          sk: { S: 'PREDICATES' },
+          predicates: { L: DEFAULT_PREDICATES.map(p => ({ S: p })) },
+          updatedAt: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(pk)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-kg-predicates'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedKGPredicates', {
+      onCreate: seedPredicates,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [graphTable.tableArn],
+        }),
+      ]),
+    });
+
     // --- S3 Config Bucket (for cross-stack integration) ---
     const configBucket = new cdk.aws_s3.Bucket(this, 'ConfigBucket', {
       bucketName: CONFIG_BUCKET_NAME,
@@ -764,6 +792,8 @@ export class PrivateMCPStack extends cdk.Stack {
           settingsTableName: SETTINGS_TABLE_NAME,
           thoughtsTableArn: thoughtsTable.tableArn,
           thoughtsTableName: THOUGHTS_TABLE_NAME,
+          graphTableArn: graphTable.tableArn,
+          graphTableName: GRAPH_TABLE_NAME,
         }),
         ContentType: 'application/json',
       },
@@ -838,6 +868,11 @@ export class PrivateMCPStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiKeysTableName', {
       value: apiKeysTable.tableName,
       description: 'DynamoDB API keys table name',
+    });
+
+    new cdk.CfnOutput(this, 'GraphTableName', {
+      value: graphTable.tableName,
+      description: 'DynamoDB knowledge graph table name',
     });
   }
 }
