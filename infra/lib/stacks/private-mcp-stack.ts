@@ -8,6 +8,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { PrivateMCPConfig } from '../config';
@@ -61,6 +62,7 @@ export class PrivateMCPStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       pointInTimeRecovery: true,
+      stream: dynamodb.StreamViewType.NEW_IMAGE,
     });
 
     thoughtsTable.addGlobalSecondaryIndex({
@@ -435,6 +437,40 @@ export class PrivateMCPStack extends cdk.Stack {
     // Allow mcp-server to invoke daily-summary
     dailySummaryFn.grantInvoke(mcpServerFn);
     mcpServerFn.addEnvironment('DAILY_SUMMARY_FN_NAME', dailySummaryFn.functionName);
+
+    // --- extract-graph Lambda (Knowledge Graph — DynamoDB Stream consumer) ---
+    const extractGraphFn = new nodejs.NodejsFunction(this, 'ExtractGraphFn', {
+      entry: 'lambdas/extract-graph/index.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        REGION: config.region,
+        GRAPH_TABLE_NAME: GRAPH_TABLE_NAME,
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+
+    extractGraphFn.addToRolePolicy(graphReadWritePolicy);
+
+    extractGraphFn.addEventSource(new lambdaEventSources.DynamoEventSource(thoughtsTable, {
+      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      batchSize: 1,
+      retryAttempts: 3,
+      filters: [
+        lambda.FilterCriteria.filter({
+          dynamodb: {
+            NewImage: {
+              enriched: { BOOL: [true] },
+            },
+          },
+        }),
+      ],
+    }));
 
     // --- rest-api Lambda (UI backend) ---
     const restApiFn = new nodejs.NodejsFunction(this, 'RestApiFn', {
