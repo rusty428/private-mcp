@@ -1,6 +1,6 @@
 import { EnrichmentSettings } from '../../../types/settings';
 
-export function buildPrompt(settings: EnrichmentSettings): string {
+export function buildPrompt(settings: EnrichmentSettings, predicates?: string[]): string {
   if (settings.customPrompt) return settings.customPrompt;
 
   const typeList = settings.types.join(', ');
@@ -10,6 +10,18 @@ export function buildPrompt(settings: EnrichmentSettings): string {
     : '';
   const specialSection = settings.specialInstructions
     ? `\n${settings.specialInstructions}\n`
+    : '';
+
+  const rawTriplesSection = predicates
+    ? `- "raw_triples": array of relationship triples extracted from this thought. Each triple is an object with:
+  - "subject": entity name (a person, project, or topic)
+  - "predicate": one of: ${predicates.join(', ')}
+  - "object": entity name (a person, project, or topic)
+  - "subject_type": one of: person, project, topic
+  - "object_type": one of: person, project, topic
+  - "confidence": number 0.0-1.0 (how certain is this relationship)
+  Only extract relationships explicitly stated or strongly implied. Return empty array if no clear relationships exist.
+`
     : '';
 
   return `You are a metadata extractor for a personal knowledge management system. Given a thought with its source context, extract structured metadata and produce a normalized summary.
@@ -24,6 +36,7 @@ Return JSON with these fields:
 - "related_projects": array of project names referenced in the content (other than the primary project). Use consistent canonical names — match the project name format given in the Project field (e.g., if the primary project is "PrivateMCP", use that exact casing/format for references to it, and use similarly precise names for other projects). Do not create variations like abbreviations or lowercase versions.
 - "summary": 1-2 sentence normalized summary capturing the essential meaning. Write as a standalone statement, not referencing "the user" or "this thought". This summary will be used for semantic search embedding.
 - "quality": "high" if this contains an architectural decision, milestone, or significant insight. "standard" for normal content. "noise" if this is trivial or not worth indexing.
+${rawTriplesSection}
 ${projectSection}
 Source-specific guidance:
 - "mcp" source: Intentional capture. Trust the content. Likely high quality.

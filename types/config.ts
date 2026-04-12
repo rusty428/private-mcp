@@ -19,4 +19,5 @@ export const SETTINGS_TABLE_NAME = 'private-mcp-settings';
 export const TEAMS_TABLE_NAME = 'private-mcp-teams';
 export const USERS_TABLE_NAME = 'private-mcp-users';
 export const API_KEYS_TABLE_NAME = 'private-mcp-api-keys';
+export const GRAPH_TABLE_NAME = 'private-mcp-graph';
 export const CONFIG_BUCKET_NAME = `private-mcp-config-${accountSuffix}`;

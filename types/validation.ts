@@ -6,6 +6,8 @@ export const MAX_LIST_LIMIT = 2000;
 export const MAX_SEARCH_LIMIT = 100;
 export const MAX_PROJECT_LENGTH = 200;
 export const MAX_SESSION_FIELD_LENGTH = 256;
+export const MAX_ENTITY_NAME_LENGTH = 200;
+export const MAX_PREDICATE_LENGTH = 100;
 
 export const MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
 

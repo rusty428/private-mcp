@@ -8,6 +8,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { PrivateMCPConfig } from '../config';
@@ -21,10 +22,12 @@ import {
   TEAMS_TABLE_NAME,
   USERS_TABLE_NAME,
   API_KEYS_TABLE_NAME,
+  GRAPH_TABLE_NAME,
   CONFIG_BUCKET_NAME,
 } from '../../../types/config';
 import { VALID_CLASSIFICATION_MODELS } from '../../../types/validation';
 import { DEFAULT_ENRICHMENT_SETTINGS } from '../../../types/settings';
+import { DEFAULT_PREDICATES } from '../../../types/graph';
 
 interface PrivateMCPStackProps extends cdk.StackProps {
   config: PrivateMCPConfig;
@@ -60,6 +63,7 @@ export class PrivateMCPStack extends cdk.Stack {
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.RETAIN,
       pointInTimeRecovery: true,
+      stream: dynamodb.StreamViewType.NEW_IMAGE,
     });
 
     thoughtsTable.addGlobalSecondaryIndex({
@@ -185,6 +189,23 @@ export class PrivateMCPStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // --- Knowledge Graph DynamoDB Table ---
+    const graphTable = new dynamodb.Table(this, 'GraphTable', {
+      tableName: GRAPH_TABLE_NAME,
+      partitionKey: { name: 'pk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'sk', type: dynamodb.AttributeType.STRING },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+      pointInTimeRecovery: true,
+    });
+
+    graphTable.addGlobalSecondaryIndex({
+      indexName: 'gsi-graph-inverse',
+      partitionKey: { name: 'inversePk', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'inverseSk', type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
     // --- Common Lambda environment ---
     const commonEnv = {
       REGION: config.region,
@@ -259,6 +280,28 @@ export class PrivateMCPStack extends cdk.Stack {
       ),
     });
 
+    // --- Knowledge Graph DynamoDB IAM policies ---
+    const graphReadPolicy = new iam.PolicyStatement({
+      actions: ['dynamodb:GetItem', 'dynamodb:Query'],
+      resources: [
+        graphTable.tableArn,
+        `${graphTable.tableArn}/index/*`,
+      ],
+    });
+
+    const graphReadWritePolicy = new iam.PolicyStatement({
+      actions: [
+        'dynamodb:GetItem',
+        'dynamodb:PutItem',
+        'dynamodb:UpdateItem',
+        'dynamodb:Query',
+      ],
+      resources: [
+        graphTable.tableArn,
+        `${graphTable.tableArn}/index/*`,
+      ],
+    });
+
     // --- Marketplace IAM policy (required for first-time Anthropic model access) ---
     const marketplacePolicy = new iam.PolicyStatement({
       actions: [
@@ -305,6 +348,8 @@ export class PrivateMCPStack extends cdk.Stack {
     enrichThoughtFn.addToRolePolicy(ddbWritePolicy);
     enrichThoughtFn.addToRolePolicy(settingsReadPolicy);
     enrichThoughtFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
+    enrichThoughtFn.addToRolePolicy(graphReadPolicy);
+    enrichThoughtFn.addEnvironment('GRAPH_TABLE_NAME', GRAPH_TABLE_NAME);
 
     // process-thought invokes enrich-thought async
     enrichThoughtFn.grantInvoke(processThoughtFn);
@@ -352,6 +397,8 @@ export class PrivateMCPStack extends cdk.Stack {
     mcpServerFn.addToRolePolicy(bedrockEmbedPolicy);
     mcpServerFn.addToRolePolicy(settingsReadPolicy);
     mcpServerFn.addEnvironment('SETTINGS_TABLE_NAME', SETTINGS_TABLE_NAME);
+    mcpServerFn.addToRolePolicy(graphReadWritePolicy);
+    mcpServerFn.addEnvironment('GRAPH_TABLE_NAME', GRAPH_TABLE_NAME);
 
     // --- daily-summary Lambda ---
     const dailySummaryFn = new nodejs.NodejsFunction(this, 'DailySummaryFn', {
@@ -391,6 +438,40 @@ export class PrivateMCPStack extends cdk.Stack {
     // Allow mcp-server to invoke daily-summary
     dailySummaryFn.grantInvoke(mcpServerFn);
     mcpServerFn.addEnvironment('DAILY_SUMMARY_FN_NAME', dailySummaryFn.functionName);
+
+    // --- extract-graph Lambda (Knowledge Graph — DynamoDB Stream consumer) ---
+    const extractGraphFn = new nodejs.NodejsFunction(this, 'ExtractGraphFn', {
+      entry: 'lambdas/extract-graph/index.ts',
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {
+        REGION: config.region,
+        GRAPH_TABLE_NAME: GRAPH_TABLE_NAME,
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+    });
+
+    extractGraphFn.addToRolePolicy(graphReadWritePolicy);
+
+    extractGraphFn.addEventSource(new lambdaEventSources.DynamoEventSource(thoughtsTable, {
+      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+      batchSize: 1,
+      retryAttempts: 3,
+      filters: [
+        lambda.FilterCriteria.filter({
+          dynamodb: {
+            NewImage: {
+              enriched: { BOOL: [true] },
+            },
+          },
+        }),
+      ],
+    }));
 
     // --- rest-api Lambda (UI backend) ---
     const restApiFn = new nodejs.NodejsFunction(this, 'RestApiFn', {
@@ -617,6 +698,33 @@ export class PrivateMCPStack extends cdk.Stack {
       ]),
     });
 
+    // --- Seed default KG predicate vocabulary ---
+    const seedPredicates = {
+      service: 'DynamoDB',
+      action: 'putItem',
+      parameters: {
+        TableName: GRAPH_TABLE_NAME,
+        Item: {
+          pk: { S: 'CONFIG#default' },
+          sk: { S: 'PREDICATES' },
+          predicates: { L: DEFAULT_PREDICATES.map(p => ({ S: p })) },
+          updatedAt: { S: new Date().toISOString() },
+        },
+        ConditionExpression: 'attribute_not_exists(pk)',
+      },
+      physicalResourceId: cr.PhysicalResourceId.of('seed-kg-predicates'),
+    };
+
+    new cr.AwsCustomResource(this, 'SeedKGPredicates', {
+      onCreate: seedPredicates,
+      policy: cr.AwsCustomResourcePolicy.fromStatements([
+        new iam.PolicyStatement({
+          actions: ['dynamodb:PutItem'],
+          resources: [graphTable.tableArn],
+        }),
+      ]),
+    });
+
     // --- S3 Config Bucket (for cross-stack integration) ---
     const configBucket = new cdk.aws_s3.Bucket(this, 'ConfigBucket', {
       bucketName: CONFIG_BUCKET_NAME,
@@ -684,6 +792,8 @@ export class PrivateMCPStack extends cdk.Stack {
           settingsTableName: SETTINGS_TABLE_NAME,
           thoughtsTableArn: thoughtsTable.tableArn,
           thoughtsTableName: THOUGHTS_TABLE_NAME,
+          graphTableArn: graphTable.tableArn,
+          graphTableName: GRAPH_TABLE_NAME,
         }),
         ContentType: 'application/json',
       },
@@ -758,6 +868,11 @@ export class PrivateMCPStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'ApiKeysTableName', {
       value: apiKeysTable.tableName,
       description: 'DynamoDB API keys table name',
+    });
+
+    new cdk.CfnOutput(this, 'GraphTableName', {
+      value: graphTable.tableName,
+      description: 'DynamoDB knowledge graph table name',
     });
   }
 }
