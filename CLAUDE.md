@@ -127,7 +127,7 @@ private-mcp/
 
 - **process-thought** — The core. Takes raw text, calls Bedrock Titan v2 for embedding + Bedrock Haiku for classification in parallel, writes to S3 Vectors. All capture sources invoke this Lambda.
 - **authorizer** — Custom Lambda authorizer. Resolves API key → user + team via SHA-256 hash lookup in the api-keys DynamoDB table. Injects user_id, username, team_id, and role into the request context.
-- **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` with Web Standard MCP transport. Raw Lambda handler (no Express). Five tools: `search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`.
+- **mcp-server** — MCP protocol via `@modelcontextprotocol/sdk` with Web Standard MCP transport. Raw Lambda handler (no Express). 13 tools: core (`search_thoughts`, `browse_recent`, `stats`, `capture_thought`, `daily_summary`), knowledge graph (`kg_query`, `kg_add`, `kg_invalidate`, `kg_timeline`, `kg_predicates`), connections (`find_connections`, `explore_topic`, `explore_person`).
 - **rest-api** — REST backend for the web UI. Raw Lambda handler with route dispatch (no Express). CRUD for thoughts, semantic search, timeseries stats, AI narrative reports, enrichment settings. Data stored in DynamoDB (`private-mcp-thoughts-v2` table) with GSIs for type, source, project, and date queries.
 - **daily-summary** — Generates a two-section report (performance metrics + content highlights). Triggered daily by EventBridge cron or on-demand via `daily_summary` MCP tool. Schedule hour configured via `DAILY_SUMMARY_HOUR` in `.env` (UTC).
 - **enrich-thought** — Async enrichment pipeline. Performs deeper metadata extraction (related projects, refined summaries) after initial capture. Invoked asynchronously so it doesn't block the capture response.
@@ -175,6 +175,14 @@ private-mcp/
 | `stats` | none | Count, type breakdown, top topics, date range |
 | `capture_thought` | `text, source?, project?, session_id?, session_name?` | Save a thought via process-thought |
 | `daily_summary` | none | Generate and post yesterday's daily summary to Slack |
+| `kg_query` | `entity, as_of?, predicate?, direction?` | Get all relationships for an entity with temporal validity |
+| `kg_add` | `subject, predicate, object, subject_type?, object_type?` | Add a relationship fact to the knowledge graph |
+| `kg_invalidate` | `subject, predicate, object, ended?` | Mark a relationship as no longer true |
+| `kg_timeline` | `entity, limit?` | Chronological story of an entity — all facts ordered by time |
+| `kg_predicates` | `action, predicate?` | View and manage the relationship vocabulary |
+| `find_connections` | `project_a, project_b, min_occurrences?` | Find shared topics and people between two projects |
+| `explore_topic` | `topic, since?` | Explore a topic across projects — which projects and people mention it |
+| `explore_person` | `person, since?` | Explore a person across projects — which projects and topics they appear in |
 
 ## S3 Vectors Gotchas (MUST FOLLOW)
 
@@ -225,7 +233,7 @@ claude mcp add-json --scope user private-mcp \
 
 **Always use `--scope user`.** The default `--scope local` only registers the MCP for the current project directory — sessions in other projects won't have access to the tools.
 
-Restart Claude Code after adding. The five MCP tools (`stats`, `browse_recent`, `search_thoughts`, `capture_thought`, `daily_summary`) will be available as native tools.
+Restart Claude Code after adding. All 13 MCP tools will be available as native tools.
 
 ## Security
 

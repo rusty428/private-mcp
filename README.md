@@ -114,6 +114,14 @@ Slack ──webhook──▶ API Gateway ──▶ ingest-thought Lambda ──�
 | `stats` | Overview: total count, type breakdown, top topics, date range |
 | `capture_thought` | Save a thought from any connected AI tool |
 | `daily_summary` | Generate a daily summary of recent activity |
+| `kg_query` | Get all relationships for an entity with temporal validity |
+| `kg_add` | Add a relationship fact to the knowledge graph |
+| `kg_invalidate` | Mark a relationship as no longer true |
+| `kg_timeline` | Chronological story of an entity — all facts ordered by time |
+| `kg_predicates` | View and manage the relationship vocabulary |
+| `find_connections` | Find shared topics and people between two projects |
+| `explore_topic` | Explore a topic across projects — which projects and people mention it |
+| `explore_person` | Explore a person across projects — which projects and topics they appear in |
 
 ## Privacy
 

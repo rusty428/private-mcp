@@ -23,12 +23,12 @@
 │   ┌────────────────┐           ┌──────────────┐          │
 │   │ mcp-server     │           │ ingest-      │          │
 │   │                │           │ thought      │          │
-│   │ 5 MCP tools:   │           │              │          │
-│   │ - search       │           │ Slack events │          │
-│   │ - browse       │           │ filtering    │          │
-│   │ - stats        │           │ + reply      │          │
-│   │ - capture      │           └──────┬───────┘          │
-│   │ - daily_summary│                  │                  │
+│   │ 13 MCP tools:  │           │              │          │
+│   │ - search/browse│           │ Slack events │          │
+│   │ - stats/capture│           │ filtering    │          │
+│   │ - daily_summary│           │ + reply      │          │
+│   │ - kg_* (5)     │           └──────┬───────┘          │
+│   │ - connections(3)│                 │                  │
 │   └───┬────────┬───┘    Lambda invoke │                  │
 │       │        │                      │                  │
 │       ▼        │                      ▼                  │
@@ -85,7 +85,7 @@ MCP protocol server using `@modelcontextprotocol/sdk` in stateless mode.
 - Express app wrapped with `@codegenie/serverless-express` for API Gateway compatibility
 - Creates a fresh `McpServer` + `StreamableHTTPServerTransport` per request (stateless — no session tracking)
 - `enableJsonResponse: true` — returns JSON instead of SSE (API Gateway doesn't support streaming)
-- Registers five tools that AI clients discover via the MCP protocol
+- Registers 13 tools that AI clients discover via the MCP protocol
 
 **Tools:**
 
@@ -96,6 +96,14 @@ MCP protocol server using `@modelcontextprotocol/sdk` in stateless mode.
 | `stats` | Aggregates: total count, breakdown by type, top 10 topics, date range |
 | `capture_thought` | Invokes `process-thought` — same embed + classify + store pipeline |
 | `daily_summary` | Generates and posts a daily activity summary to Slack |
+| `kg_query` | Gets all relationships for an entity from the knowledge graph with temporal validity |
+| `kg_add` | Adds a relationship fact — auto-creates entities, validates predicate vocabulary |
+| `kg_invalidate` | Marks a relationship as no longer true — preserves history with end date |
+| `kg_timeline` | Chronological story of an entity — all facts ordered by time |
+| `kg_predicates` | View and manage the relationship vocabulary (list, add, remove) |
+| `find_connections` | Queries DDB `gsi-by-project` for two projects, intersects topics and people arrays |
+| `explore_topic` | Queries S3 Vectors with `$in` filter on topics array, aggregates projects and people |
+| `explore_person` | Queries S3 Vectors with `$in` filter on people array, aggregates projects and topics |
 
 ### daily-summary Lambda
 
