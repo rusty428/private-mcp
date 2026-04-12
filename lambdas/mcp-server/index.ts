@@ -242,8 +242,8 @@ function createServer(userContext: AuthorizerContext): McpServer {
       title: 'Explore Topic',
       description: 'Explore a topic across the thought archive — which projects mention it, which people are connected to it, and recent activity.',
       inputSchema: {
-        topic: z.string().describe("Topic tag to explore (e.g., 'auth', 'cdk', 'deploy')"),
-        since: z.string().optional().describe('Optional date filter (YYYY-MM-DD)'),
+        topic: z.string().max(MAX_ENTITY_NAME_LENGTH).describe("Topic tag to explore (e.g., 'auth', 'cdk', 'deploy')"),
+        since: z.string().regex(DATE_REGEX).optional().describe('Optional date filter (YYYY-MM-DD)'),
       },
     },
     async ({ topic, since }) => {
@@ -260,8 +260,8 @@ function createServer(userContext: AuthorizerContext): McpServer {
       title: 'Explore Person',
       description: 'Explore a person across the thought archive — which projects they appear in, what topics they\'re connected to, and recent mentions.',
       inputSchema: {
-        person: z.string().describe("Person name (e.g., 'Kai', 'Maya')"),
-        since: z.string().optional().describe('Optional date filter (YYYY-MM-DD)'),
+        person: z.string().max(MAX_ENTITY_NAME_LENGTH).describe("Person name (e.g., 'Kai', 'Maya')"),
+        since: z.string().regex(DATE_REGEX).optional().describe('Optional date filter (YYYY-MM-DD)'),
       },
     },
     async ({ person, since }) => {

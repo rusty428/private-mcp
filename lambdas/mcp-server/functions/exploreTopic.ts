@@ -1,6 +1,7 @@
 import { S3VectorsClient, QueryVectorsCommand } from '@aws-sdk/client-s3vectors';
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 import { EMBEDDING_MODEL_ID, VECTOR_DIMENSIONS } from '../../../types/config';
+import { EXPLORE_TOP_K } from '../../../types/validation';
 
 const s3vectors = new S3VectorsClient({ region: process.env.REGION });
 const bedrock = new BedrockRuntimeClient({ region: process.env.REGION });
@@ -28,19 +29,24 @@ export async function exploreTopic(topic: string, teamId: string, since?: string
   const filter = { '$and': filterConditions };
 
   // QueryVectors requires a vector — embed the topic name as the query
-  const embedResponse = await bedrock.send(new InvokeModelCommand({
-    modelId: EMBEDDING_MODEL_ID,
-    contentType: 'application/json',
-    accept: 'application/json',
-    body: JSON.stringify({ inputText: topic, dimensions: VECTOR_DIMENSIONS, normalize: true }),
-  }));
-  const queryVector = JSON.parse(new TextDecoder().decode(embedResponse.body)).embedding;
+  let queryVector: number[];
+  try {
+    const embedResponse = await bedrock.send(new InvokeModelCommand({
+      modelId: EMBEDDING_MODEL_ID,
+      contentType: 'application/json',
+      accept: 'application/json',
+      body: JSON.stringify({ inputText: topic, dimensions: VECTOR_DIMENSIONS, normalize: true }),
+    }));
+    queryVector = JSON.parse(new TextDecoder().decode(embedResponse.body)).embedding;
+  } catch (err: any) {
+    throw new Error(`Failed to generate embedding for topic "${topic}": ${err.message}`);
+  }
 
   const searchResponse = await s3vectors.send(new QueryVectorsCommand({
     vectorBucketName: process.env.VECTOR_BUCKET_NAME,
     indexName: process.env.VECTOR_INDEX_NAME,
     queryVector: { float32: queryVector },
-    topK: 100,
+    topK: EXPLORE_TOP_K,
     returnMetadata: true,
     filter,
   }));
@@ -71,9 +77,9 @@ export async function exploreTopic(topic: string, teamId: string, since?: string
     topic,
     total_mentions: results.length,
     projects: sortedEntries(projects),
-    people: sortedEntries(people),
+    people: sortedEntries(people).slice(0, 15),
     related_topics: sortedEntries(coTopics).slice(0, 10),
-    recent: results.slice(0, 5).map((r: any) => ({
+    top_by_relevance: results.slice(0, 5).map((r: any) => ({
       thought_date: r.metadata?.thought_date,
       summary: r.metadata?.summary || r.metadata?.content?.slice(0, 200),
       project: r.metadata?.project,

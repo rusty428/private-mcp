@@ -43,6 +43,7 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
     type: classification.type as ThoughtMetadata['type'],
     topics: classification.topics,
     people: classification.people,
+    people_lower: classification.people.map(p => p.toLowerCase()),
     action_items: classification.action_items,
     dates_mentioned: classification.dates_mentioned,
     project,
@@ -89,6 +90,8 @@ export const handler = async (event: EnrichThoughtInput): Promise<void> => {
   if (classification.people.length > 0) {
     updateExprParts.push('people = :people');
     exprValues[':people'] = classification.people;
+    updateExprParts.push('people_lower = :people_lower');
+    exprValues[':people_lower'] = classification.people.map(p => p.toLowerCase());
   }
   if (classification.action_items.length > 0) {
     updateExprParts.push('action_items = :action_items');

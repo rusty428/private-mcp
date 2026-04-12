@@ -27,6 +27,7 @@ export async function storeThought(
     type: metadata.type,
     topics: metadata.topics,
     people: metadata.people,
+    people_lower: metadata.people_lower,
     action_items: metadata.action_items,
     dates_mentioned: metadata.dates_mentioned,
     project: metadata.project,
