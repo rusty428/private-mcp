@@ -7,6 +7,11 @@ import { browseRecent } from './functions/browseRecent';
 import { getStats } from './functions/getStats';
 import { captureThought } from './functions/captureThought';
 import { invokeDailySummary } from './functions/invokeDailySummary';
+import { kgQuery } from './functions/kgQuery';
+import { kgAdd } from './functions/kgAdd';
+import { kgInvalidate } from './functions/kgInvalidate';
+import { kgTimeline } from './functions/kgTimeline';
+import { kgPredicates } from './functions/kgPredicates';
 import { SOURCE_REGEX, SOURCE_FORMAT_DESCRIPTION, MAX_PROJECT_LENGTH, MAX_SESSION_FIELD_LENGTH } from '../../types/validation';
 import { AuthorizerContext } from '../../types/identity';
 
@@ -108,6 +113,103 @@ function createServer(userContext: AuthorizerContext): McpServer {
       const result = await invokeDailySummary(userContext.team_id);
       return {
         content: [{ type: 'text' as const, text: result.text }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'kg_query',
+    {
+      title: 'Knowledge Graph Query',
+      description: 'Get all relationships for an entity. Returns outgoing and incoming edges with temporal validity.',
+      inputSchema: {
+        entity: z.string().describe('Entity name (e.g., "Kai", "auth-migration")'),
+        as_of: z.string().optional().describe('Date (YYYY-MM-DD) — only return facts valid at this time'),
+        predicate: z.string().optional().describe('Filter to a specific relationship type (e.g., "works_on")'),
+        direction: z.enum(['outgoing', 'incoming', 'both']).optional().default('both').describe('Edge direction to query'),
+      },
+    },
+    async ({ entity, as_of, predicate, direction }) => {
+      const result = await kgQuery(entity, userContext.team_id, as_of, predicate, direction);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'kg_add',
+    {
+      title: 'Knowledge Graph Add',
+      description: 'Add a relationship fact. Auto-creates entities if they don\'t exist. Validates predicate against active vocabulary.',
+      inputSchema: {
+        subject: z.string().describe('Subject entity name'),
+        predicate: z.string().describe('Relationship type (e.g., "works_on", "owns")'),
+        object: z.string().describe('Object entity name'),
+        subject_type: z.enum(['person', 'project', 'topic']).optional().describe('Entity type for subject'),
+        object_type: z.enum(['person', 'project', 'topic']).optional().describe('Entity type for object'),
+      },
+    },
+    async ({ subject, predicate, object, subject_type, object_type }) => {
+      const result = await kgAdd(subject, predicate, object, userContext.team_id, subject_type, object_type);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'kg_invalidate',
+    {
+      title: 'Knowledge Graph Invalidate',
+      description: 'Mark a relationship as no longer true. Sets the end date without deleting — history is preserved.',
+      inputSchema: {
+        subject: z.string().describe('Subject entity name'),
+        predicate: z.string().describe('Relationship type'),
+        object: z.string().describe('Object entity name'),
+        ended: z.string().optional().describe('When this stopped being true (YYYY-MM-DD). Defaults to today.'),
+      },
+    },
+    async ({ subject, predicate, object, ended }) => {
+      const result = await kgInvalidate(subject, predicate, object, userContext.team_id, ended);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'kg_timeline',
+    {
+      title: 'Knowledge Graph Timeline',
+      description: 'Chronological story of an entity — all facts involving it, ordered by time.',
+      inputSchema: {
+        entity: z.string().describe('Entity name'),
+        limit: z.number().optional().default(50).describe('Max results'),
+      },
+    },
+    async ({ entity, limit }) => {
+      const result = await kgTimeline(entity, userContext.team_id, limit);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+      };
+    }
+  );
+
+  server.registerTool(
+    'kg_predicates',
+    {
+      title: 'Knowledge Graph Predicates',
+      description: 'View and manage the relationship vocabulary. List active predicates, add new ones, or remove existing ones.',
+      inputSchema: {
+        action: z.enum(['list', 'add', 'remove']).describe('Action to perform'),
+        predicate: z.string().optional().describe('Predicate name (required for add/remove)'),
+      },
+    },
+    async ({ action, predicate }) => {
+      const result = await kgPredicates(action, userContext.team_id, predicate);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
       };
     }
   );
