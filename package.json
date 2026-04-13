@@ -1,6 +1,6 @@
 {
   "name": "private-mcp",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "description": "PrivateMCP - Private MCP server infrastructure & backend",
   "scripts": {
@@ -10,6 +10,7 @@
     "diff": "cdk diff",
     "lint": "eslint . --ext .ts --fix",
     "test": "jest",
+    "test:import": "jest --config jest.config.js",
     "mcp-ui": "npm run dev --prefix ui",
     "migrate:ddb": "npx ts-node --project tsconfig.json scripts/migrate-to-dynamodb.ts",
     "migrate": "npx ts-node scripts/migrate-identity.ts"
@@ -31,9 +32,12 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "aws-cdk": "^2.1108.0",
     "esbuild": "^0.27.3",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.4.9",
     "ts-node": "^10.9.0",
     "typescript": "~5.6.0"
   },

@@ -22,6 +22,7 @@ import {
   isValidSource,
   SOURCE_FORMAT_DESCRIPTION,
   MAX_PROJECT_LENGTH,
+  MAX_SESSION_FIELD_LENGTH,
 } from '../../types/validation';
 
 // --- Helpers ---
@@ -217,6 +218,18 @@ async function handleCapture(event: APIGatewayProxyEvent): Promise<APIGatewayPro
   }
   if (body.project && body.project.length > MAX_PROJECT_LENGTH) {
     return errorResponse(400, `Project name too long. Maximum ${MAX_PROJECT_LENGTH} characters.`, event);
+  }
+  if (body.session_id && body.session_id.length > MAX_SESSION_FIELD_LENGTH) {
+    return errorResponse(400, `session_id too long. Maximum ${MAX_SESSION_FIELD_LENGTH} characters.`, event);
+  }
+  if (body.session_name && body.session_name.length > MAX_SESSION_FIELD_LENGTH) {
+    return errorResponse(400, `session_name too long. Maximum ${MAX_SESSION_FIELD_LENGTH} characters.`, event);
+  }
+  if (body.thought_date && !DATE_REGEX.test(body.thought_date)) {
+    return errorResponse(400, 'Invalid thought_date format. Use YYYY-MM-DD.', event);
+  }
+  if (body.created_at && isNaN(Date.parse(body.created_at))) {
+    return errorResponse(400, 'Invalid created_at format. Use ISO 8601.', event);
   }
   const result = await captureThought({
     ...body,

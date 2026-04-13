@@ -46,6 +46,8 @@ export interface ProcessThoughtInput {
   project?: string;
   session_id?: string;
   session_name?: string;
+  thought_date?: string;
+  created_at?: string;
   user_id?: string;
   team_id?: string;
 }

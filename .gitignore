@@ -7,6 +7,7 @@ cdk.out/
 !cdk.json
 !package.json
 !tsconfig.json
+!jest.config.js
 .env
 .claude/
 tmp/

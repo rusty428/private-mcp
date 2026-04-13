@@ -29,6 +29,8 @@ interface LambdaEvent {
   project?: string;
   session_id?: string;
   session_name?: string;
+  thought_date?: string;   // Optional override for historical imports (YYYY-MM-DD)
+  created_at?: string;     // Optional override for historical imports (ISO 8601)
   user_id?: string;
   team_id?: string;
   slackReply?: SlackReplyContext;
@@ -43,6 +45,8 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
         project: event.project,
         session_id: event.session_id,
         session_name: event.session_name,
+        thought_date: event.thought_date,
+        created_at: event.created_at,
         user_id: event.user_id,
         team_id: event.team_id,
       }
@@ -58,12 +62,12 @@ export const handler = async (event: LambdaEvent): Promise<ProcessThoughtResult>
 
   const id = randomUUID();
   const now = new Date();
-  const createdAt = now.toISOString();
+  const createdAt = event.created_at || now.toISOString();
   // NOTE: thought_date is the human-calendar date, computed using the user's
   // configured timezone. Without this, evening captures (e.g. 8pm PST) would
   // be attributed to the next day's UTC date. created_at stays canonical UTC.
   const timezone = await loadTimezone();
-  const thoughtDate = now.toLocaleDateString('en-CA', { timeZone: timezone });
+  const thoughtDate = event.thought_date || now.toLocaleDateString('en-CA', { timeZone: timezone });
 
   const quality = triageThought(input.text, input.source);
 
