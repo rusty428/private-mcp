@@ -1,5 +1,5 @@
 // scripts/lib/__tests__/normalizer.test.ts
-import { parseClaudeCode, parseChatGPT } from '../normalizer';
+import { parseClaudeCode, parseChatGPT, parseClaudeAI } from '../normalizer';
 
 const MINIMAL_SESSION = [
   '{"type":"custom-title","customTitle":"Fix auth bug","sessionId":"abc-123"}',
@@ -230,5 +230,72 @@ describe('parseChatGPT', () => {
 
   it('returns empty for invalid JSON', () => {
     expect(parseChatGPT('not json', '/test.json')).toEqual([]);
+  });
+});
+
+const CLAUDE_AI_FLAT = JSON.stringify([
+  { role: 'user', content: 'What is CDK?' },
+  { role: 'assistant', content: 'CDK is the AWS Cloud Development Kit.' },
+  { role: 'user', content: 'How do I deploy?' },
+  { role: 'assistant', content: 'Run cdk deploy from your project root.' },
+]);
+
+const CLAUDE_AI_PRIVACY = JSON.stringify([
+  {
+    name: 'CDK Chat',
+    created_at: '2026-01-15T10:00:00Z',
+    chat_messages: [
+      { role: 'human', content: 'What is CDK?' },
+      { role: 'assistant', content: 'CDK is the AWS Cloud Development Kit.' },
+    ],
+  },
+  {
+    name: 'Lambda Chat',
+    created_at: '2026-01-16T10:00:00Z',
+    chat_messages: [
+      { role: 'human', content: 'What is Lambda?' },
+      { role: 'assistant', content: 'Lambda is serverless compute on AWS.' },
+    ],
+  },
+]);
+
+const CLAUDE_AI_MESSAGES_KEY = JSON.stringify({
+  messages: [
+    { role: 'user', content: 'Hello' },
+    { role: 'assistant', content: 'Hi there!' },
+  ],
+});
+
+describe('parseClaudeAI', () => {
+  it('parses flat message array', () => {
+    const results = parseClaudeAI(CLAUDE_AI_FLAT, '/export/chat.json');
+    expect(results).toHaveLength(1);
+    expect(results[0].messages).toHaveLength(4);
+    expect(results[0].messages[0]).toEqual({ role: 'user', text: 'What is CDK?' });
+    expect(results[0].format).toBe('claude-ai');
+  });
+
+  it('parses privacy export with multiple conversations', () => {
+    const results = parseClaudeAI(CLAUDE_AI_PRIVACY, '/export/conversations.json');
+    expect(results).toHaveLength(2);
+    expect(results[0].sessionName).toBe('CDK Chat');
+    expect(results[0].sessionDate).toBe('2026-01-15');
+    expect(results[1].sessionName).toBe('Lambda Chat');
+    expect(results[1].messages[0]).toEqual({ role: 'user', text: 'What is Lambda?' });
+  });
+
+  it('parses object with messages key', () => {
+    const results = parseClaudeAI(CLAUDE_AI_MESSAGES_KEY, '/export/chat.json');
+    expect(results).toHaveLength(1);
+    expect(results[0].messages).toHaveLength(2);
+  });
+
+  it('maps human role to user', () => {
+    const results = parseClaudeAI(CLAUDE_AI_PRIVACY, '/export/conversations.json');
+    expect(results[0].messages[0].role).toBe('user');
+  });
+
+  it('returns empty for invalid JSON', () => {
+    expect(parseClaudeAI('not json', '/test.json')).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 // scripts/lib/normalizer.ts
 import { NormalizedConversation, NormalizedMessage } from './types';
+import { extractContent } from './extractContent';
 
 /**
  * Parse Claude Code session JSONL into a normalized conversation.
@@ -223,4 +224,91 @@ export function parseChatGPT(
   }
 
   return results;
+}
+
+/**
+ * Parse Claude.ai JSON export.
+ * Two formats:
+ * 1. Flat message list: [{role, content}, ...] or {messages: [{role, content}, ...]}
+ * 2. Privacy export: [{name, created_at, chat_messages: [{role, content}, ...]}, ...]
+ */
+export function parseClaudeAI(
+  content: string,
+  filePath: string,
+): NormalizedConversation[] {
+  let data: any;
+  try {
+    data = JSON.parse(content);
+  } catch {
+    return [];
+  }
+
+  // Unwrap {messages: [...]} wrapper
+  if (data && typeof data === 'object' && !Array.isArray(data) && data.messages) {
+    data = data.messages;
+  }
+
+  if (!Array.isArray(data)) return [];
+
+  // Detect privacy export: array of objects with chat_messages
+  if (data.length > 0 && typeof data[0] === 'object' && 'chat_messages' in data[0]) {
+    return parseClaudeAIPrivacy(data, filePath);
+  }
+
+  // Flat message list: [{role, content}, ...]
+  const messages = parseMessageList(data);
+  if (messages.length < 2) return [];
+
+  return [
+    {
+      messages,
+      sourceFile: filePath,
+      format: 'claude-ai',
+    },
+  ];
+}
+
+function parseClaudeAIPrivacy(
+  conversations: any[],
+  filePath: string,
+): NormalizedConversation[] {
+  const results: NormalizedConversation[] = [];
+
+  for (const conv of conversations) {
+    if (!conv.chat_messages || !Array.isArray(conv.chat_messages)) continue;
+    const messages = parseMessageList(conv.chat_messages);
+    if (messages.length < 2) continue;
+
+    let sessionDate: string | undefined;
+    if (conv.created_at) {
+      sessionDate = conv.created_at.slice(0, 10);
+    }
+
+    results.push({
+      messages,
+      sourceFile: filePath,
+      format: 'claude-ai',
+      sessionDate,
+      sessionName: conv.name,
+    });
+  }
+
+  return results;
+}
+
+function parseMessageList(items: any[]): NormalizedMessage[] {
+  const messages: NormalizedMessage[] = [];
+  for (const item of items) {
+    if (typeof item !== 'object' || item === null) continue;
+    const rawRole = item.role || '';
+    const text = extractContent(item.content);
+    if (!text) continue;
+
+    if (rawRole === 'user' || rawRole === 'human') {
+      messages.push({ role: 'user', text });
+    } else if (rawRole === 'assistant' || rawRole === 'ai') {
+      messages.push({ role: 'assistant', text });
+    }
+  }
+  return messages;
 }

@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { parseArgs } from 'node:util';
-import { parseClaudeCode, parseChatGPT } from './lib/normalizer';
+import { parseClaudeCode, parseChatGPT, parseClaudeAI } from './lib/normalizer';
 import { chunkConversation } from './lib/chunker';
 import { ImportManifest } from './lib/importManifest';
 import { NormalizedConversation, Chunk, ConversationFormat, ImportOptions } from './lib/types';
@@ -135,6 +135,7 @@ function normalizeFile(
 ): NormalizedConversation[] {
   if (format === 'claude-code') return parseClaudeCode(content, filePath);
   if (format === 'chatgpt') return parseChatGPT(content, filePath);
+  if (format === 'claude-ai') return parseClaudeAI(content, filePath);
 
   // Auto-detection
   if (format === 'auto') {
@@ -142,9 +143,14 @@ function normalizeFile(
     if (path.basename(filePath) === 'conversations.json') {
       return parseChatGPT(content, filePath);
     }
+    if (filePath.endsWith('.json')) {
+      // Try Claude.ai first, fall back to ChatGPT
+      const claudeResults = parseClaudeAI(content, filePath);
+      if (claudeResults.length > 0) return claudeResults;
+      return parseChatGPT(content, filePath);
+    }
   }
 
-  console.warn(`  Skipping ${filePath} — format not yet supported`);
   return [];
 }
 
