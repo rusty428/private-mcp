@@ -1,5 +1,5 @@
 // scripts/lib/__tests__/normalizer.test.ts
-import { parseClaudeCode } from '../normalizer';
+import { parseClaudeCode, parseChatGPT } from '../normalizer';
 
 const MINIMAL_SESSION = [
   '{"type":"custom-title","customTitle":"Fix auth bug","sessionId":"abc-123"}',
@@ -104,5 +104,131 @@ describe('parseClaudeCode', () => {
       role: 'assistant',
       text: 'Actual response.',
     });
+  });
+});
+
+const CHATGPT_SINGLE = JSON.stringify({
+  title: 'TypeScript Help',
+  create_time: 1705305600, // 2024-01-15
+  mapping: {
+    root: {
+      parent: null,
+      children: ['user1'],
+      message: null,
+    },
+    user1: {
+      parent: 'root',
+      children: ['asst1'],
+      message: {
+        author: { role: 'user' },
+        content: { parts: ['What is TypeScript?'] },
+      },
+    },
+    asst1: {
+      parent: 'user1',
+      children: ['user2'],
+      message: {
+        author: { role: 'assistant' },
+        content: { parts: ['TypeScript is a typed superset of JavaScript.'] },
+      },
+    },
+    user2: {
+      parent: 'asst1',
+      children: ['asst2'],
+      message: {
+        author: { role: 'user' },
+        content: { parts: ['How do I install it?'] },
+      },
+    },
+    asst2: {
+      parent: 'user2',
+      children: [],
+      message: {
+        author: { role: 'assistant' },
+        content: { parts: ['Run npm install -g typescript.'] },
+      },
+    },
+  },
+});
+
+const CHATGPT_ARRAY = JSON.stringify([
+  JSON.parse(CHATGPT_SINGLE),
+  {
+    title: 'Python Help',
+    create_time: 1705392000,
+    mapping: {
+      root: { parent: null, children: ['u1'], message: null },
+      u1: {
+        parent: 'root',
+        children: ['a1'],
+        message: {
+          author: { role: 'user' },
+          content: { parts: ['What is Python?'] },
+        },
+      },
+      a1: {
+        parent: 'u1',
+        children: [],
+        message: {
+          author: { role: 'assistant' },
+          content: { parts: ['Python is a high-level programming language.'] },
+        },
+      },
+    },
+  },
+]);
+
+describe('parseChatGPT', () => {
+  it('parses a single conversation object', () => {
+    const results = parseChatGPT(CHATGPT_SINGLE, '/export/conversations.json');
+    expect(results).toHaveLength(1);
+    expect(results[0].messages).toHaveLength(4);
+    expect(results[0].messages[0]).toEqual({ role: 'user', text: 'What is TypeScript?' });
+    expect(results[0].messages[1]).toEqual({
+      role: 'assistant',
+      text: 'TypeScript is a typed superset of JavaScript.',
+    });
+    expect(results[0].format).toBe('chatgpt');
+    expect(results[0].sessionName).toBe('TypeScript Help');
+    expect(results[0].sessionDate).toBe('2024-01-15');
+  });
+
+  it('parses an array of conversations', () => {
+    const results = parseChatGPT(CHATGPT_ARRAY, '/export/conversations.json');
+    expect(results).toHaveLength(2);
+    expect(results[0].sessionName).toBe('TypeScript Help');
+    expect(results[1].sessionName).toBe('Python Help');
+    expect(results[1].messages[0]).toEqual({ role: 'user', text: 'What is Python?' });
+  });
+
+  it('skips system messages', () => {
+    const conv = JSON.stringify({
+      title: 'Test',
+      create_time: 1705305600,
+      mapping: {
+        root: { parent: null, children: ['sys'], message: null },
+        sys: {
+          parent: 'root',
+          children: ['u1'],
+          message: { author: { role: 'system' }, content: { parts: ['You are helpful.'] } },
+        },
+        u1: {
+          parent: 'sys',
+          children: ['a1'],
+          message: { author: { role: 'user' }, content: { parts: ['Hello'] } },
+        },
+        a1: {
+          parent: 'u1',
+          children: [],
+          message: { author: { role: 'assistant' }, content: { parts: ['Hi!'] } },
+        },
+      },
+    });
+    const results = parseChatGPT(conv, '/test.json');
+    expect(results[0].messages).toHaveLength(2);
+  });
+
+  it('returns empty for invalid JSON', () => {
+    expect(parseChatGPT('not json', '/test.json')).toEqual([]);
   });
 });

@@ -127,3 +127,100 @@ export function parseClaudeCode(
     },
   ];
 }
+
+/**
+ * Parse ChatGPT conversations.json export.
+ * Handles both a single conversation object and an array of conversations.
+ * Tree-walking: start at root (parent=null, message=null), follow children[0].
+ */
+export function parseChatGPT(
+  content: string,
+  filePath: string,
+): NormalizedConversation[] {
+  let data: any;
+  try {
+    data = JSON.parse(content);
+  } catch {
+    return [];
+  }
+
+  // Wrap single conversation in array
+  const conversations: any[] = Array.isArray(data)
+    ? data
+    : data.mapping
+      ? [data]
+      : [];
+
+  const results: NormalizedConversation[] = [];
+
+  for (const conv of conversations) {
+    const mapping = conv.mapping;
+    if (!mapping || typeof mapping !== 'object') continue;
+
+    // Find root node: parent=null and message=null (synthetic root)
+    let rootId: string | null = null;
+    let fallbackRoot: string | null = null;
+
+    for (const [nodeId, node] of Object.entries(mapping) as any[]) {
+      if (node.parent === null) {
+        if (node.message === null || node.message === undefined) {
+          rootId = nodeId;
+          break;
+        } else if (fallbackRoot === null) {
+          fallbackRoot = nodeId;
+        }
+      }
+    }
+    if (!rootId) rootId = fallbackRoot;
+    if (!rootId) continue;
+
+    // Linear walk following children[0]
+    const messages: NormalizedMessage[] = [];
+    let currentId: string | null = rootId;
+    const visited = new Set<string>();
+
+    while (currentId && !visited.has(currentId)) {
+      visited.add(currentId);
+      const node: any = (mapping as any)[currentId];
+      if (!node) break;
+
+      const msg = node.message;
+      if (msg) {
+        const role = msg.author?.role;
+        const parts = msg.content?.parts;
+        const text = Array.isArray(parts)
+          ? parts.filter((p: any) => typeof p === 'string').join(' ').trim()
+          : '';
+
+        if (role === 'user' && text) {
+          messages.push({ role: 'user', text });
+        } else if (role === 'assistant' && text) {
+          messages.push({ role: 'assistant', text });
+        }
+      }
+
+      const children: any[] = node.children || [];
+      currentId = children.length > 0 ? children[0] : null;
+    }
+
+    if (messages.length < 2) continue;
+
+    // Extract session date from create_time (Unix timestamp)
+    let sessionDate: string | undefined;
+    if (conv.create_time) {
+      sessionDate = new Date(conv.create_time * 1000)
+        .toISOString()
+        .slice(0, 10);
+    }
+
+    results.push({
+      messages,
+      sourceFile: filePath,
+      format: 'chatgpt',
+      sessionDate,
+      sessionName: conv.title,
+    });
+  }
+
+  return results;
+}
