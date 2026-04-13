@@ -21,8 +21,14 @@ export async function storeThought(
   vector: number[],
   metadata: ThoughtMetadata
 ): Promise<void> {
+  // Truncate content for S3 Vectors metadata (2048 byte limit).
+  // Full content lives in DynamoDB; S3 Vectors only needs a prefix for filtering.
+  const truncatedContent = metadata.content.length > 500
+    ? metadata.content.slice(0, 500) + '...'
+    : metadata.content;
+
   const cleanMetadata = filterEmptyArrays({
-    content: metadata.content,
+    content: truncatedContent,
     summary: metadata.summary,
     type: metadata.type,
     topics: metadata.topics,

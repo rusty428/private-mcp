@@ -1,6 +1,7 @@
 import { NormalizedConversation, Chunk } from './types';
 
 const MIN_CHUNK_SIZE = 30;
+const MAX_CONTENT_CHARS = 9500; // Stay under 10000 API limit with margin for formatting
 const MAX_RESPONSE_CHARS = 8000;
 
 /**
@@ -41,7 +42,18 @@ export function chunkConversation(conversation: NormalizedConversation): Chunk[]
         assistantText = assistantText.slice(0, MAX_RESPONSE_CHARS) + '\n[truncated]';
       }
 
-      const content = `> ${userTurn}\n\n${assistantText}`;
+      // Truncate user turn if needed (rare — huge pasted code blocks)
+      let displayUserTurn = userTurn;
+      if (displayUserTurn.length > 1500) {
+        displayUserTurn = displayUserTurn.slice(0, 1500) + '\n[truncated]';
+      }
+
+      let content = `> ${displayUserTurn}\n\n${assistantText}`;
+
+      // Final safety cap — ensure total stays under API limit
+      if (content.length > MAX_CONTENT_CHARS) {
+        content = content.slice(0, MAX_CONTENT_CHARS - 12) + '\n[truncated]';
+      }
 
       // Skip tiny chunks
       if (content.length < MIN_CHUNK_SIZE) continue;
